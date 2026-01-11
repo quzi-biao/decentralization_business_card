@@ -87,27 +87,35 @@ async function getAIApiKey(): Promise<string> {
         console.log('获取新的 AI API Key...');
         const baseUrl = await getAvailableBaseUrl();
         
-        // 调用获取 API Key 的 workflow
-        const response = await fetch(
-            `${baseUrl}/api/v1/workflows/${N8N_CONFIG.apiKeyWorkflowId}/execute`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-N8N-API-KEY': N8N_CONFIG.apiKey,
-                },
-                body: JSON.stringify({}),
-            }
-        );
+        // 使用 webhook 方式调用获取 API Key 的 workflow (GET 方法)
+        const webhookUrl = `${baseUrl}/webhook/${N8N_CONFIG.apiKeyWebhookPath}`;
+        console.log('API Key Webhook URL:', webhookUrl);
+        
+        const response = await fetch(webhookUrl, {
+            method: 'GET',
+        });
+        
+        console.log('API Key 响应状态:', response.status);
         
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Key 错误响应:', errorText);
             throw new Error(`Failed to get AI API Key: ${response.status}`);
         }
         
-        const data = await response.json();
+        // 响应可能是直接的字符串或 JSON
+        const contentType = response.headers.get('content-type');
+        let apiKey: string;
         
-        // 从响应中提取 API Key
-        const apiKey = data.data?.apiKey || data.apiKey || data.key;
+        if (contentType?.includes('application/json')) {
+            const data = await response.json();
+            console.log('API Key 响应数据 (JSON):', data);
+            apiKey = data.apiKey || data.key || data.data?.apiKey || data;
+        } else {
+            // 直接返回字符串
+            apiKey = await response.text();
+            console.log('API Key 响应数据 (文本):', apiKey.substring(0, 50) + '...');
+        }
         
         if (!apiKey) {
             throw new Error('API Key not found in response');
@@ -162,7 +170,7 @@ export async function callN8NAgent(
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-AI-API-KEY': aiApiKey, // 使用动态获取的 AI API Key
+                        'X-AI-API-KEY': aiApiKey,
                     },
                     body: JSON.stringify(requestBody),
                 });
@@ -188,7 +196,7 @@ export async function callN8NAgent(
             headers: {
                 'Content-Type': 'application/json',
                 'X-N8N-API-KEY': N8N_CONFIG.apiKey,
-                'X-AI-API-KEY': aiApiKey, // 使用动态获取的 AI API Key
+                'X-AI-API-KEY': aiApiKey,
             },
             body: JSON.stringify(requestBody),
         });

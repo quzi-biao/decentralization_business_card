@@ -20,7 +20,7 @@ export const N8N_CONFIG = {
     
     // API Key - 请在 n8n 设置中生成
     // 路径：Settings > API > Create API Key
-    apiKey: process.env.N8N_API_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTVlNzNmYS0zNWE2LTRiMjItYWM1Yi0yMTU3ZWM0N2UyMjEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY4MTQyNjIxfQ.srEtupJd_zxll1FJBAk96Bvssi9x08TGco0ipADanLY',
+    apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTVlNzNmYS0zNWE2LTRiMjItYWM1Yi0yMTU3ZWM0N2UyMjEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY4MTQyNjIxfQ.srEtupJd_zxll1FJBAk96Bvssi9x08TGco0ipADanLY',
     
     // AI Agent Webhook 路径
     // 在 n8n 中创建 webhook 触发器后获得
@@ -31,6 +31,9 @@ export const N8N_CONFIG = {
     
     // 获取 AI API Key 的 Workflow ID
     apiKeyWorkflowId: 'jDf6woXVzj2k_0wGWViwy',
+    
+    // 获取 AI API Key 的 Webhook 路径（如果使用 webhook 方式）
+    apiKeyWebhookPath: '8fc0755e-9e3f-476d-a222-e90e33fb3f28',
     
     // 健康检查超时时间（毫秒）
     healthCheckTimeout: 3000,

@@ -140,20 +140,6 @@ const ProfileScreen = ({ onEditPress }: any) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* AI 助手 */}
-                <View style={styles.section}>
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialIcons name="lightbulb-outline" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>优化名片内容</Text>
-                        <Text style={styles.menuArrow}>›</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialIcons name="description" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>生成个人简介</Text>
-                        <Text style={styles.menuArrow}>›</Text>
-                    </TouchableOpacity>
-                </View>
-
                 {/* 设置 */}
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.menuItem}>
