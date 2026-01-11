@@ -6,9 +6,10 @@ import { BusinessCardData } from '../store/useCardStore';
 interface MyCardProps {
     cardData: BusinessCardData;
     onPress?: () => void;
+    onAIAssistantPress?: () => void;
 }
 
-const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
+const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }) => {
     const CardWrapper = onPress ? TouchableOpacity : View;
     
     // 检查是否有任何名片内容（排除系统默认字段）
@@ -27,11 +28,21 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
     if (!hasCardData) {
         return (
             <View style={styles.emptyCard}>
-                <Text style={styles.emptyIcon}>📇</Text>
+                <MaterialIcons name="badge" size={64} color="#cbd5e1" />
                 <Text style={styles.emptyTitle}>还没有名片</Text>
                 <Text style={styles.emptyDescription}>
-                    点击下方按钮开始创建您的专属名片
+                    让 AI 助手帮您快速创建专属名片
                 </Text>
+                {onAIAssistantPress && (
+                    <TouchableOpacity 
+                        style={styles.aiButton}
+                        onPress={onAIAssistantPress}
+                        activeOpacity={0.8}
+                    >
+                        <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                        <Text style={styles.aiButtonText}>AI 帮我填写</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         );
     }
@@ -227,14 +238,11 @@ const styles = StyleSheet.create({
         borderStyle: 'dashed',
         minHeight: 200,
     },
-    emptyIcon: {
-        fontSize: 48,
-        marginBottom: 12,
-    },
     emptyTitle: {
         fontSize: 18,
         fontWeight: '700',
         color: '#1e293b',
+        marginTop: 16,
         marginBottom: 8,
     },
     emptyDescription: {
@@ -242,6 +250,26 @@ const styles = StyleSheet.create({
         color: '#64748b',
         textAlign: 'center',
         lineHeight: 20,
+        marginBottom: 24,
+    },
+    aiButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#4F46E5',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 12,
+        gap: 8,
+        shadowColor: '#4F46E5',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    aiButtonText: {
+        color: '#ffffff',
+        fontSize: 15,
+        fontWeight: '600',
     },
 });
 

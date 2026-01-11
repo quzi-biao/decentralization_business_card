@@ -97,7 +97,11 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* 我的名片 */}
             <View style={styles.profileHeader}>
-                <MyCard cardData={cardData} onPress={handleCardPress} />
+                <MyCard 
+                    cardData={cardData} 
+                    onPress={handleCardPress}
+                    onAIAssistantPress={() => (navigation as any).navigate('AIAssistant')}
+                />
             </View>
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>

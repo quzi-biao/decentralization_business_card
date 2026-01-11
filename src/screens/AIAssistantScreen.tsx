@@ -235,12 +235,14 @@ const AIAssistantScreen: React.FC = () => {
             isUser: false,
             timestamp: new Date(),
         };
-        setMessages(prev => [...prev, updateMessage]);
+        
+        // 删除原始的 AI 消息（带确认卡片的那条），只保留确认提示
+        setMessages(prev => prev.filter(msg => msg.id !== pendingUpdate.messageId).concat(updateMessage));
         
         // 清除待确认更新
         setPendingUpdate(null);
         
-        // 发送确认消息给 AI，获取下一步引导
+        // 发送确认消息给 AI，获取下一步引导并展示
         setLoading(true);
         try {
             const confirmationMessage = `已确认更新：${fieldNames}。请继续引导我填写下一个内容。`;
@@ -250,18 +252,19 @@ const AIAssistantScreen: React.FC = () => {
                 confirmationMessage,
                 sessionId
             );
-
+            
             const parsedResponse = parseAIResponse(rawResponse);
-
+            
+            // 展示 AI 的响应
             const aiMessage: Message = {
                 id: (Date.now() + 3).toString(),
                 text: parsedResponse.output,
                 isUser: false,
                 timestamp: new Date(),
             };
-
+            
             setMessages(prev => [...prev, aiMessage]);
-
+            
             // 如果 AI 又返回了新的表单数据，继续存储为待确认
             if (parsedResponse.formData) {
                 setPendingUpdate({
@@ -284,55 +287,104 @@ const AIAssistantScreen: React.FC = () => {
         setPendingUpdate(null);
     };
 
-    const renderMessage = (message: Message) => (
-        <View 
-            key={message.id} 
-            style={[
-                styles.messageContainer,
-                message.isUser ? styles.userMessage : styles.aiMessage
-            ]}
-        >
-            <View style={[
-                styles.messageBubble,
-                message.isUser ? styles.userBubble : styles.aiBubble
-            ]}>
+    const renderMessage = (message: Message) => {
+        // 检查这条消息是否有待确认的更新
+        const hasPendingUpdate = pendingUpdate && pendingUpdate.messageId === message.id;
+        
+        return (
+            <View 
+                key={message.id} 
+                style={[
+                    styles.messageContainer,
+                    message.isUser ? styles.userMessage : styles.aiMessage
+                ]}
+            >
+                {/* 用户消息：正常显示 */}
                 {message.isUser ? (
-                    <Text style={styles.userText}>
-                        {message.text}
-                    </Text>
+                    <View style={[styles.messageBubble, styles.userBubble]}>
+                        <Text style={styles.userText}>
+                            {message.text}
+                        </Text>
+                        <Text style={styles.timestamp}>
+                            {message.timestamp.toLocaleTimeString('zh-CN', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            })}
+                        </Text>
+                    </View>
                 ) : (
-                    <Markdown style={markdownStyles}>
-                        {message.text}
-                    </Markdown>
+                    /* AI 消息：如果有待确认更新，只显示字段信息；否则显示完整消息 */
+                    hasPendingUpdate ? (
+                        <View style={styles.updateCard}>
+                            <View style={styles.updateHeader}>
+                                <MaterialIcons name="edit" size={18} color="#4F46E5" />
+                                <Text style={styles.updateTitle}>请确认以下信息</Text>
+                            </View>
+                            {Object.entries(pendingUpdate.formData).map(([key, value]) => {
+                                if (value === undefined || value === null) return null;
+                                
+                                const fieldMap: Record<string, string> = {
+                                    realName: '姓名',
+                                    position: '职位',
+                                    companyName: '公司',
+                                    phone: '电话',
+                                    email: '邮箱',
+                                    wechat: '微信',
+                                    address: '地址',
+                                    industry: '行业',
+                                    aboutMe: '个人简介',
+                                    hometown: '家乡',
+                                    residence: '常驻',
+                                    hobbies: '兴趣爱好',
+                                    personality: '性格特点',
+                                    focusIndustry: '关注行业',
+                                    circles: '圈层',
+                                    companyIntro: '公司简介',
+                                };
+                                
+                                const fieldName = fieldMap[key] || key;
+                                
+                                return (
+                                    <View key={key} style={styles.fieldItem}>
+                                        <Text style={styles.fieldLabel}>{fieldName}</Text>
+                                        <Text style={styles.fieldValue}>{String(value)}</Text>
+                                    </View>
+                                );
+                            })}
+                            <View style={styles.confirmButtons}>
+                                <TouchableOpacity 
+                                    style={styles.confirmButton}
+                                    onPress={confirmUpdate}
+                                >
+                                    <MaterialIcons name="check" size={18} color="#ffffff" />
+                                    <Text style={styles.confirmButtonText}>确认更新</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style={styles.cancelButton}
+                                    onPress={cancelUpdate}
+                                >
+                                    <MaterialIcons name="close" size={18} color="#64748b" />
+                                    <Text style={styles.cancelButtonText}>取消</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    ) : (
+                        <View style={[styles.messageBubble, styles.aiBubble]}>
+                            <Markdown style={markdownStyles}>
+                                {message.text}
+                            </Markdown>
+                            <Text style={styles.timestamp}>
+                                {message.timestamp.toLocaleTimeString('zh-CN', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                })}
+                            </Text>
+                        </View>
+                    )
                 )}
-                <Text style={styles.timestamp}>
-                    {message.timestamp.toLocaleTimeString('zh-CN', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    })}
-                </Text>
             </View>
-            {/* 如果这条消息有待确认的更新，显示确认按钮 */}
-            {pendingUpdate && pendingUpdate.messageId === message.id && (
-                <View style={styles.confirmButtons}>
-                    <TouchableOpacity 
-                        style={styles.confirmButton}
-                        onPress={confirmUpdate}
-                    >
-                        <MaterialIcons name="check" size={16} color="#ffffff" />
-                        <Text style={styles.confirmButtonText}>确认更新</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={styles.cancelButton}
-                        onPress={cancelUpdate}
-                    >
-                        <MaterialIcons name="close" size={16} color="#64748b" />
-                        <Text style={styles.cancelButtonText}>取消</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-        </View>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -556,7 +608,6 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
     },
     aiMessage: {
-        alignItems: 'flex-start',
     },
     messageBubble: {
         maxWidth: '80%',
@@ -592,37 +643,82 @@ const styles = StyleSheet.create({
         color: '#94a3b8',
         marginTop: 4,
     },
+    updateCard: {
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        padding: 16,
+        width: '100%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    updateHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 12,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    updateTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#4F46E5',
+    },
+    fieldItem: {
+        marginBottom: 12,
+    },
+    fieldLabel: {
+        fontSize: 12,
+        color: '#64748b',
+        marginBottom: 4,
+        fontWeight: '500',
+    },
+    fieldValue: {
+        fontSize: 15,
+        color: '#1e293b',
+        fontWeight: '500',
+    },
     confirmButtons: {
         flexDirection: 'row',
-        marginTop: 8,
+        marginTop: 4,
         gap: 8,
     },
     confirmButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: '#4F46E5',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 6,
-        gap: 4,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 8,
+        gap: 6,
     },
     confirmButtonText: {
         color: '#ffffff',
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: '600',
     },
     cancelButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: '#f1f5f9',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 6,
-        gap: 4,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 8,
+        gap: 6,
     },
     cancelButtonText: {
         color: '#64748b',
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: '600',
     },
     loadingContainer: {

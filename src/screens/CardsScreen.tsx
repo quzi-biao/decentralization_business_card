@@ -56,6 +56,7 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                     <MyCard 
                         cardData={cardData} 
                         onPress={() => navigation.navigate('CardDetail', { cardData })}
+                        onAIAssistantPress={() => (navigation as any).navigate('AIAssistant')}
                     />
                 </View>
 
