@@ -2,20 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { StackScreenProps } from '@react-navigation/stack';
 import { useExchangeStore, CardExchange } from '../store/useExchangeStore';
 import { downloadEncryptedCard, getAccessGrant, decryptCardData, revokeAccessGrant, isGrantRevoked } from '../services/storageService';
 import { getIdentity } from '../services/identityService';
-import { BusinessCardData } from '../store/useCardStore';
+import { CollectionStackParamList } from '../navigation/CollectionStack';
 
 /**
  * 名片收藏屏幕
  * 显示已交换的名片列表
  */
 
-const CollectionScreen = () => {
+type Props = StackScreenProps<CollectionStackParamList, 'CollectionList'>;
+
+const CollectionScreen: React.FC<Props> = ({ navigation }) => {
     const { exchanges, exchangedCards, setExchangedCard, revokeExchange, loadExchanges } = useExchangeStore();
-    const [selectedCard, setSelectedCard] = useState<string | null>(null);
-    const [isScreenProtected, setIsScreenProtected] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         loadExchanges();
@@ -37,8 +39,7 @@ const CollectionScreen = () => {
             // 检查是否已解密
             const existingCard = exchangedCards.get(exchange.peerDid);
             if (existingCard?.isDecrypted && existingCard.cardData) {
-                setSelectedCard(exchange.peerDid);
-                enableScreenProtection();
+                navigation.navigate('CardDetail', { cardData: existingCard.cardData });
                 return;
             }
 
@@ -57,29 +58,13 @@ const CollectionScreen = () => {
 
             const cardData = await decryptCardData(encryptedPackage, grant);
             setExchangedCard(exchange.peerDid, cardData);
-            setSelectedCard(exchange.peerDid);
-            enableScreenProtection();
+            navigation.navigate('CardDetail', { cardData });
         } catch (error) {
             console.error('Failed to view card:', error);
             Alert.alert('错误', '无法查看名片');
         }
     };
 
-    // 启用截屏保护
-    const enableScreenProtection = () => {
-        setIsScreenProtected(true);
-        // Android 可以使用 FLAG_SECURE，iOS 需要其他方案
-        if (Platform.OS === 'android') {
-            // 实际实现需要原生模块
-            console.log('Screen protection enabled');
-        }
-    };
-
-    // 关闭名片详情
-    const closeCardDetail = () => {
-        setSelectedCard(null);
-        setIsScreenProtected(false);
-    };
 
     // 撤销访问
     const handleRevokeAccess = (exchange: CardExchange) => {
@@ -111,7 +96,7 @@ const CollectionScreen = () => {
         const cardData = exchangedCard?.cardData;
 
         return (
-            <TouchableOpacity
+            <TouchableOpacity 
                 style={styles.exchangeCard}
                 onPress={() => viewCardDetail(item)}
             >
@@ -155,55 +140,6 @@ const CollectionScreen = () => {
         );
     };
 
-    // 渲染名片详情
-    const renderCardDetail = () => {
-        if (!selectedCard) return null;
-
-        const exchangedCard = exchangedCards.get(selectedCard);
-        const cardData = exchangedCard?.cardData;
-
-        if (!cardData) return null;
-
-        return (
-            <View style={styles.detailOverlay}>
-                <SafeAreaView style={styles.detailContainer}>
-                    <View style={styles.detailHeader}>
-                        <Text style={styles.detailTitle}>名片详情</Text>
-                        <TouchableOpacity onPress={closeCardDetail}>
-                            <Text style={styles.closeButton}>✕</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {isScreenProtected && (
-                        <View style={styles.protectionBanner}>
-                            <Text style={styles.protectionText}>🔒 截屏保护已启用</Text>
-                        </View>
-                    )}
-
-                    <FlatList
-                        data={[
-                            { label: '姓名', value: cardData.realName },
-                            { label: '职位', value: cardData.position },
-                            { label: '公司', value: cardData.companyName },
-                            { label: '行业', value: cardData.industry },
-                            { label: '电话', value: cardData.phone },
-                            { label: '邮箱', value: cardData.email },
-                            { label: '微信', value: cardData.wechat },
-                            { label: '地址', value: cardData.address },
-                        ]}
-                        keyExtractor={(item) => item.label}
-                        renderItem={({ item }) => (
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>{item.label}</Text>
-                                <Text style={styles.detailValue}>{item.value}</Text>
-                            </View>
-                        )}
-                        style={styles.detailList}
-                    />
-                </SafeAreaView>
-            </View>
-        );
-    };
 
     const activeExchanges = exchanges.filter(e => e.status === 'active');
 
@@ -230,8 +166,6 @@ const CollectionScreen = () => {
                     contentContainerStyle={styles.listContent}
                 />
             )}
-
-            {renderCardDetail()}
         </SafeAreaView>
     );
 };

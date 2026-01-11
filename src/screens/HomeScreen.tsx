@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StackScreenProps } from '@react-navigation/stack';
 import { PremiumCard } from '../components/PremiumCard';
 import { useCardStore } from '../store/useCardStore';
+import { HomeStackParamList } from '../navigation/HomeStack';
 
 const BusinessItemCard = ({ name, description }: any) => (
     <View style={styles.businessCard}>
@@ -11,16 +13,22 @@ const BusinessItemCard = ({ name, description }: any) => (
     </View>
 );
 
-const HomeScreen = () => {
+type Props = StackScreenProps<HomeStackParamList, 'Home'>;
+
+const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const { cardData } = useCardStore();
 
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* 名片卡片 */}
-                <View style={styles.cardContainer}>
+                <TouchableOpacity 
+                    style={styles.cardContainer}
+                    onPress={() => navigation.navigate('CardDetail', { cardData })}
+                    activeOpacity={0.9}
+                >
                     <PremiumCard data={cardData} />
-                </View>
+                </TouchableOpacity>
 
                 {/* 个人简介卡片 */}
                 <View style={styles.card}>

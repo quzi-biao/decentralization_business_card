@@ -9,7 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, Text, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import CardsScreen from './src/screens/CardsScreen';
+import CardsStack from './src/navigation/CardsStack';
 import ExchangeScreen from './src/screens/ExchangeScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import EditCardScreen from './src/screens/EditCardScreen';
@@ -82,7 +82,7 @@ export default function App() {
         >
           <Tab.Screen
             name="Cards"
-            component={CardsScreen}
+            component={CardsStack}
             options={{
               tabBarLabel: '名片夹',
               tabBarIcon: ({ color }) => <TabIcon name="contacts" color={color} />,

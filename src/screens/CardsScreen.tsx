@@ -2,17 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useCardStore } from '../store/useCardStore';
+import { StackScreenProps } from '@react-navigation/stack';
+import { useCardStore, BusinessCardData } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
 import MyCard from '../components/MyCard';
 import { getIdentity } from '../services/identityService';
+import { CardsStackParamList } from '../navigation/CardsStack';
 
 /**
  * 名片夹屏幕 - 主页面
  * 展示我的名片和已收藏的名片
  */
 
-const CardsScreen = () => {
+type Props = StackScreenProps<CardsStackParamList, 'CardsList'>;
+
+const CardsScreen: React.FC<Props> = ({ navigation }) => {
     const { cardData } = useCardStore();
     const { exchanges, exchangedCards, loadExchanges } = useExchangeStore();
     const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +53,10 @@ const CardsScreen = () => {
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* 我的名片卡片 */}
                 <View style={styles.myCardSection}>
-                    <MyCard cardData={cardData} />
+                    <MyCard 
+                        cardData={cardData} 
+                        onPress={() => navigation.navigate('CardDetail', { cardData })}
+                    />
                 </View>
 
                 {/* 搜索栏 */}
@@ -109,6 +116,7 @@ const CardsScreen = () => {
                                     <TouchableOpacity 
                                         key={exchange.id} 
                                         style={styles.cardItem}
+                                        onPress={() => cardData && navigation.navigate('CardDetail', { cardData })}
                                     >
                                         <View style={styles.cardAvatar}>
                                             <Text style={styles.cardAvatarText}>

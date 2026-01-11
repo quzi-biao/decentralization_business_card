@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
+import PageHeader from '../components/PageHeader';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -76,21 +77,19 @@ const EditCardScreen = ({ onClose }: any) => {
     };
 
     return (
-        <View style={styles.container}>
-            <SafeAreaView style={styles.safeArea} edges={['top']}>
-                {/* 顶部导航栏 */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={onClose} style={styles.backButton}>
-                        <Text style={styles.backButtonText}>✕</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>编辑名片</Text>
-                    <TouchableOpacity onPress={handleSave} style={styles.saveHeaderButton}>
-                        <Text style={styles.saveHeaderButtonText}>完成</Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
+        <SafeAreaProvider>
+            <View style={styles.container}>
+                <PageHeader 
+                    title="编辑名片"
+                    onBack={onClose}
+                    rightButton={{
+                        text: '完成',
+                        onPress: handleSave
+                    }}
+                    backgroundColor="#f8fafc"
+                />
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* 基本信息 */}
                 <View style={styles.card}>
                     <SectionHeader title="基本信息" iconName="person" />
@@ -144,60 +143,14 @@ const EditCardScreen = ({ onClose }: any) => {
                 <View style={styles.spacer} />
             </ScrollView>
         </View>
+        </SafeAreaProvider>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8FAFC',
-    },
-    safeArea: {
-        backgroundColor: '#F8FAFC',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 16,
-        backgroundColor: '#F8FAFC',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
-    },
-    backButton: {
-        width: 44,
-        height: 44,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 22,
-        backgroundColor: '#ffffff',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-    },
-    backButtonText: {
-        fontSize: 20,
-        color: '#64748b',
-        fontWeight: '400',
-    },
-    headerTitle: {
-        fontSize: 17,
-        fontWeight: '600',
-        color: '#1e293b',
-    },
-    saveHeaderButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        backgroundColor: '#4F46E5',
-        borderRadius: 22,
-        minWidth: 60,
-        alignItems: 'center',
-    },
-    saveHeaderButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#ffffff',
+        backgroundColor: '#f8fafc',
     },
     scrollContent: {
         padding: 16,
