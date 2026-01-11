@@ -14,6 +14,7 @@ import ExchangeScreen from './src/screens/ExchangeScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import EditCardScreen from './src/screens/EditCardScreen';
 import InitScreen from './src/screens/InitScreen';
+import AIAssistantScreen from './src/screens/AIAssistantScreen';
 import { isInitialized } from './src/services/identityService';
 
 const Tab = createBottomTabNavigator();
@@ -94,6 +95,14 @@ export default function App() {
             options={{
               tabBarLabel: '交换',
               tabBarIcon: ({ color }) => <TabIcon name="swap-horiz" color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="AIAssistant"
+            component={AIAssistantScreen}
+            options={{
+              tabBarLabel: 'AI助手',
+              tabBarIcon: ({ color }) => <TabIcon name="smart-toy" color={color} />,
             }}
           />
           <Tab.Screen

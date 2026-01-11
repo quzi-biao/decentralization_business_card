@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
+import { useCardStore } from '../store/useCardStore';
+import { parseAIResponse, hasCompleteFormData, mergeFormData, generateFormSummary } from '../utils/formDataParser';
 
 interface Message {
     id: string;
@@ -17,17 +19,13 @@ interface Message {
  * 使用 n8n AI Agent 提供智能对话功能
  */
 const AIAssistantScreen: React.FC = () => {
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            text: '你好！我是名片助手，有什么可以帮助你的吗？',
-            isUser: false,
-            timestamp: new Date(),
-        }
-    ]);
+    const { cardData, updateCardData } = useCardStore();
+    const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [loading, setLoading] = useState(false);
     const [sessionId] = useState(`session-${Date.now()}`);
+    const [formCompleted, setFormCompleted] = useState(false);
+    const [updatedFields, setUpdatedFields] = useState<string[]>([]);
     const scrollViewRef = useRef<ScrollView>(null);
 
     useEffect(() => {
@@ -50,20 +48,83 @@ const AIAssistantScreen: React.FC = () => {
 
         try {
             // 调用 n8n AI Agent
-            const response = await callN8NAgent(
+            const rawResponse = await callN8NAgent(
                 N8N_CONFIG.agentWebhookPath,
                 userMessage.text,
                 sessionId
             );
 
+            // 解析 AI 响应
+            const parsedResponse = parseAIResponse(rawResponse);
+
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
-                text: response.output,
+                text: parsedResponse.output,
                 isUser: false,
                 timestamp: new Date(),
             };
 
             setMessages(prev => [...prev, aiMessage]);
+
+            // 实时更新表单数据（只要有 formData 就立即更新）
+            console.log('parsedResponse', parsedResponse);
+            if (parsedResponse.formData) {
+                // 获取本次更新的字段
+                const newlyUpdatedFields = Object.keys(parsedResponse.formData).filter(
+                    key => {
+                        const value = (parsedResponse.formData as any)[key];
+                        return value !== undefined && value !== null;
+                    }
+                );
+                
+                // 合并并更新表单数据
+                const mergedData = mergeFormData(cardData, parsedResponse.formData);
+                updateCardData(mergedData);
+                
+                // 更新已填写字段列表
+                setUpdatedFields(prev => {
+                    const combined = [...new Set([...prev, ...newlyUpdatedFields])];
+                    return combined;
+                });
+                
+                // 如果标记为完成，显示完成状态
+                if (parsedResponse.completed) {
+                    setFormCompleted(true);
+                    
+                    // 添加完成提示消息
+                    const completionMessage: Message = {
+                        id: (Date.now() + 2).toString(),
+                        text: `✅ 名片信息已完成！共填写了 ${Object.keys(parsedResponse.formData).length} 个字段。您可以在"我的"页面查看完整名片。`,
+                        isUser: false,
+                        timestamp: new Date(),
+                    };
+                    setMessages(prev => [...prev, completionMessage]);
+                } else if (newlyUpdatedFields.length > 0) {
+                    // 显示字段更新提示
+                    const fieldNames = newlyUpdatedFields.map(field => {
+                        const fieldMap: Record<string, string> = {
+                            realName: '姓名',
+                            position: '职位',
+                            companyName: '公司',
+                            phone: '电话',
+                            email: '邮箱',
+                            wechat: '微信',
+                            address: '地址',
+                            industry: '行业',
+                            aboutMe: '个人简介',
+                        };
+                        return fieldMap[field] || field;
+                    }).join('、');
+                    
+                    const updateMessage: Message = {
+                        id: (Date.now() + 2).toString(),
+                        text: `📝 已更新：${fieldNames}`,
+                        isUser: false,
+                        timestamp: new Date(),
+                    };
+                    setMessages(prev => [...prev, updateMessage]);
+                }
+            }
         } catch (error) {
             console.error('Error calling AI Agent:', error);
             
@@ -111,8 +172,16 @@ const AIAssistantScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
-                <MaterialIcons name="smart-toy" size={24} color="#4F46E5" />
-                <Text style={styles.headerTitle}>AI 助手</Text>
+                <View style={styles.headerLeft}>
+                    <MaterialIcons name="smart-toy" size={24} color="#4F46E5" />
+                    <Text style={styles.headerTitle}>AI 名片助手</Text>
+                </View>
+                {formCompleted && (
+                    <View style={styles.completedBadge}>
+                        <MaterialIcons name="check-circle" size={16} color="#10b981" />
+                        <Text style={styles.completedText}>已完成</Text>
+                    </View>
+                )}
             </View>
 
             <KeyboardAvoidingView 
@@ -174,17 +243,36 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#f8fafc',
         borderBottomWidth: 1,
         borderBottomColor: '#e2e8f0',
+    },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 12,
     },
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
         color: '#1e293b',
+    },
+    completedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#d1fae5',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    completedText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#10b981',
     },
     content: {
         flex: 1,
