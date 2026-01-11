@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { BusinessCardData } from '../store/useCardStore';
 
 interface MyCardProps {
@@ -29,9 +30,12 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
                             {cardData.realName || '未设置姓名'}
                         </Text>
                         {cardData.phone && (
-                            <Text style={styles.phoneInline} numberOfLines={1}>
-                                📱 {cardData.phone}
-                            </Text>
+                            <View style={styles.phoneContainer}>
+                                <MaterialIcons name="phone" size={14} color="#64748b" />
+                                <Text style={styles.phoneInline} numberOfLines={1}>
+                                    {cardData.phone}
+                                </Text>
+                            </View>
                         )}
                     </View>
                     <Text style={styles.position} numberOfLines={1}>
@@ -48,7 +52,10 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
                 <View style={styles.middleSection}>
                     {cardData.mainBusiness && cardData.mainBusiness.length > 0 && (
                         <View style={styles.businessColumn}>
-                            <Text style={styles.columnTitle}>💼 主营业务</Text>
+                            <View style={styles.columnTitleRow}>
+                                <MaterialIcons name="work-outline" size={14} color="#4F46E5" />
+                                <Text style={styles.columnTitle}>主营业务</Text>
+                            </View>
                             {cardData.mainBusiness.slice(0, 2).map((item, index) => (
                                 <Text key={item.id || index} style={styles.businessItem} numberOfLines={1}>
                                     • {item.name}
@@ -62,7 +69,10 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
                     
                     {cardData.serviceNeeds && cardData.serviceNeeds.length > 0 && (
                         <View style={styles.businessColumn}>
-                            <Text style={styles.columnTitle}>🎯 服务需求</Text>
+                            <View style={styles.columnTitleRow}>
+                                <MaterialIcons name="flag" size={14} color="#4F46E5" />
+                                <Text style={styles.columnTitle}>服务需求</Text>
+                            </View>
                             {cardData.serviceNeeds.slice(0, 2).map((item, index) => (
                                 <Text key={item.id || index} style={styles.businessItem} numberOfLines={1}>
                                     • {item.name}
@@ -129,6 +139,11 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#1e293b',
     },
+    phoneContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
     phoneInline: {
         fontSize: 13,
         color: '#64748b',
@@ -155,11 +170,16 @@ const styles = StyleSheet.create({
     businessColumn: {
         flex: 1,
     },
+    columnTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 6,
+    },
     columnTitle: {
         fontSize: 12,
         fontWeight: '600',
         color: '#4F46E5',
-        marginBottom: 6,
     },
     businessItem: {
         fontSize: 11,

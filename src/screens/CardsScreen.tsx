@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useCardStore } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
 import MyCard from '../components/MyCard';
@@ -54,7 +55,7 @@ const CardsScreen = () => {
                 {/* 搜索栏 */}
                 <View style={styles.searchSection}>
                     <View style={styles.searchContainer}>
-                        <Text style={styles.searchIcon}>🔍</Text>
+                        <MaterialIcons name="search" size={20} color="#94a3b8" style={styles.searchIcon} />
                         <TextInput
                             style={styles.searchInput}
                             placeholder="搜索姓名、公司、职位"
@@ -68,9 +69,12 @@ const CardsScreen = () => {
                 {/* 名片列表 */}
                 <View style={styles.collectionSection}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            📋 名片列表 ({activeExchanges.length})
-                        </Text>
+                        <View style={styles.sectionTitleRow}>
+                            <MaterialIcons name="contacts" size={18} color="#1e293b" />
+                            <Text style={styles.sectionTitle}>
+                                名片列表 ({activeExchanges.length})
+                            </Text>
+                        </View>
                         {activeExchanges.length > 0 && (
                             <TouchableOpacity>
                                 <Text style={styles.filterButton}>筛选 ▼</Text>
@@ -80,7 +84,7 @@ const CardsScreen = () => {
 
                     {filteredCards.length === 0 ? (
                         <View style={styles.emptyState}>
-                            <Text style={styles.emptyEmoji}>📇</Text>
+                            <MaterialIcons name="contacts" size={64} color="#cbd5e1" style={styles.emptyIcon} />
                             <Text style={styles.emptyTitle}>
                                 {searchQuery ? '没有找到相关名片' : '还没有收藏的名片'}
                             </Text>
@@ -175,7 +179,6 @@ const styles = StyleSheet.create({
         elevation: 1,
     },
     searchIcon: {
-        fontSize: 16,
         marginRight: 8,
     },
     searchInput: {
@@ -288,9 +291,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 16,
     },
+    sectionTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
     sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 18,
+        fontWeight: '700',
         color: '#1e293b',
     },
     filterButton: {
@@ -302,8 +310,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 60,
     },
-    emptyEmoji: {
-        fontSize: 64,
+    emptyIcon: {
         marginBottom: 16,
     },
     emptyTitle: {

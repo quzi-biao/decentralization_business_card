@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { MaterialIcons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useCardStore } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
@@ -136,7 +137,7 @@ const ExchangeScreen = () => {
                 <View style={styles.qrSection}>
                     <View style={styles.qrCard}>
                         <View style={styles.qrHeader}>
-                            <Text style={styles.qrIcon}>📱</Text>
+                            <MaterialIcons name="qr-code-2" size={24} color="#4F46E5" style={styles.qrIcon} />
                             <View>
                                 <Text style={styles.qrTitle}>我的二维码</Text>
                                 <Text style={styles.qrSubtitle}>让对方扫描此二维码交换名片</Text>
@@ -154,22 +155,31 @@ const ExchangeScreen = () => {
                             </View>
                         ) : (
                             <View style={styles.qrPlaceholder}>
-                                <Text style={styles.placeholderText}>⏳ 生成中...</Text>
+                                <MaterialIcons name="hourglass-empty" size={48} color="#cbd5e1" />
+                                <Text style={styles.placeholderText}>生成中...</Text>
                             </View>
                         )}
 
                         <View style={styles.qrActions}>
                             <TouchableOpacity style={styles.qrActionButton}>
-                                <Text style={styles.qrActionText}>💾 保存图片</Text>
+                                <MaterialIcons name="save-alt" size={18} color="#64748b" />
+                                <Text style={styles.qrActionText}>保存图片</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={[styles.qrActionButton, styles.qrActionButtonPrimary]}>
-                                <Text style={[styles.qrActionText, styles.qrActionTextPrimary]}>📤 分享</Text>
+                                <MaterialIcons name="share" size={18} color="#ffffff" />
+                                <Text style={[styles.qrActionText, styles.qrActionTextPrimary]}>分享</Text>
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.qrInfo}>
-                            <Text style={styles.qrInfoText}>🔒 端到端加密保护</Text>
-                            <Text style={styles.qrInfoText}>🔑 只有交换过的用户才能解密</Text>
+                            <View style={styles.qrInfoRow}>
+                                <MaterialIcons name="lock" size={16} color="#64748b" />
+                                <Text style={styles.qrInfoText}>端到端加密保护</Text>
+                            </View>
+                            <View style={styles.qrInfoRow}>
+                                <MaterialIcons name="vpn-key" size={16} color="#64748b" />
+                                <Text style={styles.qrInfoText}>只有交换过的用户才能解密</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
@@ -180,7 +190,7 @@ const ExchangeScreen = () => {
                         style={styles.scanCard}
                         onPress={() => setMode('scan')}
                     >
-                        <Text style={styles.scanIcon}>📷</Text>
+                        <MaterialIcons name="qr-code-scanner" size={48} color="#4F46E5" style={styles.scanIcon} />
                         <Text style={styles.scanTitle}>扫描对方二维码</Text>
                         <Text style={styles.scanHint}>点击开始扫描</Text>
                     </TouchableOpacity>
@@ -224,9 +234,12 @@ const ExchangeScreen = () => {
                                         onBarcodeScanned={isProcessing ? undefined : handleBarCodeScanned}
                                     />
                                 </View>
-                                <Text style={styles.cameraTip}>
-                                    {isProcessing ? '⏳ 处理中...' : '将二维码对准扫描框'}
-                                </Text>
+                                <View style={styles.cameraTipContainer}>
+                                    {isProcessing && <MaterialIcons name="hourglass-empty" size={16} color="#ffffff" style={styles.cameraTipIcon} />}
+                                    <Text style={styles.cameraTip}>
+                                        {isProcessing ? '处理中...' : '将二维码对准扫描框'}
+                                    </Text>
+                                </View>
                             </View>
                         )}
                     </View>
@@ -269,7 +282,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     qrIcon: {
-        fontSize: 24,
         marginRight: 12,
     },
     qrTitle: {
@@ -296,11 +308,14 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+        gap: 12,
     },
     placeholderText: {
-        color: '#94a3b8',
         fontSize: 14,
+        textAlign: 'center',
     },
     qrActions: {
         flexDirection: 'row',
@@ -309,12 +324,15 @@ const styles = StyleSheet.create({
     },
     qrActionButton: {
         flex: 1,
+        flexDirection: 'row',
         paddingVertical: 12,
         borderRadius: 10,
         backgroundColor: '#F8FAFC',
         borderWidth: 1,
         borderColor: '#e2e8f0',
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
     },
     qrActionButtonPrimary: {
         backgroundColor: '#4F46E5',
@@ -332,12 +350,17 @@ const styles = StyleSheet.create({
         paddingTop: 16,
         borderTopWidth: 1,
         borderTopColor: '#f1f5f9',
+        gap: 8,
+    },
+    qrInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: 6,
     },
     qrInfoText: {
-        fontSize: 11,
-        color: '#10B981',
-        textAlign: 'center',
+        fontSize: 12,
+        color: '#64748b',
     },
     scanSection: {
         marginBottom: 16,
@@ -438,10 +461,19 @@ const styles = StyleSheet.create({
         borderWidth: 3,
         borderColor: '#4F46E5',
     },
+    cameraTipContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 16,
+        gap: 6,
+    },
+    cameraTipIcon: {
+        marginRight: 4,
+    },
     cameraTip: {
-        marginTop: 24,
-        fontSize: 15,
         color: '#ffffff',
+        fontSize: 14,
         textAlign: 'center',
     },
 });

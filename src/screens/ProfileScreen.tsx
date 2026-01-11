@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 import MyCard from '../components/MyCard';
 
@@ -96,17 +97,17 @@ const ProfileScreen = ({ onEditPress }: any) => {
                         style={styles.menuItem}
                         onPress={onEditPress}
                     >
-                        <Text style={styles.menuIcon}>✏️</Text>
+                        <MaterialIcons name="edit" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>编辑我的名片</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🎨</Text>
+                        <MaterialIcons name="palette" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>名片模板选择</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>📤</Text>
+                        <MaterialIcons name="file-upload" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>导出名片</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
@@ -118,22 +119,22 @@ const ProfileScreen = ({ onEditPress }: any) => {
                         style={styles.menuItem}
                         onPress={() => setShowMnemonic(true)}
                     >
-                        <Text style={styles.menuIcon}>🔑</Text>
+                        <MaterialIcons name="vpn-key" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>查看助记词</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>💾</Text>
+                        <MaterialIcons name="backup" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>备份与恢复</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🛡️</Text>
+                        <MaterialIcons name="security" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>访问权限管理</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🚫</Text>
+                        <MaterialIcons name="block" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>撤销列表</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
@@ -142,12 +143,12 @@ const ProfileScreen = ({ onEditPress }: any) => {
                 {/* AI 助手 */}
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>💡</Text>
+                        <MaterialIcons name="lightbulb-outline" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>优化名片内容</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>📝</Text>
+                        <MaterialIcons name="description" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>生成个人简介</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
@@ -156,22 +157,22 @@ const ProfileScreen = ({ onEditPress }: any) => {
                 {/* 设置 */}
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🔒</Text>
+                        <MaterialIcons name="lock" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>隐私设置</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🔔</Text>
+                        <MaterialIcons name="notifications" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>通知设置</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🎨</Text>
+                        <MaterialIcons name="color-lens" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>主题切换</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🌍</Text>
+                        <MaterialIcons name="language" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>语言选择</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
@@ -180,17 +181,17 @@ const ProfileScreen = ({ onEditPress }: any) => {
                 {/* 关于 */}
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>📖</Text>
+                        <MaterialIcons name="menu-book" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>使用教程</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>❓</Text>
+                        <MaterialIcons name="help-outline" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>常见问题</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>📧</Text>
+                        <MaterialIcons name="email" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>联系我们</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
@@ -428,9 +429,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#f1f5f9',
     },
     menuIcon: {
-        fontSize: 20,
         marginRight: 12,
-        width: 24,
     },
     menuText: {
         flex: 1,

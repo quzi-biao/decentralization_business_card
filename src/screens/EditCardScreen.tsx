@@ -1,15 +1,16 @@
 import React from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const SectionHeader = ({ title, emoji }: any) => (
+const SectionHeader = ({ title, iconName }: any) => (
     <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderEmoji}>{emoji}</Text>
+        <MaterialIcons name={iconName} size={20} color="#4F46E5" style={styles.sectionIcon} />
         <Text style={styles.sectionHeaderText}>{title}</Text>
     </View>
 );
@@ -92,7 +93,7 @@ const EditCardScreen = ({ onClose }: any) => {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* 基本信息 */}
                 <View style={styles.card}>
-                    <SectionHeader title="基本信息" emoji="👤" />
+                    <SectionHeader title="基本信息" iconName="person" />
                     <InputField label="姓名" value={cardData.realName} onChangeText={(v: any) => updateCardData({ realName: v })} placeholder="请输入姓名" />
                     <InputField label="职位" value={cardData.position} onChangeText={(v: any) => updateCardData({ position: v })} placeholder="请输入职位" />
                     <InputField label="公司名称" value={cardData.companyName} onChangeText={(v: any) => updateCardData({ companyName: v })} placeholder="请输入公司名称" />
@@ -102,7 +103,7 @@ const EditCardScreen = ({ onClose }: any) => {
 
                 {/* 联系方式 */}
                 <View style={styles.card}>
-                    <SectionHeader title="联系方式" emoji="📧" />
+                    <SectionHeader title="联系方式" iconName="contact-mail" />
                     <InputField label="电话" value={cardData.phone} onChangeText={(v: any) => updateCardData({ phone: v })} placeholder="请输入电话" />
                     <InputField label="邮箱" value={cardData.email} onChangeText={(v: any) => updateCardData({ email: v })} placeholder="请输入邮箱" />
                     <InputField label="微信" value={cardData.wechat} onChangeText={(v: any) => updateCardData({ wechat: v })} placeholder="请输入微信号" />
@@ -110,7 +111,7 @@ const EditCardScreen = ({ onClose }: any) => {
 
                 {/* 主营业务 */}
                 <View style={styles.card}>
-                    <SectionHeader title="主营业务" emoji="💼" />
+                    <SectionHeader title="主营业务" iconName="work" />
                     {cardData.mainBusiness.map(item => (
                         <BusinessItemCard
                             key={item.id}
@@ -126,7 +127,7 @@ const EditCardScreen = ({ onClose }: any) => {
 
                 {/* 服务需求 */}
                 <View style={styles.card}>
-                    <SectionHeader title="服务需求" emoji="🎯" />
+                    <SectionHeader title="服务需求" iconName="flag" />
                     {cardData.serviceNeeds.map(item => (
                         <BusinessItemCard
                             key={item.id}
@@ -217,8 +218,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 16,
     },
-    sectionHeaderEmoji: {
-        fontSize: 20,
+    sectionIcon: {
         marginRight: 8,
     },
     sectionHeaderText: {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useExchangeStore, CardExchange } from '../store/useExchangeStore';
 import { downloadEncryptedCard, getAccessGrant, decryptCardData, revokeAccessGrant, isGrantRevoked } from '../services/storageService';
 import { getIdentity } from '../services/identityService';
@@ -217,7 +218,7 @@ const CollectionScreen = () => {
 
             {activeExchanges.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyEmoji}>📇</Text>
+                    <MaterialIcons name="contacts" size={64} color="#cbd5e1" style={styles.emptyIcon} />
                     <Text style={styles.emptyText}>还没有交换过名片</Text>
                     <Text style={styles.emptyHint}>去"交换"页面扫描对方的二维码</Text>
                 </View>
@@ -346,8 +347,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 40,
     },
-    emptyEmoji: {
-        fontSize: 64,
+    emptyIcon: {
         marginBottom: 16,
     },
     emptyText: {
