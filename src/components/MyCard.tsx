@@ -11,6 +11,31 @@ interface MyCardProps {
 const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
     const CardWrapper = onPress ? TouchableOpacity : View;
     
+    // 检查是否有任何名片内容（排除系统默认字段）
+    const hasCardData = Boolean(
+        cardData.realName || cardData.position || cardData.companyName || 
+        cardData.industry || cardData.phone || cardData.email || 
+        cardData.wechat || cardData.address || cardData.aboutMe ||
+        cardData.hometown || cardData.residence || cardData.hobbies ||
+        cardData.personality || cardData.focusIndustry || cardData.circles ||
+        cardData.companyIntro || cardData.mainBusiness?.length > 0 || 
+        cardData.serviceNeeds?.length > 0 ||
+        cardData.avatarUrl || cardData.wechatQrCode || cardData.introVideoUrl || cardData.videoChannelId
+    );
+    
+    // 如果没有任何内容，显示空状态
+    if (!hasCardData) {
+        return (
+            <View style={styles.emptyCard}>
+                <Text style={styles.emptyIcon}>📇</Text>
+                <Text style={styles.emptyTitle}>还没有名片</Text>
+                <Text style={styles.emptyDescription}>
+                    点击下方按钮开始创建您的专属名片
+                </Text>
+            </View>
+        );
+    }
+    
     return (
         <CardWrapper 
             style={styles.myCard}
@@ -27,7 +52,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
                 <View style={styles.basicInfo}>
                     <View style={styles.nameRow}>
                         <Text style={styles.name} numberOfLines={1}>
-                            {cardData.realName || '未设置姓名'}
+                            {cardData.realName || '未填写姓名'}
                         </Text>
                         {cardData.phone && (
                             <View style={styles.phoneContainer}>
@@ -39,10 +64,10 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress }) => {
                         )}
                     </View>
                     <Text style={styles.position} numberOfLines={1}>
-                        {cardData.position || '未设置职位'}
+                        {cardData.position || '未填写职位'}
                     </Text>
                     <Text style={styles.company} numberOfLines={1}>
-                        {cardData.companyName || '未设置公司'}
+                        {cardData.companyName || '未填写公司'}
                     </Text>
                 </View>
             </View>
@@ -188,11 +213,35 @@ const styles = StyleSheet.create({
         paddingLeft: 4,
     },
     moreText: {
-        fontSize: 10,
+        fontSize: 11,
         color: '#94a3b8',
-        fontStyle: 'italic',
-        marginTop: 2,
-        paddingLeft: 4,
+        marginTop: 4,
+    },
+    emptyCard: {
+        backgroundColor: '#ffffff',
+        borderRadius: 20,
+        padding: 40,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+        minHeight: 200,
+    },
+    emptyIcon: {
+        fontSize: 48,
+        marginBottom: 12,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1e293b',
+        marginBottom: 8,
+    },
+    emptyDescription: {
+        fontSize: 14,
+        color: '#64748b',
+        textAlign: 'center',
+        lineHeight: 20,
     },
 });
 

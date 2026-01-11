@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { StackScreenProps } from '@react-navigation/stack';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 import MyCard from '../components/MyCard';
+import { ProfileStackParamList } from '../navigation/ProfileStack';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -63,9 +65,17 @@ const BusinessItemCard = ({ item, onUpdate, onDelete }: { item: BusinessItem, on
     </View>
 );
 
-const ProfileScreen = ({ onEditPress }: any) => {
+type Props = StackScreenProps<ProfileStackParamList, 'ProfileMain'> & {
+    onEditPress: () => void;
+};
+
+const ProfileScreen = ({ navigation, onEditPress }: Props) => {
     const { cardData, updateCardData } = useCardStore();
     const [showMnemonic, setShowMnemonic] = useState(false);
+    
+    const handleCardPress = () => {
+        navigation.navigate('CardDetail', { cardData });
+    };
 
     const handleUpdateItem = (field: 'mainBusiness' | 'serviceNeeds', id: string, data: Partial<BusinessItem>) => {
         const newList = cardData[field].map(item => item.id === id ? { ...item, ...data } : item);
@@ -87,7 +97,7 @@ const ProfileScreen = ({ onEditPress }: any) => {
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* 我的名片 */}
             <View style={styles.profileHeader}>
-                <MyCard cardData={cardData} onPress={onEditPress} />
+                <MyCard cardData={cardData} onPress={handleCardPress} />
             </View>
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
