@@ -10,8 +10,8 @@ import { View, Text, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import CardsStack from './src/navigation/CardsStack';
+import ProfileStack from './src/navigation/ProfileStack';
 import ExchangeScreen from './src/screens/ExchangeScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
 import EditCardScreen from './src/screens/EditCardScreen';
 import InitScreen from './src/screens/InitScreen';
 import AIAssistantScreen from './src/screens/AIAssistantScreen';
@@ -112,7 +112,7 @@ export default function App() {
               tabBarIcon: ({ color }) => <TabIcon name="person" color={color} />,
             }}
           >
-            {(props) => <ProfileScreen {...props} onEditPress={() => setShowEditCard(true)} />}
+            {() => <ProfileStack onEditPress={() => setShowEditCard(true)} />}
           </Tab.Screen>
         </Tab.Navigator>
 

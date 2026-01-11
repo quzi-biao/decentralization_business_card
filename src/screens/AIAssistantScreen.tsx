@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import Markdown from 'react-native-markdown-display';
+import { useNavigation } from '@react-navigation/native';
+import { useCardStore } from '../store/useCardStore';
 import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
-import { useCardStore } from '../store/useCardStore';
 import { parseAIResponse, hasCompleteFormData, mergeFormData, generateFormSummary } from '../utils/formDataParser';
 
 interface Message {
@@ -19,6 +21,7 @@ interface Message {
  * 使用 n8n AI Agent 提供智能对话功能
  */
 const AIAssistantScreen: React.FC = () => {
+    const navigation = useNavigation<any>();
     const { cardData, updateCardData } = useCardStore();
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
@@ -26,10 +29,46 @@ const AIAssistantScreen: React.FC = () => {
     const [sessionId] = useState(`session-${Date.now()}`);
     const [formCompleted, setFormCompleted] = useState(false);
     const [updatedFields, setUpdatedFields] = useState<string[]>([]);
+    const [pendingUpdate, setPendingUpdate] = useState<{
+        formData: any;
+        messageId: string;
+    } | null>(null);
     const scrollViewRef = useRef<ScrollView>(null);
 
+    // 计算名片完成度
+    const calculateProgress = () => {
+        const requiredFields = [
+            'realName', 'position', 'companyName', 'industry',
+            'phone', 'email', 'wechat', 'address',
+            'aboutMe', 'hometown', 'residence', 'hobbies',
+            'personality', 'focusIndustry', 'circles', 'companyIntro'
+        ];
+        
+        const filledCount = requiredFields.filter(field => {
+            const value = (cardData as any)[field];
+            return value && value.toString().trim() !== '';
+        }).length;
+        
+        const progress = Math.round((filledCount / requiredFields.length) * 100);
+        return { progress, filledCount, totalCount: requiredFields.length };
+    };
+
+    const progressInfo = calculateProgress();
+
+    const handleProgressPress = () => {
+        navigation.navigate('Profile', {
+            screen: 'CardDetail',
+            params: { cardData }
+        });
+    };
+
     useEffect(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
+        // 使用 setTimeout 确保在消息渲染完成后再滚动
+        const timer = setTimeout(() => {
+            scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+        
+        return () => clearTimeout(timer);
     }, [messages]);
 
     // 添加开场白并发送当前已填写的信息给 AI
@@ -118,63 +157,16 @@ const AIAssistantScreen: React.FC = () => {
 
             setMessages(prev => [...prev, aiMessage]);
 
-            // 实时更新表单数据（只要有 formData 就立即更新）
-            console.log('parsedResponse', parsedResponse);
+            // 如果有表单数据，存储为待确认更新
             if (parsedResponse.formData) {
-                // 获取本次更新的字段
-                const newlyUpdatedFields = Object.keys(parsedResponse.formData).filter(
-                    key => {
-                        const value = (parsedResponse.formData as any)[key];
-                        return value !== undefined && value !== null;
-                    }
-                );
-                
-                // 合并并更新表单数据
-                const mergedData = mergeFormData(cardData, parsedResponse.formData);
-                updateCardData(mergedData);
-                
-                // 更新已填写字段列表
-                setUpdatedFields(prev => {
-                    const combined = [...new Set([...prev, ...newlyUpdatedFields])];
-                    return combined;
+                setPendingUpdate({
+                    formData: parsedResponse.formData,
+                    messageId: aiMessage.id,
                 });
                 
                 // 如果标记为完成，显示完成状态
                 if (parsedResponse.completed) {
                     setFormCompleted(true);
-                    
-                    // 添加完成提示消息
-                    const completionMessage: Message = {
-                        id: (Date.now() + 2).toString(),
-                        text: `✅ 名片信息已完成！共填写了 ${Object.keys(parsedResponse.formData).length} 个字段。您可以在"我的"页面查看完整名片。`,
-                        isUser: false,
-                        timestamp: new Date(),
-                    };
-                    setMessages(prev => [...prev, completionMessage]);
-                } else if (newlyUpdatedFields.length > 0) {
-                    // 显示字段更新提示
-                    const fieldNames = newlyUpdatedFields.map(field => {
-                        const fieldMap: Record<string, string> = {
-                            realName: '姓名',
-                            position: '职位',
-                            companyName: '公司',
-                            phone: '电话',
-                            email: '邮箱',
-                            wechat: '微信',
-                            address: '地址',
-                            industry: '行业',
-                            aboutMe: '个人简介',
-                        };
-                        return fieldMap[field] || field;
-                    }).join('、');
-                    
-                    const updateMessage: Message = {
-                        id: (Date.now() + 2).toString(),
-                        text: `📝 已更新：${fieldNames}`,
-                        isUser: false,
-                        timestamp: new Date(),
-                    };
-                    setMessages(prev => [...prev, updateMessage]);
                 }
             }
         } catch (error) {
@@ -193,9 +185,108 @@ const AIAssistantScreen: React.FC = () => {
         }
     };
 
+    const confirmUpdate = async () => {
+        if (!pendingUpdate) return;
+        
+        // 获取本次更新的字段
+        const newlyUpdatedFields = Object.keys(pendingUpdate.formData).filter(
+            key => {
+                const value = (pendingUpdate.formData as any)[key];
+                return value !== undefined && value !== null;
+            }
+        );
+        
+        // 合并并更新表单数据
+        const mergedData = mergeFormData(cardData, pendingUpdate.formData);
+        updateCardData(mergedData);
+        
+        // 更新已填写字段列表
+        setUpdatedFields(prev => {
+            const combined = [...new Set([...prev, ...newlyUpdatedFields])];
+            return combined;
+        });
+        
+        // 显示字段更新提示
+        const fieldNames = newlyUpdatedFields.map(field => {
+            const fieldMap: Record<string, string> = {
+                realName: '姓名',
+                position: '职位',
+                companyName: '公司',
+                phone: '电话',
+                email: '邮箱',
+                wechat: '微信',
+                address: '地址',
+                industry: '行业',
+                aboutMe: '个人简介',
+                hometown: '家乡',
+                residence: '常驻',
+                hobbies: '兴趣爱好',
+                personality: '性格特点',
+                focusIndustry: '关注行业',
+                circles: '圈层',
+                companyIntro: '公司简介',
+            };
+            return fieldMap[field] || field;
+        }).join('、');
+        
+        const updateMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            text: `✅ 已确认更新：${fieldNames}`,
+            isUser: false,
+            timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, updateMessage]);
+        
+        // 清除待确认更新
+        setPendingUpdate(null);
+        
+        // 发送确认消息给 AI，获取下一步引导
+        setLoading(true);
+        try {
+            const confirmationMessage = `已确认更新：${fieldNames}。请继续引导我填写下一个内容。`;
+            
+            const rawResponse = await callN8NAgent(
+                N8N_CONFIG.agentWebhookPath,
+                confirmationMessage,
+                sessionId
+            );
+
+            const parsedResponse = parseAIResponse(rawResponse);
+
+            const aiMessage: Message = {
+                id: (Date.now() + 3).toString(),
+                text: parsedResponse.output,
+                isUser: false,
+                timestamp: new Date(),
+            };
+
+            setMessages(prev => [...prev, aiMessage]);
+
+            // 如果 AI 又返回了新的表单数据，继续存储为待确认
+            if (parsedResponse.formData) {
+                setPendingUpdate({
+                    formData: parsedResponse.formData,
+                    messageId: aiMessage.id,
+                });
+                
+                if (parsedResponse.completed) {
+                    setFormCompleted(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error getting next guidance:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const cancelUpdate = () => {
+        setPendingUpdate(null);
+    };
+
     const renderMessage = (message: Message) => (
-        <View
-            key={message.id}
+        <View 
+            key={message.id} 
             style={[
                 styles.messageContainer,
                 message.isUser ? styles.userMessage : styles.aiMessage
@@ -205,12 +296,15 @@ const AIAssistantScreen: React.FC = () => {
                 styles.messageBubble,
                 message.isUser ? styles.userBubble : styles.aiBubble
             ]}>
-                <Text style={[
-                    styles.messageText,
-                    message.isUser ? styles.userText : styles.aiText
-                ]}>
-                    {message.text}
-                </Text>
+                {message.isUser ? (
+                    <Text style={styles.userText}>
+                        {message.text}
+                    </Text>
+                ) : (
+                    <Markdown style={markdownStyles}>
+                        {message.text}
+                    </Markdown>
+                )}
                 <Text style={styles.timestamp}>
                     {message.timestamp.toLocaleTimeString('zh-CN', { 
                         hour: '2-digit', 
@@ -218,6 +312,25 @@ const AIAssistantScreen: React.FC = () => {
                     })}
                 </Text>
             </View>
+            {/* 如果这条消息有待确认的更新，显示确认按钮 */}
+            {pendingUpdate && pendingUpdate.messageId === message.id && (
+                <View style={styles.confirmButtons}>
+                    <TouchableOpacity 
+                        style={styles.confirmButton}
+                        onPress={confirmUpdate}
+                    >
+                        <MaterialIcons name="check" size={16} color="#ffffff" />
+                        <Text style={styles.confirmButtonText}>确认更新</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.cancelButton}
+                        onPress={cancelUpdate}
+                    >
+                        <MaterialIcons name="close" size={16} color="#64748b" />
+                        <Text style={styles.cancelButtonText}>取消</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 
@@ -228,12 +341,23 @@ const AIAssistantScreen: React.FC = () => {
                     <MaterialIcons name="smart-toy" size={24} color="#4F46E5" />
                     <Text style={styles.headerTitle}>AI 名片助手</Text>
                 </View>
-                {formCompleted && (
-                    <View style={styles.completedBadge}>
-                        <MaterialIcons name="check-circle" size={16} color="#10b981" />
-                        <Text style={styles.completedText}>已完成</Text>
+                <TouchableOpacity 
+                    style={styles.progressContainer}
+                    onPress={handleProgressPress}
+                    activeOpacity={0.7}
+                >
+                    <View style={styles.progressInfo}>
+                        <Text style={styles.progressText}>{progressInfo.progress}%</Text>
+                        <Text style={styles.progressLabel}>完成度</Text>
                     </View>
-                )}
+                    <View style={styles.progressBarContainer}>
+                        <View style={[styles.progressBar, { width: `${progressInfo.progress}%` }]} />
+                    </View>
+                    <View style={styles.qualityBadge}>
+                        <MaterialIcons name="star" size={14} color="#f59e0b" />
+                        <Text style={styles.qualityText}>{progressInfo.progress}分</Text>
+                    </View>
+                </TouchableOpacity>
             </View>
 
             <KeyboardAvoidingView 
@@ -287,6 +411,50 @@ const AIAssistantScreen: React.FC = () => {
     );
 };
 
+const markdownStyles = {
+    body: {
+        color: '#1e293b',
+        fontSize: 15,
+        lineHeight: 22,
+    },
+    paragraph: {
+        marginTop: 0,
+        marginBottom: 8,
+    },
+    strong: {
+        fontWeight: '700' as '700',
+    },
+    em: {
+        fontStyle: 'italic' as 'italic',
+    },
+    code_inline: {
+        backgroundColor: '#f1f5f9',
+        color: '#4F46E5',
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 4,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        fontSize: 14,
+    },
+    code_block: {
+        backgroundColor: '#f1f5f9',
+        padding: 12,
+        borderRadius: 8,
+        marginVertical: 8,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        fontSize: 14,
+    },
+    bullet_list: {
+        marginVertical: 4,
+    },
+    ordered_list: {
+        marginVertical: 4,
+    },
+    list_item: {
+        marginVertical: 2,
+    },
+};
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -308,9 +476,54 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     headerTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '700',
         color: '#1e293b',
+        marginLeft: 8,
+    },
+    progressContainer: {
+        alignItems: 'flex-end',
+        gap: 4,
+    },
+    progressInfo: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: 4,
+    },
+    progressText: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#4F46E5',
+    },
+    progressLabel: {
+        fontSize: 11,
+        color: '#64748b',
+    },
+    progressBarContainer: {
+        width: 80,
+        height: 4,
+        backgroundColor: '#e2e8f0',
+        borderRadius: 2,
+        overflow: 'hidden',
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#4F46E5',
+        borderRadius: 2,
+    },
+    qualityBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 2,
+        backgroundColor: '#fef3c7',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    qualityText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#f59e0b',
     },
     completedBadge: {
         flexDirection: 'row',
@@ -377,7 +590,40 @@ const styles = StyleSheet.create({
     timestamp: {
         fontSize: 11,
         color: '#94a3b8',
-        alignSelf: 'flex-end',
+        marginTop: 4,
+    },
+    confirmButtons: {
+        flexDirection: 'row',
+        marginTop: 8,
+        gap: 8,
+    },
+    confirmButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#4F46E5',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+        gap: 4,
+    },
+    confirmButtonText: {
+        color: '#ffffff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    cancelButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f1f5f9',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+        gap: 4,
+    },
+    cancelButtonText: {
+        color: '#64748b',
+        fontSize: 13,
+        fontWeight: '600',
     },
     loadingContainer: {
         flexDirection: 'row',
