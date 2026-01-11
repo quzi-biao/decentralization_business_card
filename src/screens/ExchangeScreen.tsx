@@ -130,66 +130,81 @@ const ExchangeScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            {/* 模式切换 */}
-            <View style={styles.modeSelector}>
-                <TouchableOpacity
-                    style={[styles.modeButton, mode === 'qr' && styles.modeButtonActive]}
-                    onPress={() => setMode('qr')}
-                >
-                    <Text style={[styles.modeButtonText, mode === 'qr' && styles.modeButtonTextActive]}>
-                        我的二维码
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.modeButton, mode === 'scan' && styles.modeButtonActive]}
-                    onPress={() => setMode('scan')}
-                >
-                    <Text style={[styles.modeButtonText, mode === 'scan' && styles.modeButtonTextActive]}>
-                        扫描名片
-                    </Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* 内容区域 */}
-            <ScrollView contentContainerStyle={styles.content}>
-                {mode === 'qr' ? (
-                    <View style={styles.qrContainer}>
-                        <View style={styles.card}>
-                            <Text style={styles.title}>📇 我的名片二维码</Text>
-                            <Text style={styles.subtitle}>让对方扫描此二维码交换名片</Text>
-                            
-                            {qrData ? (
-                                <View style={styles.qrWrapper}>
-                                    <QRCode
-                                        value={qrData}
-                                        size={240}
-                                        backgroundColor="white"
-                                        color="#475569"
-                                    />
-                                </View>
-                            ) : (
-                                <View style={styles.qrPlaceholder}>
-                                    <Text style={styles.placeholderText}>生成中...</Text>
-                                </View>
-                            )}
-
-                            <View style={styles.infoBox}>
-                                <Text style={styles.infoText}>🔒 您的名片数据已加密存储</Text>
-                                <Text style={styles.infoText}>🔑 只有交换过的用户才能解密查看</Text>
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+                {/* 我的二维码区域 */}
+                <View style={styles.qrSection}>
+                    <View style={styles.qrCard}>
+                        <View style={styles.qrHeader}>
+                            <Text style={styles.qrIcon}>📱</Text>
+                            <View>
+                                <Text style={styles.qrTitle}>我的二维码</Text>
+                                <Text style={styles.qrSubtitle}>让对方扫描此二维码交换名片</Text>
                             </View>
                         </View>
+                            
+                        {qrData ? (
+                            <View style={styles.qrWrapper}>
+                                <QRCode
+                                    value={qrData}
+                                    size={220}
+                                    backgroundColor="white"
+                                    color="#4F46E5"
+                                />
+                            </View>
+                        ) : (
+                            <View style={styles.qrPlaceholder}>
+                                <Text style={styles.placeholderText}>⏳ 生成中...</Text>
+                            </View>
+                        )}
+
+                        <View style={styles.qrActions}>
+                            <TouchableOpacity style={styles.qrActionButton}>
+                                <Text style={styles.qrActionText}>💾 保存图片</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.qrActionButton, styles.qrActionButtonPrimary]}>
+                                <Text style={[styles.qrActionText, styles.qrActionTextPrimary]}>📤 分享</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.qrInfo}>
+                            <Text style={styles.qrInfoText}>🔒 端到端加密保护</Text>
+                            <Text style={styles.qrInfoText}>🔑 只有交换过的用户才能解密</Text>
+                        </View>
                     </View>
-                ) : (
-                    <View style={styles.scanContainer}>
+                </View>
+
+                {/* 扫描按钮区域 */}
+                <View style={styles.scanSection}>
+                    <TouchableOpacity 
+                        style={styles.scanCard}
+                        onPress={() => setMode('scan')}
+                    >
+                        <Text style={styles.scanIcon}>📷</Text>
+                        <Text style={styles.scanTitle}>扫描对方二维码</Text>
+                        <Text style={styles.scanHint}>点击开始扫描</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* 扫描模态框 */}
+                {mode === 'scan' && (
+                    <View style={styles.scanModal}>
+                        <TouchableOpacity 
+                            style={styles.closeButton}
+                            onPress={() => setMode('qr')}
+                        >
+                            <Text style={styles.closeButtonText}>✕</Text>
+                        </TouchableOpacity>
+
                         {!permission ? (
-                            <View style={styles.card}>
-                                <Text style={styles.title}>请求相机权限...</Text>
+                            <View style={styles.permissionView}>
+                                <Text style={styles.permissionTitle}>请求相机权限...</Text>
                             </View>
                         ) : !permission.granted ? (
-                            <View style={styles.card}>
-                                <Text style={styles.title}>⚠️ 需要相机权限</Text>
-                                <Text style={styles.subtitle}>请在设置中允许访问相机</Text>
+                            <View style={styles.permissionView}>
+                                <Text style={styles.permissionIcon}>⚠️</Text>
+                                <Text style={styles.permissionTitle}>需要相机权限</Text>
+                                <Text style={styles.permissionText}>请在设置中允许访问相机</Text>
                                 <TouchableOpacity
                                     style={styles.permissionButton}
                                     onPress={requestPermission}
@@ -198,9 +213,8 @@ const ExchangeScreen = () => {
                                 </TouchableOpacity>
                             </View>
                         ) : (
-                            <View style={styles.scannerWrapper}>
-                                <Text style={styles.scanTitle}>📷 扫描对方的二维码</Text>
-                                <View style={styles.scanner}>
+                            <View style={styles.cameraContainer}>
+                                <View style={styles.camera}>
                                     <CameraView
                                         style={StyleSheet.absoluteFillObject}
                                         facing="back"
@@ -210,8 +224,8 @@ const ExchangeScreen = () => {
                                         onBarcodeScanned={isProcessing ? undefined : handleBarCodeScanned}
                                     />
                                 </View>
-                                <Text style={styles.scanHint}>
-                                    {isProcessing ? '处理中...' : '将二维码对准扫描框'}
+                                <Text style={styles.cameraTip}>
+                                    {isProcessing ? '⏳ 处理中...' : '将二维码对准扫描框'}
                                 </Text>
                             </View>
                         )}
@@ -225,134 +239,210 @@ const ExchangeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#F8FAFC',
     },
-    modeSelector: {
-        flexDirection: 'row',
-        padding: 16,
-        gap: 12,
-    },
-    modeButton: {
+    scrollView: {
         flex: 1,
-        paddingVertical: 12,
-        borderRadius: 12,
-        backgroundColor: '#ffffff',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-    },
-    modeButtonActive: {
-        backgroundColor: '#64748b',
-        borderColor: '#64748b',
-    },
-    modeButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#64748b',
-    },
-    modeButtonTextActive: {
-        color: '#ffffff',
     },
     content: {
         padding: 16,
+        paddingTop: 8,
     },
-    qrContainer: {
-        alignItems: 'center',
+    qrSection: {
+        marginBottom: 16,
     },
-    card: {
+    qrCard: {
         backgroundColor: '#ffffff',
         borderRadius: 16,
-        padding: 24,
-        width: '100%',
-        alignItems: 'center',
-        shadowColor: '#64748b',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 2,
+        padding: 20,
+        shadowColor: '#4F46E5',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: '#e0e7ff',
     },
-    title: {
-        fontSize: 18,
+    qrHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    qrIcon: {
+        fontSize: 24,
+        marginRight: 12,
+    },
+    qrTitle: {
+        fontSize: 16,
         fontWeight: '600',
         color: '#1e293b',
-        marginBottom: 8,
+        marginBottom: 2,
     },
-    subtitle: {
-        fontSize: 13,
+    qrSubtitle: {
+        fontSize: 12,
         color: '#64748b',
-        marginBottom: 24,
-        textAlign: 'center',
     },
     qrWrapper: {
+        alignItems: 'center',
         padding: 20,
         backgroundColor: '#ffffff',
         borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#e2e8f0',
+        marginBottom: 16,
     },
     qrPlaceholder: {
-        width: 240,
-        height: 240,
+        width: 220,
+        height: 220,
         backgroundColor: '#f8fafc',
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
+        marginBottom: 16,
     },
     placeholderText: {
         color: '#94a3b8',
         fontSize: 14,
     },
-    infoBox: {
-        marginTop: 24,
-        padding: 16,
-        backgroundColor: '#f8fafc',
-        borderRadius: 12,
-        width: '100%',
-        gap: 8,
+    qrActions: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 16,
     },
-    infoText: {
-        fontSize: 12,
-        color: '#64748b',
-        textAlign: 'center',
-    },
-    scanContainer: {
+    qrActionButton: {
         flex: 1,
-    },
-    scannerWrapper: {
+        paddingVertical: 12,
+        borderRadius: 10,
+        backgroundColor: '#F8FAFC',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
         alignItems: 'center',
     },
-    scanTitle: {
-        fontSize: 18,
+    qrActionButtonPrimary: {
+        backgroundColor: '#4F46E5',
+        borderColor: '#4F46E5',
+    },
+    qrActionText: {
+        fontSize: 13,
         fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 20,
+        color: '#64748b',
+    },
+    qrActionTextPrimary: {
+        color: '#ffffff',
+    },
+    qrInfo: {
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#f1f5f9',
+        gap: 6,
+    },
+    qrInfoText: {
+        fontSize: 11,
+        color: '#10B981',
         textAlign: 'center',
     },
-    scanner: {
+    scanSection: {
+        marginBottom: 16,
+    },
+    scanCard: {
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        padding: 32,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+    },
+    scanIcon: {
+        fontSize: 48,
+        marginBottom: 12,
+    },
+    scanTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1e293b',
+        marginBottom: 6,
+    },
+    scanHint: {
+        fontSize: 13,
+        color: '#94a3b8',
+    },
+    scanModal: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#000000',
+        zIndex: 1000,
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 60,
+        right: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1001,
+    },
+    closeButtonText: {
+        fontSize: 24,
+        color: '#ffffff',
+        fontWeight: '300',
+    },
+    permissionView: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 40,
+    },
+    permissionIcon: {
+        fontSize: 64,
+        marginBottom: 20,
+    },
+    permissionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#ffffff',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    permissionText: {
+        fontSize: 14,
+        color: '#94a3b8',
+        textAlign: 'center',
+        marginBottom: 24,
+    },
+    permissionButton: {
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        backgroundColor: '#4F46E5',
+        borderRadius: 10,
+    },
+    permissionButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#ffffff',
+    },
+    cameraContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    camera: {
         width: 300,
         height: 300,
         borderRadius: 16,
         overflow: 'hidden',
         borderWidth: 3,
-        borderColor: '#64748b',
+        borderColor: '#4F46E5',
     },
-    scanHint: {
-        marginTop: 20,
-        fontSize: 14,
-        color: '#64748b',
-        textAlign: 'center',
-    },
-    permissionButton: {
-        marginTop: 20,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        backgroundColor: '#64748b',
-        borderRadius: 12,
-    },
-    permissionButtonText: {
+    cameraTip: {
+        marginTop: 24,
+        fontSize: 15,
         color: '#ffffff',
-        fontSize: 14,
-        fontWeight: '600',
+        textAlign: 'center',
     },
 });
 

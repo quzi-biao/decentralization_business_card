@@ -6,13 +6,12 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text } from 'react-native';
+import { View, Text, Modal } from 'react-native';
 
-import HomeScreen from './src/screens/HomeScreen';
-import AssistantScreen from './src/screens/AssistantScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
+import CardsScreen from './src/screens/CardsScreen';
 import ExchangeScreen from './src/screens/ExchangeScreen';
-import CollectionScreen from './src/screens/CollectionScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import EditCardScreen from './src/screens/EditCardScreen';
 import InitScreen from './src/screens/InitScreen';
 import { isInitialized } from './src/services/identityService';
 
@@ -26,6 +25,7 @@ const TabIcon = ({ emoji, color }: { emoji: string; color: string }) => (
 export default function App() {
   const [initialized, setInitialized] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [showEditCard, setShowEditCard] = useState(false);
 
   useEffect(() => {
     checkInitialization();
@@ -64,11 +64,13 @@ export default function App() {
             tabBarStyle: {
               backgroundColor: '#ffffff',
               borderTopColor: '#e2e8f0',
-              paddingTop: 10,
+              borderTopWidth: 1,
               height: 90,
+              paddingBottom: 30,
+              paddingTop: 10,
             },
-            tabBarActiveTintColor: '#64748b',
-            tabBarInactiveTintColor: '#cbd5e1',
+            tabBarActiveTintColor: '#4F46E5',
+            tabBarInactiveTintColor: '#94a3b8',
             tabBarLabelStyle: {
               fontSize: 11,
               fontWeight: '600',
@@ -78,11 +80,11 @@ export default function App() {
           }}
         >
           <Tab.Screen
-            name="Home"
-            component={HomeScreen}
+            name="Cards"
+            component={CardsScreen}
             options={{
-              tabBarLabel: '我的',
-              tabBarIcon: ({ color }) => <TabIcon emoji="💳" color={color} />,
+              tabBarLabel: '名片夹',
+              tabBarIcon: ({ color }) => <TabIcon emoji="📇" color={color} />,
             }}
           />
           <Tab.Screen
@@ -90,34 +92,28 @@ export default function App() {
             component={ExchangeScreen}
             options={{
               tabBarLabel: '交换',
-              tabBarIcon: ({ color }) => <TabIcon emoji="🔄" color={color} />,
-            }}
-          />
-          <Tab.Screen
-            name="Collection"
-            component={CollectionScreen}
-            options={{
-              tabBarLabel: '收藏',
-              tabBarIcon: ({ color }) => <TabIcon emoji="📋" color={color} />,
-            }}
-          />
-          <Tab.Screen
-            name="Assistant"
-            component={AssistantScreen}
-            options={{
-              tabBarLabel: '助手',
-              tabBarIcon: ({ color }) => <TabIcon emoji="✨" color={color} />,
+              tabBarIcon: ({ color }) => <TabIcon emoji="🤝" color={color} />,
             }}
           />
           <Tab.Screen
             name="Profile"
-            component={ProfileScreen}
             options={{
-              tabBarLabel: '设置',
-              tabBarIcon: ({ color }) => <TabIcon emoji="⚙️" color={color} />,
+              tabBarLabel: '我的',
+              tabBarIcon: ({ color }) => <TabIcon emoji="👤" color={color} />,
             }}
-          />
+          >
+            {(props) => <ProfileScreen {...props} onEditPress={() => setShowEditCard(true)} />}
+          </Tab.Screen>
         </Tab.Navigator>
+
+        {/* Edit Card Modal */}
+        <Modal
+          visible={showEditCard}
+          animationType="slide"
+          presentationStyle="fullScreen"
+        >
+          <EditCardScreen onClose={() => setShowEditCard(false)} />
+        </Modal>
       </NavigationContainer>
     </SafeAreaProvider>
   );

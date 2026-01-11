@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
+import MyCard from '../components/MyCard';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -61,8 +62,9 @@ const BusinessItemCard = ({ item, onUpdate, onDelete }: { item: BusinessItem, on
     </View>
 );
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ onEditPress }: any) => {
     const { cardData, updateCardData } = useCardStore();
+    const [showMnemonic, setShowMnemonic] = useState(false);
 
     const handleUpdateItem = (field: 'mainBusiness' | 'serviceNeeds', id: string, data: Partial<BusinessItem>) => {
         const newList = cardData[field].map(item => item.id === id ? { ...item, ...data } : item);
@@ -81,75 +83,121 @@ const ProfileScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+        <SafeAreaView style={styles.container} edges={['top']}>
+            {/* 我的名片 */}
+            <View style={styles.profileHeader}>
+                <MyCard cardData={cardData} onPress={onEditPress} />
+            </View>
 
-                {/* 基本信息卡片 */}
-                <View style={styles.card}>
-                    <SectionHeader title="基本信息" emoji="👤" />
-                    <InputField label="姓名" value={cardData.realName} onChangeText={(v: any) => updateCardData({ realName: v })} />
-                    <InputField label="职位" value={cardData.position} onChangeText={(v: any) => updateCardData({ position: v })} />
-                    <InputField label="公司名称" value={cardData.companyName} onChangeText={(v: any) => updateCardData({ companyName: v })} />
-                    <InputField label="行业领域" value={cardData.industry} onChangeText={(v: any) => updateCardData({ industry: v })} />
-                    <InputField label="关于我" value={cardData.aboutMe} onChangeText={(v: any) => updateCardData({ aboutMe: v })} multiline={true} />
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                {/* 名片管理 */}
+                <View style={styles.section}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={onEditPress}
+                    >
+                        <Text style={styles.menuIcon}>✏️</Text>
+                        <Text style={styles.menuText}>编辑我的名片</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>🎨</Text>
+                        <Text style={styles.menuText}>名片模板选择</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>📤</Text>
+                        <Text style={styles.menuText}>导出名片</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* 联系方式卡片 */}
-                <View style={styles.card}>
-                    <SectionHeader title="联系方式" emoji="📧" />
-                    <InputField label="电话" value={cardData.phone} onChangeText={(v: any) => updateCardData({ phone: v })} />
-                    <InputField label="邮箱" value={cardData.email} onChangeText={(v: any) => updateCardData({ email: v })} />
-                    <InputField label="微信" value={cardData.wechat} onChangeText={(v: any) => updateCardData({ wechat: v })} />
-                    <InputField label="地址" value={cardData.address} onChangeText={(v: any) => updateCardData({ address: v })} />
+                {/* 安全中心 */}
+                <View style={styles.section}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowMnemonic(true)}
+                    >
+                        <Text style={styles.menuIcon}>🔑</Text>
+                        <Text style={styles.menuText}>查看助记词</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>💾</Text>
+                        <Text style={styles.menuText}>备份与恢复</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>🛡️</Text>
+                        <Text style={styles.menuText}>访问权限管理</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>🚫</Text>
+                        <Text style={styles.menuText}>撤销列表</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* 个人背景卡片 */}
-                <View style={styles.card}>
-                    <SectionHeader title="个人背景" emoji="🎓" />
-                    <InputField label="家乡" value={cardData.hometown} onChangeText={(v: any) => updateCardData({ hometown: v })} />
-                    <InputField label="常驻" value={cardData.residence} onChangeText={(v: any) => updateCardData({ residence: v })} />
-                    <InputField label="兴趣爱好" value={cardData.hobbies} onChangeText={(v: any) => updateCardData({ hobbies: v })} />
-                    <InputField label="性格特点" value={cardData.personality} onChangeText={(v: any) => updateCardData({ personality: v })} />
-                    <InputField label="关注行业" value={cardData.focusIndustry} onChangeText={(v: any) => updateCardData({ focusIndustry: v })} />
-                    <InputField label="圈层" value={cardData.circles} onChangeText={(v: any) => updateCardData({ circles: v })} />
+                {/* AI 助手 */}
+                <View style={styles.section}>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>💡</Text>
+                        <Text style={styles.menuText}>优化名片内容</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>📝</Text>
+                        <Text style={styles.menuText}>生成个人简介</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* 企业信息卡片 */}
-                <View style={styles.card}>
-                    <SectionHeader title="企业信息" emoji="🏢" />
-                    <InputField label="公司简介" value={cardData.companyIntro} onChangeText={(v: any) => updateCardData({ companyIntro: v })} multiline={true} />
+                {/* 设置 */}
+                <View style={styles.section}>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>🔒</Text>
+                        <Text style={styles.menuText}>隐私设置</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>🔔</Text>
+                        <Text style={styles.menuText}>通知设置</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>🎨</Text>
+                        <Text style={styles.menuText}>主题切换</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>🌍</Text>
+                        <Text style={styles.menuText}>语言选择</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* 主营业务卡片 */}
-                <View style={styles.card}>
-                    <SectionHeader title="主营业务" emoji="💼" onAdd={() => handleAddItem('mainBusiness')} />
-                    {cardData.mainBusiness.map(item => (
-                        <BusinessItemCard
-                            key={item.id}
-                            item={item}
-                            onUpdate={(data) => handleUpdateItem('mainBusiness', item.id, data)}
-                            onDelete={() => handleDeleteItem('mainBusiness', item.id)}
-                        />
-                    ))}
+                {/* 关于 */}
+                <View style={styles.section}>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>📖</Text>
+                        <Text style={styles.menuText}>使用教程</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>❓</Text>
+                        <Text style={styles.menuText}>常见问题</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <Text style={styles.menuIcon}>📧</Text>
+                        <Text style={styles.menuText}>联系我们</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                    <View style={styles.versionInfo}>
+                        <Text style={styles.versionText}>版本 v1.0.0</Text>
+                    </View>
                 </View>
-
-                {/* 资源需求卡片 */}
-                <View style={styles.card}>
-                    <SectionHeader title="资源需求" emoji="🤝" onAdd={() => handleAddItem('serviceNeeds')} />
-                    {cardData.serviceNeeds.map(item => (
-                        <BusinessItemCard
-                            key={item.id}
-                            item={item}
-                            onUpdate={(data) => handleUpdateItem('serviceNeeds', item.id, data)}
-                            onDelete={() => handleDeleteItem('serviceNeeds', item.id)}
-                        />
-                    ))}
-                </View>
-
-                {/* 保存按钮 */}
-                <TouchableOpacity style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>保存更改</Text>
-                </TouchableOpacity>
 
                 <View style={styles.spacer} />
             </ScrollView>
@@ -296,6 +344,112 @@ const styles = StyleSheet.create({
     },
     spacer: {
         height: 80,
+    },
+    // New styles for redesigned ProfileScreen
+    profileHeader: {
+        backgroundColor: '#F8FAFC',
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 8,
+    },
+    myCardContainer: {
+        marginBottom: 8,
+    },
+    myCardDisplay: {
+        backgroundColor: '#ffffff',
+        borderRadius: 20,
+        padding: 24,
+        borderWidth: 3,
+        borderColor: '#4F46E5',
+        shadowColor: '#4F46E5',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+    cardContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    avatarLarge: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#e0e7ff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 16,
+        borderWidth: 2,
+        borderColor: '#4F46E5',
+    },
+    avatarLargeText: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: '#4F46E5',
+    },
+    cardInfo: {
+        flex: 1,
+    },
+    cardName: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#1e293b',
+        marginBottom: 6,
+    },
+    cardPosition: {
+        fontSize: 16,
+        color: '#64748b',
+        marginBottom: 4,
+        fontWeight: '500',
+    },
+    cardCompany: {
+        fontSize: 15,
+        color: '#94a3b8',
+    },
+    scrollView: {
+        flex: 1,
+    },
+    section: {
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    menuIcon: {
+        fontSize: 20,
+        marginRight: 12,
+        width: 24,
+    },
+    menuText: {
+        flex: 1,
+        fontSize: 15,
+        color: '#1e293b',
+    },
+    menuArrow: {
+        fontSize: 20,
+        color: '#cbd5e1',
+    },
+    versionInfo: {
+        paddingTop: 12,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#f1f5f9',
+    },
+    versionText: {
+        fontSize: 12,
+        color: '#94a3b8',
     },
 });
 
