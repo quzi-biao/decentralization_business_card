@@ -32,6 +32,58 @@ const AIAssistantScreen: React.FC = () => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
     }, [messages]);
 
+    // 添加开场白并发送当前已填写的信息给 AI
+    useEffect(() => {
+        const initializeChat = async () => {
+            // 构建已填写字段的摘要
+            const filledFields: string[] = [];
+            if (cardData.realName) filledFields.push(`姓名：${cardData.realName}`);
+            if (cardData.position) filledFields.push(`职位：${cardData.position}`);
+            if (cardData.companyName) filledFields.push(`公司：${cardData.companyName}`);
+            if (cardData.industry) filledFields.push(`行业：${cardData.industry}`);
+            if (cardData.phone) filledFields.push(`电话：${cardData.phone}`);
+            if (cardData.email) filledFields.push(`邮箱：${cardData.email}`);
+            if (cardData.wechat) filledFields.push(`微信：${cardData.wechat}`);
+            if (cardData.address) filledFields.push(`地址：${cardData.address}`);
+            
+            const contextMessage = filledFields.length > 0 
+                ? `用户当前已填写的信息：\n${filledFields.join('\n')}\n\n请根据已有信息，引导用户补充缺失的字段。`
+                : '用户尚未填写任何信息，请从基本信息开始引导。';
+
+            try {
+                // 发送上下文给 AI
+                const rawResponse = await callN8NAgent(
+                    N8N_CONFIG.agentWebhookPath,
+                    contextMessage,
+                    sessionId
+                );
+
+                const parsedResponse = parseAIResponse(rawResponse);
+
+                const welcomeMessage: Message = {
+                    id: 'welcome',
+                    text: parsedResponse.output,
+                    isUser: false,
+                    timestamp: new Date(),
+                };
+                
+                setMessages([welcomeMessage]);
+            } catch (error) {
+                console.error('Failed to initialize chat:', error);
+                // 如果 AI 调用失败，显示默认欢迎消息
+                const welcomeMessage: Message = {
+                    id: 'welcome',
+                    text: '您好！我是您的名片信息收集助手 😊\n\n我会通过简单的对话，帮您一步步创建一张专业、完整的商务名片。整个过程大约需要5-10分钟，所有信息仅用于生成您的个人名片。\n\n您现在方便开始吗？如果准备好了，我们可以先从基本信息入手！',
+                    isUser: false,
+                    timestamp: new Date(),
+                };
+                setMessages([welcomeMessage]);
+            }
+        };
+
+        initializeChat();
+    }, []); // 只在组件挂载时执行一次
+
     const sendMessage = async () => {
         if (!inputText.trim() || loading) return;
 
