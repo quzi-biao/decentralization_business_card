@@ -1,13 +1,20 @@
-import React from 'react';
+// IMPORTANT: Import crypto polyfill FIRST before anything else
+import './src/polyfills/crypto-polyfill';
+
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { View, Text } from 'react-native';
 
 import HomeScreen from './src/screens/HomeScreen';
 import AssistantScreen from './src/screens/AssistantScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+import ExchangeScreen from './src/screens/ExchangeScreen';
+import CollectionScreen from './src/screens/CollectionScreen';
+import InitScreen from './src/screens/InitScreen';
+import { isInitialized } from './src/services/identityService';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +24,36 @@ const TabIcon = ({ emoji, color }: { emoji: string; color: string }) => (
 );
 
 export default function App() {
+  const [initialized, setInitialized] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    checkInitialization();
+  }, []);
+
+  const checkInitialization = async () => {
+    const init = await isInitialized();
+    setInitialized(init);
+    setIsChecking(false);
+  };
+
+  const handleInitComplete = () => {
+    setInitialized(true);
+  };
+
+  if (isChecking) {
+    return null;
+  }
+
+  if (!initialized) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <InitScreen onComplete={handleInitComplete} />
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <NavigationContainer theme={DarkTheme}>
@@ -44,15 +81,31 @@ export default function App() {
             name="Home"
             component={HomeScreen}
             options={{
-              tabBarLabel: '名片',
+              tabBarLabel: '我的',
               tabBarIcon: ({ color }) => <TabIcon emoji="💳" color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="Exchange"
+            component={ExchangeScreen}
+            options={{
+              tabBarLabel: '交换',
+              tabBarIcon: ({ color }) => <TabIcon emoji="🔄" color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="Collection"
+            component={CollectionScreen}
+            options={{
+              tabBarLabel: '收藏',
+              tabBarIcon: ({ color }) => <TabIcon emoji="📋" color={color} />,
             }}
           />
           <Tab.Screen
             name="Assistant"
             component={AssistantScreen}
             options={{
-              tabBarLabel: '名片助手',
+              tabBarLabel: '助手',
               tabBarIcon: ({ color }) => <TabIcon emoji="✨" color={color} />,
             }}
           />
