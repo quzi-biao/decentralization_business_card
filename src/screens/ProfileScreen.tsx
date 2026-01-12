@@ -520,7 +520,6 @@ const styles = StyleSheet.create({
     profileHeader: {
         backgroundColor: '#F8FAFC',
         paddingHorizontal: 16,
-        paddingTop: 16,
         paddingBottom: 8,
     },
     myCardContainer: {

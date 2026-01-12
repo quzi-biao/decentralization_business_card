@@ -1,9 +1,11 @@
-import React from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet, Image, Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 import PageHeader from '../components/PageHeader';
+import { FilePersistenceService } from '../services/filePersistence';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -55,6 +57,7 @@ const BusinessItemCard = ({ item, onUpdate, onDelete }: any) => (
 
 const EditCardScreen = ({ onClose }: any) => {
     const { cardData, updateCardData } = useCardStore();
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
     const handleUpdateItem = (field: 'mainBusiness' | 'serviceNeeds', id: string, data: Partial<BusinessItem>) => {
         const newList = cardData[field].map(item => item.id === id ? { ...item, ...data } : item);
@@ -76,6 +79,80 @@ const EditCardScreen = ({ onClose }: any) => {
         onClose();
     };
 
+    const handlePickAvatar = async () => {
+        try {
+            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            
+            if (permissionResult.granted === false) {
+                Alert.alert('需要权限', '请允许访问相册以选择头像');
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: 'images' as any,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.5,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+                setUploadingAvatar(true);
+                const asset = result.assets[0];
+                
+                try {
+                    // 读取图片为 base64
+                    const response = await fetch(asset.uri);
+                    const blob = await response.blob();
+                    
+                    // 使用 Promise 包装 FileReader
+                    const base64data = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                    
+                    // 保存到加密存储
+                    const avatarKey = `avatar_${Date.now()}`;
+                    await FilePersistenceService.saveImage(avatarKey, base64data);
+                    
+                    // 更新卡片数据 - 直接存储 base64 数据用于立即显示
+                    updateCardData({ avatarUrl: base64data });
+                    
+                    setUploadingAvatar(false);
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                    Alert.alert('错误', '处理图片失败，请重试');
+                    setUploadingAvatar(false);
+                }
+            }
+        } catch (error) {
+            console.error('Error picking avatar:', error);
+            Alert.alert('错误', '选择头像失败，请重试');
+            setUploadingAvatar(false);
+        }
+    };
+
+    const handleRemoveAvatar = () => {
+        Alert.alert(
+            '移除头像',
+            '确定要移除当前头像吗？',
+            [
+                { text: '取消', style: 'cancel' },
+                {
+                    text: '移除',
+                    style: 'destructive',
+                    onPress: async () => {
+                        if (cardData.avatarUrl) {
+                            await FilePersistenceService.deleteImage(cardData.avatarUrl);
+                        }
+                        updateCardData({ avatarUrl: undefined });
+                    }
+                }
+            ]
+        );
+    };
+
     return (
         <SafeAreaProvider>
             <View style={styles.container}>
@@ -90,6 +167,55 @@ const EditCardScreen = ({ onClose }: any) => {
                 />
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
+                {/* 头像设置 */}
+                <View style={styles.card}>
+                    <SectionHeader title="头像" iconName="account-circle" />
+                    <View style={styles.avatarSection}>
+                        <TouchableOpacity 
+                            style={styles.avatarContainer}
+                            onPress={handlePickAvatar}
+                            disabled={uploadingAvatar}
+                        >
+                            {cardData.avatarUrl ? (
+                                <Image 
+                                    source={{ uri: cardData.avatarUrl }}
+                                    style={styles.avatar}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View style={styles.avatarPlaceholder}>
+                                    <MaterialIcons name="person" size={48} color="#cbd5e1" />
+                                </View>
+                            )}
+                            <View style={styles.avatarOverlay}>
+                                <MaterialIcons name="camera-alt" size={24} color="#ffffff" />
+                            </View>
+                        </TouchableOpacity>
+                        <View style={styles.avatarActions}>
+                            <TouchableOpacity 
+                                style={styles.avatarButton}
+                                onPress={handlePickAvatar}
+                                disabled={uploadingAvatar}
+                            >
+                                <MaterialIcons name="photo-library" size={20} color="#4F46E5" />
+                                <Text style={styles.avatarButtonText}>
+                                    {uploadingAvatar ? '上传中...' : '选择头像'}
+                                </Text>
+                            </TouchableOpacity>
+                            {cardData.avatarUrl && (
+                                <TouchableOpacity 
+                                    style={[styles.avatarButton, styles.removeButton]}
+                                    onPress={handleRemoveAvatar}
+                                >
+                                    <MaterialIcons name="delete" size={20} color="#ef4444" />
+                                    <Text style={[styles.avatarButtonText, styles.removeButtonText]}>移除</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                        <Text style={styles.avatarHint}>支持 PNG、JPG、SVG 等格式，建议使用正方形图片</Text>
+                    </View>
+                </View>
+
                 {/* 基本信息 */}
                 <View style={styles.card}>
                     <SectionHeader title="基本信息" iconName="person" />
@@ -250,7 +376,76 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     spacer: {
-        height: 40,
+        height: 20,
+    },
+    avatarSection: {
+        alignItems: 'center',
+        paddingVertical: 10,
+    },
+    avatarContainer: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        marginBottom: 16,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    avatar: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 60,
+    },
+    avatarPlaceholder: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#f1f5f9',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 60,
+        borderWidth: 2,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+    },
+    avatarOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        paddingVertical: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    avatarActions: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 12,
+    },
+    avatarButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        backgroundColor: '#ede9fe',
+        borderRadius: 8,
+    },
+    removeButton: {
+        backgroundColor: '#fee2e2',
+    },
+    avatarButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#4F46E5',
+    },
+    removeButtonText: {
+        color: '#ef4444',
+    },
+    avatarHint: {
+        fontSize: 12,
+        color: '#94a3b8',
+        textAlign: 'center',
+        lineHeight: 16,
     },
 });
 
