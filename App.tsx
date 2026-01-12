@@ -16,6 +16,7 @@ import EditCardScreen from './src/screens/EditCardScreen';
 import InitScreen from './src/screens/InitScreen';
 import AIAssistantScreen from './src/screens/AIAssistantScreen';
 import { isInitialized } from './src/services/identityService';
+import { useCardStore } from './src/store/useCardStore';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,6 +29,7 @@ export default function App() {
   const [initialized, setInitialized] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [showEditCard, setShowEditCard] = useState(false);
+  const loadData = useCardStore(state => state.loadData);
 
   useEffect(() => {
     checkInitialization();
@@ -36,6 +38,12 @@ export default function App() {
   const checkInitialization = async () => {
     const init = await isInitialized();
     setInitialized(init);
+    
+    // 如果已初始化，加载持久化数据
+    if (init) {
+      await loadData();
+    }
+    
     setIsChecking(false);
   };
 

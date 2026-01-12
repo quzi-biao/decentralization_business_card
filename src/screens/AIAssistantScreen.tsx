@@ -8,6 +8,7 @@ import { useCardStore } from '../store/useCardStore';
 import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
 import { parseAIResponse, hasCompleteFormData, mergeFormData, generateFormSummary } from '../utils/formDataParser';
+import { ChatPersistenceService } from '../services/chatPersistence';
 
 interface Message {
     id: string;
@@ -71,10 +72,19 @@ const AIAssistantScreen: React.FC = () => {
         return () => clearTimeout(timer);
     }, [messages]);
 
-    // 添加开场白并发送当前已填写的信息给 AI
+    // 加载今天的聊天历史或初始化新对话
     useEffect(() => {
         const initializeChat = async () => {
-            // 构建已填写字段的摘要
+            // 先尝试加载今天的聊天记录
+            const todayChat = await ChatPersistenceService.getTodayChat();
+            
+            if (todayChat && todayChat.messages.length > 0) {
+                // 如果有今天的聊天记录，直接加载
+                setMessages(todayChat.messages);
+                return;
+            }
+            
+            // 如果没有今天的聊天记录，初始化新对话
             const filledFields: string[] = [];
             if (cardData.realName) filledFields.push(`姓名：${cardData.realName}`);
             if (cardData.position) filledFields.push(`职位：${cardData.position}`);
@@ -90,7 +100,6 @@ const AIAssistantScreen: React.FC = () => {
                 : '用户尚未填写任何信息，请从基本信息开始引导。';
 
             try {
-                // 发送上下文给 AI
                 const rawResponse = await callN8NAgent(
                     N8N_CONFIG.agentWebhookPath,
                     contextMessage,
@@ -107,9 +116,9 @@ const AIAssistantScreen: React.FC = () => {
                 };
                 
                 setMessages([welcomeMessage]);
+                await ChatPersistenceService.saveMessage(welcomeMessage, sessionId);
             } catch (error) {
                 console.error('Failed to initialize chat:', error);
-                // 如果 AI 调用失败，显示默认欢迎消息
                 const welcomeMessage: Message = {
                     id: 'welcome',
                     text: '您好！我是您的名片信息收集助手 😊\n\n我会通过简单的对话，帮您一步步创建一张专业、完整的商务名片。整个过程大约需要5-10分钟，所有信息仅用于生成您的个人名片。\n\n您现在方便开始吗？如果准备好了，我们可以先从基本信息入手！',
@@ -117,6 +126,7 @@ const AIAssistantScreen: React.FC = () => {
                     timestamp: new Date(),
                 };
                 setMessages([welcomeMessage]);
+                await ChatPersistenceService.saveMessage(welcomeMessage, sessionId);
             }
         };
 
@@ -137,6 +147,9 @@ const AIAssistantScreen: React.FC = () => {
         setInputText('');
         setLoading(true);
 
+        // 保存用户消息
+        await ChatPersistenceService.saveMessage(userMessage, sessionId);
+
         try {
             // 调用 n8n AI Agent
             const rawResponse = await callN8NAgent(
@@ -156,6 +169,9 @@ const AIAssistantScreen: React.FC = () => {
             };
 
             setMessages(prev => [...prev, aiMessage]);
+            
+            // 保存 AI 消息
+            await ChatPersistenceService.saveMessage(aiMessage, sessionId);
 
             // 如果有表单数据，存储为待确认更新
             if (parsedResponse.formData) {
@@ -180,6 +196,7 @@ const AIAssistantScreen: React.FC = () => {
             };
 
             setMessages(prev => [...prev, errorMessage]);
+            await ChatPersistenceService.saveMessage(errorMessage, sessionId);
         } finally {
             setLoading(false);
         }
@@ -239,6 +256,12 @@ const AIAssistantScreen: React.FC = () => {
         // 删除原始的 AI 消息（带确认卡片的那条），只保留确认提示
         setMessages(prev => prev.filter(msg => msg.id !== pendingUpdate.messageId).concat(updateMessage));
         
+        // 保存确认消息并重新保存整个会话
+        await ChatPersistenceService.saveMessages(
+            messages.filter(msg => msg.id !== pendingUpdate.messageId).concat(updateMessage),
+            sessionId
+        );
+        
         // 清除待确认更新
         setPendingUpdate(null);
         
@@ -264,6 +287,9 @@ const AIAssistantScreen: React.FC = () => {
             };
             
             setMessages(prev => [...prev, aiMessage]);
+            
+            // 保存 AI 响应
+            await ChatPersistenceService.saveMessage(aiMessage, sessionId);
             
             // 如果 AI 又返回了新的表单数据，继续存储为待确认
             if (parsedResponse.formData) {
