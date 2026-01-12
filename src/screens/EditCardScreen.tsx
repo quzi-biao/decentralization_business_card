@@ -5,7 +5,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 import PageHeader from '../components/PageHeader';
-import { FilePersistenceService } from '../services/filePersistence';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -92,7 +91,8 @@ const EditCardScreen = ({ onClose }: any) => {
                 mediaTypes: 'images' as any,
                 allowsEditing: true,
                 aspect: [1, 1],
-                quality: 0.5,
+                quality: 0.3,
+                base64: true,
             });
 
             if (!result.canceled && result.assets[0]) {
@@ -100,23 +100,47 @@ const EditCardScreen = ({ onClose }: any) => {
                 const asset = result.assets[0];
                 
                 try {
-                    // 读取图片为 base64
-                    const response = await fetch(asset.uri);
-                    const blob = await response.blob();
+                    // 直接使用 ImagePicker 返回的 base64（如果有）
+                    let base64data = '';
                     
-                    // 使用 Promise 包装 FileReader
-                    const base64data = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve(reader.result as string);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    });
+                    if (asset.base64) {
+                        // 使用 ImagePicker 提供的 base64
+                        base64data = `data:image/jpeg;base64,${asset.base64}`;
+                    } else {
+                        // 从 URI 读取
+                        const response = await fetch(asset.uri);
+                        const blob = await response.blob();
+                        
+                        base64data = await new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                if (reader.result && typeof reader.result === 'string') {
+                                    resolve(reader.result);
+                                } else {
+                                    reject(new Error('Failed to read image data'));
+                                }
+                            };
+                            reader.onerror = () => reject(new Error('FileReader error'));
+                            reader.readAsDataURL(blob);
+                        });
+                    }
                     
-                    // 保存到加密存储
-                    const avatarKey = `avatar_${Date.now()}`;
-                    await FilePersistenceService.saveImage(avatarKey, base64data);
+                    // 计算 base64 大小
+                    const base64Size = Math.ceil((base64data.length - base64data.indexOf(',') - 1) * 0.75);
+                    const maxSizeBytes = 100 * 1024; // 100kb
+                    const sizeKB = Math.round(base64Size / 1024);
                     
-                    // 更新卡片数据 - 直接存储 base64 数据用于立即显示
+                    if (base64Size > maxSizeBytes) {
+                        Alert.alert(
+                            '图片过大',
+                            `当前图片大小为 ${sizeKB}KB，超过 100KB 限制。\n\n请尝试：\n1. 选择更小的图片\n2. 或使用图片编辑工具先压缩图片`,
+                            [{ text: '知道了' }]
+                        );
+                        setUploadingAvatar(false);
+                        return;
+                    }
+                    
+                    // 更新卡片数据
                     updateCardData({ avatarUrl: base64data });
                     
                     setUploadingAvatar(false);
@@ -142,10 +166,7 @@ const EditCardScreen = ({ onClose }: any) => {
                 {
                     text: '移除',
                     style: 'destructive',
-                    onPress: async () => {
-                        if (cardData.avatarUrl) {
-                            await FilePersistenceService.deleteImage(cardData.avatarUrl);
-                        }
+                    onPress: () => {
                         updateCardData({ avatarUrl: undefined });
                     }
                 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -23,19 +23,27 @@ const ExchangeScreen = () => {
     const [qrData, setQrData] = useState<string>('');
     const [permission, requestPermission] = useCameraPermissions();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isGeneratingQR, setIsGeneratingQR] = useState(false);
 
     useEffect(() => {
-        generateMyQRCode();
+        // 延迟生成二维码，让页面先渲染
+        const timer = setTimeout(() => {
+            generateMyQRCode();
+        }, 100);
+        
+        return () => clearTimeout(timer);
     }, []);
 
 
     // 生成我的二维码
     const generateMyQRCode = async () => {
+        setIsGeneratingQR(true);
         try {
             console.log('Step 1: Getting identity...');
             const identity = await getIdentity();
             if (!identity) {
                 Alert.alert('错误', '请先初始化身份');
+                setIsGeneratingQR(false);
                 return;
             }
             console.log('Step 2: Identity obtained:', identity.did);
@@ -61,6 +69,8 @@ const ExchangeScreen = () => {
             console.error('Failed to generate QR code:', error);
             console.error('Error stack:', error.stack);
             Alert.alert('错误', `生成二维码失败: ${error.message}`);
+        } finally {
+            setIsGeneratingQR(false);
         }
     };
 
@@ -144,21 +154,21 @@ const ExchangeScreen = () => {
                             </View>
                         </View>
                             
-                        {qrData ? (
-                            <View style={styles.qrWrapper}>
+                        <View style={styles.qrWrapper}>
+                            {qrData ? (
                                 <QRCode
                                     value={qrData}
                                     size={220}
                                     backgroundColor="white"
                                     color="#4F46E5"
                                 />
-                            </View>
-                        ) : (
-                            <View style={styles.qrPlaceholder}>
-                                <MaterialIcons name="hourglass-empty" size={48} color="#cbd5e1" />
-                                <Text style={styles.placeholderText}>生成中...</Text>
-                            </View>
-                        )}
+                            ) : (
+                                <View style={styles.qrPlaceholder}>
+                                    <ActivityIndicator size="large" color="#4F46E5" />
+                                    <Text style={styles.placeholderText}>正在生成二维码...</Text>
+                                </View>
+                            )}
+                        </View>
 
                         <View style={styles.qrActions}>
                             <TouchableOpacity style={styles.qrActionButton}>
