@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -7,6 +7,15 @@ import { useCardStore, BusinessItem } from '../store/useCardStore';
 import MyCard from '../components/MyCard';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
 import { DataManager } from '../services/dataManager';
+import { getIdentity } from '../services/identityService';
+import MnemonicScreen from './MnemonicScreen';
+import BackupRestoreScreen from './BackupRestoreScreen';
+import AccessControlScreen from './AccessControlScreen';
+import TutorialScreen from './TutorialScreen';
+import FAQScreen from './FAQScreen';
+import ContactScreen from './ContactScreen';
+import DataStatsScreen from './DataStatsScreen';
+import * as Clipboard from 'expo-clipboard';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -73,6 +82,13 @@ type Props = StackScreenProps<ProfileStackParamList, 'ProfileMain'> & {
 const ProfileScreen = ({ navigation, onEditPress }: Props) => {
     const { cardData, updateCardData, clearAllData } = useCardStore();
     const [showMnemonic, setShowMnemonic] = useState(false);
+    const [showBackupRestore, setShowBackupRestore] = useState(false);
+    const [showAccessControl, setShowAccessControl] = useState(false);
+    const [showTutorial, setShowTutorial] = useState(false);
+    const [showFAQ, setShowFAQ] = useState(false);
+    const [showContact, setShowContact] = useState(false);
+    const [showDataStats, setShowDataStats] = useState(false);
+    const [publicKey, setPublicKey] = useState<string>('');
     const [dataStats, setDataStats] = useState({
         chatDates: 0,
         myCardExists: false,
@@ -83,7 +99,19 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
     
     useEffect(() => {
         loadDataStats();
+        loadIdentity();
     }, []);
+    
+    const loadIdentity = async () => {
+        try {
+            const identity = await getIdentity();
+            if (identity) {
+                setPublicKey(identity.publicKey);
+            }
+        } catch (error) {
+            console.error('Failed to load identity:', error);
+        }
+    };
     
     const loadDataStats = async () => {
         try {
@@ -118,6 +146,13 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
         );
     };
     
+    const handleCopyPublicKey = async () => {
+        if (publicKey) {
+            await Clipboard.setStringAsync(publicKey);
+            Alert.alert('已复制', '公钥地址已复制到剪贴板');
+        }
+    };
+    
     const handleCardPress = () => {
         navigation.navigate('CardDetail', { cardData });
     };
@@ -150,6 +185,29 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
             </View>
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                {/* 公钥地址 */}
+                {publicKey && (
+                    <View style={styles.section}>
+                        <View style={styles.publicKeyCard}>
+                            <View style={styles.publicKeyHeader}>
+                                <MaterialIcons name="account-balance-wallet" size={16} color="#4F46E5" />
+                                <Text style={styles.publicKeyLabel}>我的公钥地址</Text>
+                            </View>
+                            <View style={styles.publicKeyRow}>
+                                <Text style={styles.publicKeyText} numberOfLines={1} ellipsizeMode="middle">
+                                    {publicKey}
+                                </Text>
+                                <TouchableOpacity 
+                                    style={styles.copyPublicKeyButton}
+                                    onPress={handleCopyPublicKey}
+                                >
+                                    <MaterialIcons name="content-copy" size={16} color="#4F46E5" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
                 {/* 名片管理 */}
                 <View style={styles.section}>
                     <TouchableOpacity 
@@ -182,12 +240,18 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                         <Text style={styles.menuText}>查看助记词</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowBackupRestore(true)}
+                    >
                         <MaterialIcons name="backup" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>备份与恢复</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowAccessControl(true)}
+                    >
                         <MaterialIcons name="security" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>访问权限管理</Text>
                         <Text style={styles.menuArrow}>›</Text>
@@ -201,29 +265,12 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
 
                 {/* 数据管理 */}
                 <View style={styles.section}>
-                    <View style={styles.dataStatsContainer}>
-                        <Text style={styles.dataStatsTitle}>数据统计</Text>
-                        <View style={styles.dataStatsGrid}>
-                            <View style={styles.dataStatItem}>
-                                <Text style={styles.dataStatValue}>{dataStats.chatDates}</Text>
-                                <Text style={styles.dataStatLabel}>聊天记录（天）</Text>
-                            </View>
-                            <View style={styles.dataStatItem}>
-                                <Text style={styles.dataStatValue}>{dataStats.exchangedCardsCount}</Text>
-                                <Text style={styles.dataStatLabel}>交换的名片</Text>
-                            </View>
-                            <View style={styles.dataStatItem}>
-                                <Text style={styles.dataStatValue}>{dataStats.avatarsCount}</Text>
-                                <Text style={styles.dataStatLabel}>头像图片</Text>
-                            </View>
-                        </View>
-                    </View>
                     <TouchableOpacity 
                         style={styles.menuItem}
-                        onPress={handleClearAllData}
+                        onPress={() => setShowDataStats(true)}
                     >
-                        <MaterialIcons name="delete-forever" size={20} color="#ef4444" style={styles.menuIcon} />
-                        <Text style={[styles.menuText, { color: '#ef4444' }]}>清除所有数据</Text>
+                        <MaterialIcons name="analytics" size={20} color="#64748b" style={styles.menuIcon} />
+                        <Text style={styles.menuText}>数据统计</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                 </View>
@@ -254,17 +301,26 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
 
                 {/* 关于 */}
                 <View style={styles.section}>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowTutorial(true)}
+                    >
                         <MaterialIcons name="menu-book" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>使用教程</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowFAQ(true)}
+                    >
                         <MaterialIcons name="help-outline" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>常见问题</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowContact(true)}
+                    >
                         <MaterialIcons name="email" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>联系我们</Text>
                         <Text style={styles.menuArrow}>›</Text>
@@ -276,6 +332,63 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
 
                 <View style={styles.spacer} />
             </ScrollView>
+
+            {/* 所有模态框 */}
+            <Modal
+                visible={showMnemonic}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <MnemonicScreen onClose={() => setShowMnemonic(false)} />
+            </Modal>
+
+            <Modal
+                visible={showBackupRestore}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <BackupRestoreScreen onClose={() => setShowBackupRestore(false)} />
+            </Modal>
+
+            <Modal
+                visible={showAccessControl}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <AccessControlScreen onClose={() => setShowAccessControl(false)} />
+            </Modal>
+
+            <Modal
+                visible={showTutorial}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <TutorialScreen onClose={() => setShowTutorial(false)} />
+            </Modal>
+
+            <Modal
+                visible={showFAQ}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <FAQScreen onClose={() => setShowFAQ(false)} />
+            </Modal>
+
+            <Modal
+                visible={showContact}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <ContactScreen onClose={() => setShowContact(false)} />
+            </Modal>
+
+            <Modal
+                visible={showDataStats}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <DataStatsScreen onClose={() => setShowDataStats(false)} />
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -553,6 +666,43 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: '#64748b',
         textAlign: 'center',
+    },
+    publicKeyCard: {
+        backgroundColor: '#ede9fe',
+        borderRadius: 12,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#c7d2fe',
+    },
+    publicKeyHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 8,
+    },
+    publicKeyLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#4F46E5',
+    },
+    publicKeyRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#ffffff',
+        padding: 10,
+        borderRadius: 8,
+    },
+    publicKeyText: {
+        flex: 1,
+        fontSize: 11,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        color: '#6366f1',
+    },
+    copyPublicKeyButton: {
+        padding: 6,
+        backgroundColor: '#ede9fe',
+        borderRadius: 6,
     },
 });
 
