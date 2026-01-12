@@ -56,7 +56,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
             {/* 顶部：基本信息 */}
             <View style={styles.topSection}>
                 <View style={styles.avatar}>
-                    {cardData.avatarUrl ? (
+                    {cardData.avatarUrl && cardData.avatarUrl.length < 150000 ? (
                         <Image 
                             source={{ uri: cardData.avatarUrl }}
                             style={styles.avatarImage}

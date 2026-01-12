@@ -92,6 +92,17 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                         )}
                     </View>
 
+                    {/* 个人简介 */}
+                    {cardData.aboutMe && (
+                        <View style={styles.card}>
+                            <View style={styles.cardTitle}>
+                                <MaterialIcons name="description" size={20} color="#1e293b" />
+                                <Text style={styles.cardTitleText}>个人简介</Text>
+                            </View>
+                            <Text style={styles.sectionContent}>{cardData.aboutMe}</Text>
+                        </View>
+                    )}
+
                     {/* 个人背景 */}
                     {(cardData.hometown || cardData.residence || cardData.hobbies || cardData.personality || cardData.focusIndustry || cardData.circles) && (
                         <View style={styles.card}>
