@@ -188,22 +188,20 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                 {/* 公钥地址 */}
                 {publicKey && (
                     <View style={styles.section}>
-                        <View style={styles.publicKeyCard}>
-                            <View style={styles.publicKeyHeader}>
-                                <MaterialIcons name="account-balance-wallet" size={16} color="#4F46E5" />
+                        <View style={styles.publicKeyItem}>
+                            <MaterialIcons name="account-balance-wallet" size={20} color="#64748b" style={styles.menuIcon} />
+                            <View style={styles.publicKeyContent}>
                                 <Text style={styles.publicKeyLabel}>我的公钥地址</Text>
-                            </View>
-                            <View style={styles.publicKeyRow}>
                                 <Text style={styles.publicKeyText} numberOfLines={1} ellipsizeMode="middle">
                                     {publicKey}
                                 </Text>
-                                <TouchableOpacity 
-                                    style={styles.copyPublicKeyButton}
-                                    onPress={handleCopyPublicKey}
-                                >
-                                    <MaterialIcons name="content-copy" size={16} color="#4F46E5" />
-                                </TouchableOpacity>
                             </View>
+                            <TouchableOpacity 
+                                onPress={handleCopyPublicKey}
+                                style={styles.copyIconButton}
+                            >
+                                <MaterialIcons name="content-copy" size={20} color="#64748b" />
+                            </TouchableOpacity>
                         </View>
                     </View>
                 )}
@@ -277,21 +275,6 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
 
                 {/* 设置 */}
                 <View style={styles.section}>
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialIcons name="lock" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>隐私设置</Text>
-                        <Text style={styles.menuArrow}>›</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialIcons name="notifications" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>通知设置</Text>
-                        <Text style={styles.menuArrow}>›</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialIcons name="color-lens" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>主题切换</Text>
-                        <Text style={styles.menuArrow}>›</Text>
-                    </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem}>
                         <MaterialIcons name="language" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>语言选择</Text>
@@ -667,42 +650,31 @@ const styles = StyleSheet.create({
         color: '#64748b',
         textAlign: 'center',
     },
-    publicKeyCard: {
-        backgroundColor: '#ede9fe',
-        borderRadius: 12,
-        padding: 12,
-        borderWidth: 1,
-        borderColor: '#c7d2fe',
-    },
-    publicKeyHeader: {
+    publicKeyItem: {
+        backgroundColor: '#ffffff',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        marginBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    publicKeyContent: {
+        flex: 1,
     },
     publicKeyLabel: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#4F46E5',
-    },
-    publicKeyRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        backgroundColor: '#ffffff',
-        padding: 10,
-        borderRadius: 8,
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#64748b',
+        marginBottom: 4,
     },
     publicKeyText: {
-        flex: 1,
-        fontSize: 11,
+        fontSize: 12,
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-        color: '#6366f1',
+        color: '#94a3b8',
     },
-    copyPublicKeyButton: {
-        padding: 6,
-        backgroundColor: '#ede9fe',
-        borderRadius: 6,
+    copyIconButton: {
+        padding: 4,
     },
 });
 
