@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BusinessCardData } from '../store/useCardStore';
 
@@ -11,7 +11,6 @@ interface MyCardProps {
 
 const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }) => {
     const CardWrapper = onPress ? TouchableOpacity : View;
-    const [avatarLoading, setAvatarLoading] = useState(false);
     
     // 检查是否有任何名片内容（排除系统默认字段）
     const hasCardData = Boolean(
@@ -58,21 +57,11 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
             <View style={styles.topSection}>
                 <View style={styles.avatar}>
                     {cardData.avatarUrl ? (
-                        <>
-                            <Image 
-                                source={{ uri: cardData.avatarUrl }}
-                                style={styles.avatarImage}
-                                resizeMode="cover"
-                                onLoadStart={() => setAvatarLoading(true)}
-                                onLoadEnd={() => setAvatarLoading(false)}
-                                onError={() => setAvatarLoading(false)}
-                            />
-                            {avatarLoading && (
-                                <View style={styles.avatarLoadingOverlay}>
-                                    <ActivityIndicator size="small" color="#4F46E5" />
-                                </View>
-                            )}
-                        </>
+                        <Image 
+                            source={{ uri: cardData.avatarUrl }}
+                            style={styles.avatarImage}
+                            resizeMode="cover"
+                        />
                     ) : (
                         <Text style={styles.avatarText}>
                             {cardData.realName?.charAt(0) || '👤'}
