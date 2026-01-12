@@ -242,6 +242,8 @@ const AIAssistantScreen: React.FC = () => {
                 focusIndustry: '关注行业',
                 circles: '圈层',
                 companyIntro: '公司简介',
+                mainBusiness: '主营业务',
+                serviceNeeds: '服务需求',
             };
             return fieldMap[field] || field;
         }).join('、');
@@ -268,7 +270,34 @@ const AIAssistantScreen: React.FC = () => {
         // 发送确认消息给 AI，获取下一步引导并展示
         setLoading(true);
         try {
-            const confirmationMessage = `已确认更新：${fieldNames}。请继续引导我填写下一个内容。`;
+            // 构建完整的名片信息（不包含头像等媒体数据）
+            const currentCardInfo: string[] = [];
+            if (mergedData.realName) currentCardInfo.push(`姓名：${mergedData.realName}`);
+            if (mergedData.position) currentCardInfo.push(`职位：${mergedData.position}`);
+            if (mergedData.companyName) currentCardInfo.push(`公司：${mergedData.companyName}`);
+            if (mergedData.industry) currentCardInfo.push(`行业：${mergedData.industry}`);
+            if (mergedData.phone) currentCardInfo.push(`电话：${mergedData.phone}`);
+            if (mergedData.email) currentCardInfo.push(`邮箱：${mergedData.email}`);
+            if (mergedData.wechat) currentCardInfo.push(`微信：${mergedData.wechat}`);
+            if (mergedData.address) currentCardInfo.push(`地址：${mergedData.address}`);
+            if (mergedData.aboutMe) currentCardInfo.push(`个人简介：${mergedData.aboutMe}`);
+            if (mergedData.hometown) currentCardInfo.push(`家乡：${mergedData.hometown}`);
+            if (mergedData.residence) currentCardInfo.push(`常驻：${mergedData.residence}`);
+            if (mergedData.hobbies) currentCardInfo.push(`兴趣爱好：${mergedData.hobbies}`);
+            if (mergedData.personality) currentCardInfo.push(`性格特点：${mergedData.personality}`);
+            if (mergedData.focusIndustry) currentCardInfo.push(`关注行业：${mergedData.focusIndustry}`);
+            if (mergedData.circles) currentCardInfo.push(`圈层：${mergedData.circles}`);
+            if (mergedData.companyIntro) currentCardInfo.push(`公司简介：${mergedData.companyIntro}`);
+            if (mergedData.mainBusiness && mergedData.mainBusiness.length > 0) {
+                const businessList = mergedData.mainBusiness.map(item => item.name).join('、');
+                currentCardInfo.push(`主营业务：${businessList}`);
+            }
+            if (mergedData.serviceNeeds && mergedData.serviceNeeds.length > 0) {
+                const needsList = mergedData.serviceNeeds.map(item => item.name).join('、');
+                currentCardInfo.push(`服务需求：${needsList}`);
+            }
+            
+            const confirmationMessage = `已确认更新：${fieldNames}。\n\n当前已填写的完整信息：\n${currentCardInfo.join('\n')}\n\n请根据已有信息，引导我填写下一个缺失的内容。`;
             
             const rawResponse = await callN8NAgent(
                 N8N_CONFIG.agentWebhookPath,
@@ -366,14 +395,26 @@ const AIAssistantScreen: React.FC = () => {
                                     focusIndustry: '关注行业',
                                     circles: '圈层',
                                     companyIntro: '公司简介',
+                                    mainBusiness: '主营业务',
+                                    serviceNeeds: '服务需求',
                                 };
                                 
                                 const fieldName = fieldMap[key] || key;
                                 
+                                // 格式化数组类型的值
+                                let displayValue: string;
+                                if (Array.isArray(value)) {
+                                    displayValue = value.map(item => 
+                                        typeof item === 'object' && item.name ? item.name : String(item)
+                                    ).join('、');
+                                } else {
+                                    displayValue = String(value);
+                                }
+                                
                                 return (
                                     <View key={key} style={styles.fieldItem}>
                                         <Text style={styles.fieldLabel}>{fieldName}</Text>
-                                        <Text style={styles.fieldValue}>{String(value)}</Text>
+                                        <Text style={styles.fieldValue}>{displayValue}</Text>
                                     </View>
                                 );
                             })}
