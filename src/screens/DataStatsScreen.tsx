@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import PageHeader from '../components/PageHeader';
@@ -20,6 +20,8 @@ const DataStatsScreen: React.FC<Props> = ({ onClose }) => {
         imagesCount: 0
     });
     const [loading, setLoading] = useState(true);
+    const [tapCount, setTapCount] = useState(0);
+    const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         loadDataStats();
@@ -37,37 +39,57 @@ const DataStatsScreen: React.FC<Props> = ({ onClose }) => {
         }
     };
 
-    const handleClearAllData = () => {
-        Alert.alert(
-            '清除所有数据',
-            '此操作将删除所有聊天记录、名片数据和图片文件。此操作不可恢复，确定要继续吗？',
-            [
-                { text: '取消', style: 'cancel' },
-                {
-                    text: '确定清除',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await DataManager.clearAllData();
-                            await clearAllData();
-                            await loadDataStats();
-                            Alert.alert('成功', '所有数据已清除');
-                        } catch (error) {
-                            Alert.alert('错误', '清除数据失败，请重试');
-                        }
-                    }
-                }
-            ]
-        );
+    const handleDeleteButtonPress = () => {
+        const newTapCount = tapCount + 1;
+        setTapCount(newTapCount);
+
+        if (tapTimeoutRef.current) {
+            clearTimeout(tapTimeoutRef.current);
+        }
+
+        if (newTapCount === 1) {
+            tapTimeoutRef.current = setTimeout(() => {
+                setTapCount(0);
+            }, 500);
+        } else if (newTapCount === 2) {
+            setTapCount(0);
+            if (tapTimeoutRef.current) {
+                clearTimeout(tapTimeoutRef.current);
+            }
+            showDeleteConfirmation();
+        }
     };
 
-    const handleExportData = async () => {
-        try {
-            const data = await DataManager.exportAllData();
-            Alert.alert('提示', '数据导出功能开发中，敬请期待');
-        } catch (error) {
-            Alert.alert('错误', '导出数据失败');
-        }
+    const showDeleteConfirmation = () => {
+        Alert.prompt(
+            '确认删除所有数据',
+            '删除将导致数据不可还原。\n\n请输入「我确定删除数据」以确认删除：',
+            [
+                {
+                    text: '取消',
+                    style: 'cancel',
+                },
+                {
+                    text: '删除',
+                    style: 'destructive',
+                    onPress: async (inputText) => {
+                        if (inputText === '我确定删除数据') {
+                            try {
+                                await DataManager.clearAllData();
+                                await clearAllData();
+                                await loadDataStats();
+                                Alert.alert('成功', '所有数据已清除');
+                            } catch (error) {
+                                Alert.alert('错误', '清除数据失败，请重试');
+                            }
+                        } else {
+                            Alert.alert('错误', '输入的确认文字不正确，删除已取消');
+                        }
+                    },
+                },
+            ],
+            'plain-text'
+        );
     };
 
     return (
@@ -155,38 +177,21 @@ const DataStatsScreen: React.FC<Props> = ({ onClose }) => {
 
                     {/* 数据管理操作 */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>数据管理</Text>
+                        <Text style={styles.sectionTitle}>危险操作</Text>
                         
                         <TouchableOpacity 
-                            style={styles.actionCard}
-                            onPress={handleExportData}
+                            style={styles.deleteCard}
+                            onPress={handleDeleteButtonPress}
+                            activeOpacity={0.7}
                         >
-                            <View style={styles.actionLeft}>
-                                <View style={[styles.actionIcon, { backgroundColor: '#dbeafe' }]}>
-                                    <MaterialIcons name="file-download" size={24} color="#3b82f6" />
-                                </View>
-                                <View style={styles.actionContent}>
-                                    <Text style={styles.actionTitle}>导出数据</Text>
-                                    <Text style={styles.actionDescription}>导出所有数据到文件</Text>
-                                </View>
+                            <View style={styles.deleteIcon}>
+                                <MaterialIcons name="delete-forever" size={32} color="#ef4444" />
                             </View>
-                            <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
-                            style={styles.actionCard}
-                            onPress={handleClearAllData}
-                        >
-                            <View style={styles.actionLeft}>
-                                <View style={[styles.actionIcon, { backgroundColor: '#fee2e2' }]}>
-                                    <MaterialIcons name="delete-forever" size={24} color="#ef4444" />
-                                </View>
-                                <View style={styles.actionContent}>
-                                    <Text style={[styles.actionTitle, { color: '#ef4444' }]}>清除所有数据</Text>
-                                    <Text style={styles.actionDescription}>删除所有本地数据（不可恢复）</Text>
-                                </View>
+                            <View style={styles.deleteContent}>
+                                <Text style={styles.deleteTitle}>清除所有数据</Text>
+                                <Text style={styles.deleteDescription}>双击此按钮以删除所有本地数据</Text>
+                                <Text style={styles.deleteWarning}>⚠️ 删除后数据不可恢复</Text>
                             </View>
-                            <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
                         </TouchableOpacity>
                     </View>
 
@@ -357,6 +362,46 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#475569',
         lineHeight: 18,
+    },
+    deleteCard: {
+        backgroundColor: '#fef2f2',
+        borderRadius: 12,
+        padding: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
+        borderWidth: 2,
+        borderColor: '#fecaca',
+        borderStyle: 'dashed',
+    },
+    deleteIcon: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#fee2e2',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    deleteContent: {
+        flex: 1,
+    },
+    deleteTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#ef4444',
+        marginBottom: 6,
+    },
+    deleteDescription: {
+        fontSize: 13,
+        color: '#dc2626',
+        marginBottom: 4,
+        lineHeight: 18,
+    },
+    deleteWarning: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#f59e0b',
+        marginTop: 4,
     },
 });
 
