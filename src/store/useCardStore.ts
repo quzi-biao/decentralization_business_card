@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { CardPersistenceService } from '../services/cardPersistence';
 
 export interface BusinessItem {
     id: string;
@@ -47,42 +48,87 @@ export interface BusinessCardData {
 
 interface CardStore {
     cardData: BusinessCardData;
-    updateCardData: (data: Partial<BusinessCardData>) => void;
+    exchangedCards: BusinessCardData[];
+    isLoaded: boolean;
+    updateCardData: (data: Partial<BusinessCardData>) => Promise<void>;
+    addExchangedCard: (card: BusinessCardData) => Promise<void>;
+    removeExchangedCard: (card: BusinessCardData) => Promise<void>;
+    loadData: () => Promise<void>;
+    clearAllData: () => Promise<void>;
 }
 
-export const useCardStore = create<CardStore>((set) => ({
-    cardData: {
-        // 基本信息
-        realName: "",
-        position: "",
-        companyName: "",
-        industry: "",
-        
-        // 联系方式
-        phone: "",
-        email: "",
-        wechat: "",
-        address: "",
-        
-        // 个人信息
-        aboutMe: "",
-        hometown: "",
-        residence: "",
-        hobbies: "",
-        personality: "",
-        focusIndustry: "",
-        circles: "",
-        
-        // 企业信息
-        companyIntro: "",
-        mainBusiness: [],
-        serviceNeeds: [],
-        companyImages: [],
-        
-        tags: [],
-        themeColor: "#4F46E5"
+const defaultCardData: BusinessCardData = {
+    // 基本信息
+    realName: "",
+    position: "",
+    companyName: "",
+    industry: "",
+    
+    // 联系方式
+    phone: "",
+    email: "",
+    wechat: "",
+    address: "",
+    
+    // 个人信息
+    aboutMe: "",
+    hometown: "",
+    residence: "",
+    hobbies: "",
+    personality: "",
+    focusIndustry: "",
+    circles: "",
+    
+    // 企业信息
+    companyIntro: "",
+    mainBusiness: [],
+    serviceNeeds: [],
+    companyImages: [],
+    
+    tags: [],
+    themeColor: "#4F46E5"
+};
+
+export const useCardStore = create<CardStore>((set, get) => ({
+    cardData: defaultCardData,
+    exchangedCards: [],
+    isLoaded: false,
+    
+    updateCardData: async (newData) => {
+        const updatedData = { ...get().cardData, ...newData };
+        set({ cardData: updatedData });
+        await CardPersistenceService.saveMyCard(updatedData);
     },
-    updateCardData: (newData) => set((state) => ({
-        cardData: { ...state.cardData, ...newData }
-    })),
+    
+    addExchangedCard: async (card) => {
+        await CardPersistenceService.addExchangedCard(card);
+        const cards = await CardPersistenceService.getExchangedCards();
+        set({ exchangedCards: cards });
+    },
+    
+    removeExchangedCard: async (card) => {
+        await CardPersistenceService.deleteExchangedCard(card);
+        const cards = await CardPersistenceService.getExchangedCards();
+        set({ exchangedCards: cards });
+    },
+    
+    loadData: async () => {
+        const myCard = await CardPersistenceService.getMyCard();
+        const exchangedCards = await CardPersistenceService.getExchangedCards();
+        
+        set({
+            cardData: myCard || defaultCardData,
+            exchangedCards: exchangedCards,
+            isLoaded: true
+        });
+    },
+    
+    clearAllData: async () => {
+        await CardPersistenceService.clearAllCards();
+        set({
+            cardData: defaultCardData,
+            exchangedCards: [],
+            isLoaded: true
+        });
+    }
 }));

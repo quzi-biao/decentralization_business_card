@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 import MyCard from '../components/MyCard';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
+import { DataManager } from '../services/dataManager';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -70,8 +71,52 @@ type Props = StackScreenProps<ProfileStackParamList, 'ProfileMain'> & {
 };
 
 const ProfileScreen = ({ navigation, onEditPress }: Props) => {
-    const { cardData, updateCardData } = useCardStore();
+    const { cardData, updateCardData, clearAllData } = useCardStore();
     const [showMnemonic, setShowMnemonic] = useState(false);
+    const [dataStats, setDataStats] = useState({
+        chatDates: 0,
+        myCardExists: false,
+        exchangedCardsCount: 0,
+        avatarsCount: 0,
+        imagesCount: 0
+    });
+    
+    useEffect(() => {
+        loadDataStats();
+    }, []);
+    
+    const loadDataStats = async () => {
+        try {
+            const stats = await DataManager.getDataStats();
+            setDataStats(stats);
+        } catch (error) {
+            console.error('Failed to load data stats:', error);
+        }
+    };
+    
+    const handleClearAllData = () => {
+        Alert.alert(
+            '清除所有数据',
+            '此操作将删除所有聊天记录、名片数据和图片文件。此操作不可恢复，确定要继续吗？',
+            [
+                { text: '取消', style: 'cancel' },
+                {
+                    text: '确定清除',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await DataManager.clearAllData();
+                            await clearAllData();
+                            await loadDataStats();
+                            Alert.alert('成功', '所有数据已清除');
+                        } catch (error) {
+                            Alert.alert('错误', '清除数据失败，请重试');
+                        }
+                    }
+                }
+            ]
+        );
+    };
     
     const handleCardPress = () => {
         navigation.navigate('CardDetail', { cardData });
@@ -150,6 +195,35 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                     <TouchableOpacity style={styles.menuItem}>
                         <MaterialIcons name="block" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>撤销列表</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* 数据管理 */}
+                <View style={styles.section}>
+                    <View style={styles.dataStatsContainer}>
+                        <Text style={styles.dataStatsTitle}>数据统计</Text>
+                        <View style={styles.dataStatsGrid}>
+                            <View style={styles.dataStatItem}>
+                                <Text style={styles.dataStatValue}>{dataStats.chatDates}</Text>
+                                <Text style={styles.dataStatLabel}>聊天记录（天）</Text>
+                            </View>
+                            <View style={styles.dataStatItem}>
+                                <Text style={styles.dataStatValue}>{dataStats.exchangedCardsCount}</Text>
+                                <Text style={styles.dataStatLabel}>交换的名片</Text>
+                            </View>
+                            <View style={styles.dataStatItem}>
+                                <Text style={styles.dataStatValue}>{dataStats.avatarsCount}</Text>
+                                <Text style={styles.dataStatLabel}>头像图片</Text>
+                            </View>
+                        </View>
+                    </View>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={handleClearAllData}
+                    >
+                        <MaterialIcons name="delete-forever" size={20} color="#ef4444" style={styles.menuIcon} />
+                        <Text style={[styles.menuText, { color: '#ef4444' }]}>清除所有数据</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                 </View>
@@ -449,6 +523,36 @@ const styles = StyleSheet.create({
     versionText: {
         fontSize: 12,
         color: '#94a3b8',
+    },
+    dataStatsContainer: {
+        paddingBottom: 16,
+        marginBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    dataStatsTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1e293b',
+        marginBottom: 12,
+    },
+    dataStatsGrid: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+    },
+    dataStatItem: {
+        alignItems: 'center',
+    },
+    dataStatValue: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#4F46E5',
+        marginBottom: 4,
+    },
+    dataStatLabel: {
+        fontSize: 11,
+        color: '#64748b',
+        textAlign: 'center',
     },
 });
 
