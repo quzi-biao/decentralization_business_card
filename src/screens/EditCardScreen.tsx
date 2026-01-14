@@ -195,24 +195,22 @@ const EditCardScreen = ({ onClose }: any) => {
                         </TouchableOpacity>
                         <View style={styles.avatarActions}>
                             <TouchableOpacity 
-                                key="pick-avatar"
                                 style={styles.avatarButton}
                                 onPress={handlePickAvatar}
                                 disabled={uploadingAvatar}
                             >
-                                <MaterialIcons key="icon" name="photo-library" size={20} color="#4F46E5" />
-                                <Text key="text" style={styles.avatarButtonText}>
+                                <MaterialIcons name="photo-library" size={20} color="#4F46E5" />
+                                <Text style={styles.avatarButtonText}>
                                     {uploadingAvatar ? '上传中...' : '选择头像'}
                                 </Text>
                             </TouchableOpacity>
                             {(cardData.avatarId || cardData.avatarUrl) && (
                                 <TouchableOpacity 
-                                    key="remove-avatar"
                                     style={[styles.avatarButton, styles.removeButton]}
                                     onPress={handleRemoveAvatar}
                                 >
-                                    <MaterialIcons key="icon" name="delete" size={20} color="#ef4444" />
-                                    <Text key="text" style={[styles.avatarButtonText, styles.removeButtonText]}>移除</Text>
+                                    <MaterialIcons name="delete" size={20} color="#ef4444" />
+                                    <Text style={[styles.avatarButtonText, styles.removeButtonText]}>移除</Text>
                                 </TouchableOpacity>
                             )}
                         </View>

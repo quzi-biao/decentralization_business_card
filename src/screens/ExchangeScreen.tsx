@@ -39,6 +39,15 @@ const ExchangeScreen = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    // 监听名片数据变化，自动重新生成二维码
+    useEffect(() => {
+        // 只有在已经生成过二维码后才重新生成
+        if (qrData) {
+            console.log('Card data changed, regenerating QR code...');
+            generateMyQRCode();
+        }
+    }, [cardData]);
+
 
     // 生成我的二维码
     const generateMyQRCode = async () => {
@@ -53,12 +62,12 @@ const ExchangeScreen = () => {
             }
             console.log('Step 2: Identity obtained:', identity.did);
 
-            // 上传加密的名片数据
-            console.log('Step 3: Uploading encrypted card...');
+            // 每次都重新上传加密的名片数据，确保使用最新的名片信息
+            console.log('Step 3: Uploading latest encrypted card...');
             const encryptedPackage = await uploadEncryptedCard(cardData);
-            console.log('Step 4: Card uploaded successfully');
+            console.log('Step 4: Card uploaded successfully to:', encryptedPackage.storageUrl);
 
-            // 获取 AES 密钥（用于二维码中）
+            // 获取新生成的 AES 密钥（用于二维码中）
             const aesKey = await AsyncStorage.getItem(`encrypted_card_${identity.did}_key`);
             if (!aesKey) {
                 throw new Error('AES key not found');
@@ -76,7 +85,7 @@ const ExchangeScreen = () => {
 
             console.log('Step 5: Setting QR data...');
             setQrData(JSON.stringify(qrPayload));
-            console.log('Step 6: QR code generated successfully');
+            console.log('Step 6: QR code generated successfully with latest card data');
         } catch (error: any) {
             console.error('Failed to generate QR code:', error);
             console.error('Error stack:', error.stack);
@@ -255,6 +264,9 @@ const ExchangeScreen = () => {
                         style={styles.scanCard}
                         onPress={() => {
                             setScannedCard(null);
+                            // 重置扫描状态，允许重新扫描
+                            setLastScannedData('');
+                            setLastScanTime(0);
                             setMode('scan');
                         }}
                     >
@@ -269,7 +281,12 @@ const ExchangeScreen = () => {
                     visible={!!scannedCard}
                     animationType="slide"
                     presentationStyle="pageSheet"
-                    onRequestClose={() => setScannedCard(null)}
+                    onRequestClose={() => {
+                        setScannedCard(null);
+                        // 重置扫描状态，允许再次扫描
+                        setLastScannedData('');
+                        setLastScanTime(0);
+                    }}
                 >
                     <SafeAreaView style={styles.modalContainer}>
                         <View style={styles.modalHeader}>
@@ -279,7 +296,12 @@ const ExchangeScreen = () => {
                             </View>
                             <TouchableOpacity 
                                 style={styles.modalCloseButton}
-                                onPress={() => setScannedCard(null)}
+                                onPress={() => {
+                                    setScannedCard(null);
+                                    // 重置扫描状态
+                                    setLastScannedData('');
+                                    setLastScanTime(0);
+                                }}
                             >
                                 <MaterialIcons name="close" size={24} color="#64748b" />
                             </TouchableOpacity>
@@ -296,7 +318,12 @@ const ExchangeScreen = () => {
                         <View style={styles.modalFooter}>
                             <TouchableOpacity 
                                 style={styles.modalButton}
-                                onPress={() => setScannedCard(null)}
+                                onPress={() => {
+                                    setScannedCard(null);
+                                    // 重置扫描状态
+                                    setLastScannedData('');
+                                    setLastScanTime(0);
+                                }}
                             >
                                 <Text style={styles.modalButtonText}>完成</Text>
                             </TouchableOpacity>
@@ -309,7 +336,12 @@ const ExchangeScreen = () => {
                     <View style={styles.scanModal}>
                         <TouchableOpacity 
                             style={styles.closeButton}
-                            onPress={() => setMode('qr')}
+                            onPress={() => {
+                                setMode('qr');
+                                // 重置扫描状态
+                                setLastScannedData('');
+                                setLastScanTime(0);
+                            }}
                         >
                             <Text style={styles.closeButtonText}>✕</Text>
                         </TouchableOpacity>
