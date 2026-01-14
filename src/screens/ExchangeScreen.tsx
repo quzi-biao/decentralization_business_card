@@ -4,11 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
-import { useCardStore } from '../store/useCardStore';
+import { useCardStore, BusinessCardData } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
 import { getIdentity } from '../services/identityService';
 import { uploadEncryptedCard, createAccessGrant, downloadEncryptedCard, getAccessGrant, decryptCardData } from '../services/storageService';
 import { generateRandomId } from '../utils/crypto';
+import MyCard from '../components/MyCard';
 
 /**
  * 名片交换屏幕
@@ -24,6 +25,9 @@ const ExchangeScreen = () => {
     const [permission, requestPermission] = useCameraPermissions();
     const [isProcessing, setIsProcessing] = useState(false);
     const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+    const [lastScannedData, setLastScannedData] = useState<string>('');
+    const [lastScanTime, setLastScanTime] = useState<number>(0);
+    const [scannedCard, setScannedCard] = useState<BusinessCardData | null>(null);
 
     useEffect(() => {
         // 延迟生成二维码，让页面先渲染
@@ -76,8 +80,18 @@ const ExchangeScreen = () => {
 
     // 处理扫描结果
     const handleBarCodeScanned = async ({ data }: any) => {
+        // 防止重复扫描：检查是否正在处理
         if (isProcessing) return;
         
+        // 防止重复扫描：检查是否是相同的二维码
+        if (data === lastScannedData) return;
+        
+        // 防止重复扫描：添加冷却时间（2秒内不处理相同或新的扫描）
+        const now = Date.now();
+        if (now - lastScanTime < 2000) return;
+        
+        setLastScannedData(data);
+        setLastScanTime(now);
         setIsProcessing(true);
         
         try {
@@ -87,6 +101,7 @@ const ExchangeScreen = () => {
             const identity = await getIdentity();
             if (!identity) {
                 Alert.alert('错误', '请先初始化身份');
+                setIsProcessing(false);
                 return;
             }
 
@@ -116,22 +131,29 @@ const ExchangeScreen = () => {
             await addExchange(exchange);
 
             // 尝试下载并解密对方的名片
+            let peerCardData: BusinessCardData | null = null;
             try {
                 const encryptedPackage = await downloadEncryptedCard(peerStorageUrl);
                 if (encryptedPackage) {
                     const grant = await getAccessGrant(peerDid, identity.did);
                     if (grant) {
-                        const peerCardData = await decryptCardData(encryptedPackage, grant);
-                        setExchangedCard(peerDid, peerCardData);
+                        peerCardData = await decryptCardData(encryptedPackage, grant);
+                        if (peerCardData) {
+                            setExchangedCard(peerDid, peerCardData);
+                        }
                     }
                 }
             } catch (error) {
                 console.error('Failed to decrypt peer card:', error);
             }
 
-            Alert.alert('成功', '名片交换成功！', [
-                { text: '确定', onPress: () => setMode('qr') }
-            ]);
+            // 关闭扫描模式，显示对方名片
+            setMode('qr');
+            if (peerCardData) {
+                setScannedCard(peerCardData);
+            }
+            
+            Alert.alert('成功', '名片交换成功！');
         } catch (error) {
             console.error('Failed to exchange card:', error);
             Alert.alert('错误', '名片交换失败，请重试');
@@ -198,13 +220,33 @@ const ExchangeScreen = () => {
                 <View style={styles.scanSection}>
                     <TouchableOpacity 
                         style={styles.scanCard}
-                        onPress={() => setMode('scan')}
+                        onPress={() => {
+                            setScannedCard(null);
+                            setMode('scan');
+                        }}
                     >
                         <MaterialIcons name="qr-code-scanner" size={48} color="#4F46E5" style={styles.scanIcon} />
                         <Text style={styles.scanTitle}>扫描对方二维码</Text>
                         <Text style={styles.scanHint}>点击开始扫描</Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* 扫描到的名片展示 */}
+                {scannedCard && (
+                    <View style={styles.scannedCardSection}>
+                        <View style={styles.scannedCardHeader}>
+                            <MaterialIcons name="check-circle" size={24} color="#10b981" />
+                            <Text style={styles.scannedCardTitle}>交换成功</Text>
+                            <TouchableOpacity 
+                                style={styles.closeScannedCard}
+                                onPress={() => setScannedCard(null)}
+                            >
+                                <MaterialIcons name="close" size={20} color="#64748b" />
+                            </TouchableOpacity>
+                        </View>
+                        <MyCard cardData={scannedCard} />
+                    </View>
+                )}
 
                 {/* 扫描模态框 */}
                 {mode === 'scan' && (
@@ -485,6 +527,37 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 14,
         textAlign: 'center',
+    },
+    scannedCardSection: {
+        marginBottom: 16,
+    },
+    scannedCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 12,
+        gap: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    scannedCardTitle: {
+        flex: 1,
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#10b981',
+    },
+    closeScannedCard: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#f1f5f9',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
 

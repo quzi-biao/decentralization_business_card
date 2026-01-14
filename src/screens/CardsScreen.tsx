@@ -102,7 +102,10 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                                     : '去"交换"页面扫描对方的二维码来交换名片吧'}
                             </Text>
                             {!searchQuery && (
-                                <TouchableOpacity style={styles.emptyButton}>
+                                <TouchableOpacity 
+                                    style={styles.emptyButton}
+                                    onPress={() => (navigation as any).navigate('Exchange')}
+                                >
                                     <Text style={styles.emptyButtonText}>去交换名片</Text>
                                 </TouchableOpacity>
                             )}
