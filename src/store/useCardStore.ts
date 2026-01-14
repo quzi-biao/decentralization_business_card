@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { CardPersistenceService } from '../services/cardPersistence';
+import { ImageMigrationService } from '../utils/imageMigration';
 
 export interface BusinessItem {
     id: string;
@@ -9,7 +10,8 @@ export interface BusinessItem {
 
 export interface BusinessCardData {
     // 基本信息
-    avatarUrl?: string;        // 头像URL
+    avatarId?: string;         // 头像图片ID
+    avatarUrl?: string;        // 头像URL（兼容旧数据）
     realName: string;          // 姓名
     position: string;          // 职位
     companyName: string;       // 公司名称
@@ -19,7 +21,8 @@ export interface BusinessCardData {
     phone: string;             // 电话
     email: string;             // 邮箱
     wechat: string;            // 微信
-    wechatQrCode?: string;     // 微信二维码URL
+    wechatQrCodeId?: string;   // 微信二维码图片ID
+    wechatQrCode?: string;     // 微信二维码URL（兼容旧数据）
     address: string;           // 地址
     
     // 个人信息
@@ -35,7 +38,8 @@ export interface BusinessCardData {
     companyIntro: string;      // 公司简介
     mainBusiness: BusinessItem[];  // 主营业务
     serviceNeeds: BusinessItem[];  // 近期需求的资源
-    companyImages: string[];   // 公司图片
+    companyImageIds: string[]; // 公司图片ID列表
+    companyImages: string[];   // 公司图片（兼容旧数据）
     
     // 多媒体
     introVideoUrl?: string;    // 个人介绍视频URL
@@ -83,6 +87,7 @@ const defaultCardData: BusinessCardData = {
     companyIntro: "",
     mainBusiness: [],
     serviceNeeds: [],
+    companyImageIds: [],
     companyImages: [],
     
     tags: [],
@@ -115,6 +120,33 @@ export const useCardStore = create<CardStore>((set, get) => ({
     loadData: async () => {
         const myCard = await CardPersistenceService.getMyCard();
         const exchangedCards = await CardPersistenceService.getExchangedCards();
+        
+        // 检查是否需要迁移图片数据
+        const needsMigration = myCard && ImageMigrationService.needsMigration(myCard);
+        
+        if (needsMigration) {
+            console.log('Migrating image data to FileSystem...');
+            const migrationResult = await ImageMigrationService.migrateAllCards(
+                myCard || defaultCardData,
+                exchangedCards
+            );
+            
+            if (migrationResult.migrated) {
+                // 保存迁移后的数据
+                await CardPersistenceService.saveMyCard(migrationResult.myCard);
+                for (const card of migrationResult.exchangedCards) {
+                    await CardPersistenceService.addExchangedCard(card);
+                }
+                
+                set({
+                    cardData: migrationResult.myCard,
+                    exchangedCards: migrationResult.exchangedCards,
+                    isLoaded: true
+                });
+                console.log('Image migration completed');
+                return;
+            }
+        }
         
         set({
             cardData: myCard || defaultCardData,
