@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { encryptAES, decryptAES, generateAESKey, encryptWithPublicKey, signData, hashData } from '../utils/crypto';
 import { getPrivateKey, getIdentity } from './identityService';
+import { uploadToMinio, downloadFromMinio } from './minioService';
 
 /**
  * 存储服务
@@ -32,30 +33,22 @@ const GRANT_PREFIX = 'access_grant_';
 
 // 上传加密的名片数据
 export async function uploadEncryptedCard(cardData: any): Promise<EncryptedPackage> {
-    console.log('uploadEncryptedCard: Starting...');
     const identity = await getIdentity();
     const privateKey = await getPrivateKey();
     
     if (!identity || !privateKey) {
         throw new Error('Identity not initialized');
     }
-    console.log('uploadEncryptedCard: Identity verified');
     
     // 生成 AES 密钥
-    console.log('uploadEncryptedCard: Generating AES key...');
     const aesKey = generateAESKey();
-    console.log('uploadEncryptedCard: AES key generated');
     
     // 用 AES 加密名片数据
-    console.log('uploadEncryptedCard: Encrypting card data...');
     const cardJson = JSON.stringify(cardData);
     const encryptedData = encryptAES(cardJson, aesKey);
-    console.log('uploadEncryptedCard: Card data encrypted');
     
     // 用自己的公钥加密 AES 密钥
-    console.log('uploadEncryptedCard: Encrypting AES key...');
     const encryptedKey = encryptWithPublicKey(aesKey, identity.publicKey);
-    console.log('uploadEncryptedCard: AES key encrypted');
     
     // 生成数据哈希
     const dataHash = hashData(encryptedData);
@@ -66,7 +59,7 @@ export async function uploadEncryptedCard(cardData: any): Promise<EncryptedPacka
     // 创建加密包
     const package_: EncryptedPackage = {
         did: identity.did,
-        storageUrl: `${STORAGE_PREFIX}${identity.did}`,
+        storageUrl: '', // 将在上传后设置
         encryptedData,
         encryptedKey,
         dataHash,
@@ -75,10 +68,14 @@ export async function uploadEncryptedCard(cardData: any): Promise<EncryptedPacka
         timestamp: Date.now()
     };
     
-    // 模拟上传到 OSS（实际存储到 AsyncStorage）
-    await AsyncStorage.setItem(package_.storageUrl, JSON.stringify(package_));
+    // 上传到 MinIO，使用内容 hash 作为文件名
+    const minioUrl = await uploadToMinio(JSON.stringify(package_), `${dataHash}.json`);
+    package_.storageUrl = minioUrl;
     
-    // 同时保存 AES 密钥（用于后续创建授权）
+    // 同时保存到本地 AsyncStorage 作为备份
+    await AsyncStorage.setItem(`${STORAGE_PREFIX}${identity.did}`, JSON.stringify(package_));
+    
+    // 保存 AES 密钥到本地（用于后续创建授权）
     await AsyncStorage.setItem(`${STORAGE_PREFIX}${identity.did}_key`, aesKey);
     
     return package_;
@@ -87,6 +84,13 @@ export async function uploadEncryptedCard(cardData: any): Promise<EncryptedPacka
 // 下载加密的名片数据
 export async function downloadEncryptedCard(storageUrl: string): Promise<EncryptedPackage | null> {
     try {
+        // 如果是 MinIO URL，从 MinIO 下载
+        if (storageUrl.startsWith('http://') || storageUrl.startsWith('https://')) {
+            const data = await downloadFromMinio(storageUrl);
+            return JSON.parse(data);
+        }
+        
+        // 否则从本地 AsyncStorage 读取（向后兼容）
         const packageJson = await AsyncStorage.getItem(storageUrl);
         if (!packageJson) return null;
         return JSON.parse(packageJson);
