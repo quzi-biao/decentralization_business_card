@@ -15,6 +15,7 @@ import TutorialScreen from './TutorialScreen';
 import FAQScreen from './FAQScreen';
 import ContactScreen from './ContactScreen';
 import DataStatsScreen from './DataStatsScreen';
+import RevokeListScreen from './RevokeListScreen';
 import * as Clipboard from 'expo-clipboard';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -88,6 +89,7 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
     const [showFAQ, setShowFAQ] = useState(false);
     const [showContact, setShowContact] = useState(false);
     const [showDataStats, setShowDataStats] = useState(false);
+    const [showRevokeList, setShowRevokeList] = useState(false);
     const [publicKey, setPublicKey] = useState<string>('');
     const [dataStats, setDataStats] = useState({
         chatDates: 0,
@@ -254,7 +256,10 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                         <Text style={styles.menuText}>访问权限管理</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowRevokeList(true)}
+                    >
                         <MaterialIcons name="block" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>撤销列表</Text>
                         <Text style={styles.menuArrow}>›</Text>
@@ -371,6 +376,14 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                 presentationStyle="fullScreen"
             >
                 <DataStatsScreen onClose={() => setShowDataStats(false)} />
+            </Modal>
+
+            <Modal
+                visible={showRevokeList}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <RevokeListScreen onClose={() => setShowRevokeList(false)} />
             </Modal>
         </SafeAreaView>
     );
