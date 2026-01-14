@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCardStore, BusinessCardData } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
 import { getIdentity } from '../services/identityService';
@@ -57,11 +58,18 @@ const ExchangeScreen = () => {
             const encryptedPackage = await uploadEncryptedCard(cardData);
             console.log('Step 4: Card uploaded successfully');
 
-            // 生成二维码数据
+            // 获取 AES 密钥（用于二维码中）
+            const aesKey = await AsyncStorage.getItem(`encrypted_card_${identity.did}_key`);
+            if (!aesKey) {
+                throw new Error('AES key not found');
+            }
+
+            // 生成二维码数据（包含 AES 密钥）
             const qrPayload = {
                 did: identity.did,
                 publicKey: identity.publicKey,
                 storageUrl: encryptedPackage.storageUrl,
+                aesKey: aesKey, // 直接包含 AES 密钥
                 signature: encryptedPackage.signature,
                 timestamp: Date.now()
             };
@@ -107,53 +115,78 @@ const ExchangeScreen = () => {
 
             // 检查是否已经交换过
             const existingExchange = useExchangeStore.getState().getExchange(peerDid);
-            if (existingExchange) {
-                Alert.alert('提示', '已经与该用户交换过名片');
+            const isUpdate = !!existingExchange;
+
+            // 1. 创建访问授权（让对方能访问我的名片）
+            console.log('Creating access grant for peer...');
+            await createAccessGrant(peerDid, peerPublicKey);
+
+            // 2. 尝试下载并解密对方的名片（使用二维码中的 AES 密钥）
+            let peerCardData: BusinessCardData | null = null;
+            try {
+                console.log('Downloading encrypted card from:', peerStorageUrl);
+                const encryptedPackage = await downloadEncryptedCard(peerStorageUrl);
+                if (!encryptedPackage) {
+                    throw new Error('无法下载对方的名片数据');
+                }
+                
+                // 从二维码获取 AES 密钥
+                const aesKey = qrPayload.aesKey;
+                if (!aesKey) {
+                    throw new Error('二维码中缺少 AES 密钥');
+                }
+                
+                console.log('Decrypting card data with AES key from QR...');
+                // 直接使用 AES 密钥解密
+                const { decryptAES } = require('../utils/crypto');
+                const decryptedJson = decryptAES(encryptedPackage.encryptedData, aesKey);
+                peerCardData = JSON.parse(decryptedJson);
+                
+                if (!peerCardData) {
+                    throw new Error('无法解密对方的名片');
+                }
+                
+                // 保存 AES 密钥以便后续使用
+                await AsyncStorage.setItem(`encrypted_card_${peerDid}_key`, aesKey);
+            } catch (error: any) {
+                console.error('Failed to get peer card:', error);
+                Alert.alert('错误', `无法获取对方名片: ${error.message}\n\n${isUpdate ? '更新' : '交换'}已取消`);
                 setIsProcessing(false);
                 return;
             }
 
-            // 创建访问授权（让对方能访问我的名片）
-            await createAccessGrant(peerDid, peerPublicKey);
+            // 如果是更新，更新交换记录和名片数据
+            if (isUpdate) {
+                await useExchangeStore.getState().updateExchange(peerDid, {
+                    peerPublicKey,
+                    peerStorageUrl,
+                    lastSyncAt: Date.now(),
+                });
+                await setExchangedCard(peerDid, peerCardData);
+                
+                // 退出扫描模式，显示名片预览弹窗
+                setMode('qr');
+                setScannedCard(peerCardData);
+            } else {
+                // 创建新的交换记录
+                const exchange = {
+                    id: generateRandomId(),
+                    myDid: identity.did,
+                    peerDid,
+                    peerPublicKey,
+                    peerStorageUrl,
+                    exchangedAt: Date.now(),
+                    lastSyncAt: Date.now(),
+                    status: 'active' as const
+                };
 
-            // 创建交换记录
-            const exchange = {
-                id: generateRandomId(),
-                myDid: identity.did,
-                peerDid,
-                peerPublicKey,
-                peerStorageUrl,
-                exchangedAt: Date.now(),
-                lastSyncAt: Date.now(),
-                status: 'active' as const
-            };
+                await addExchange(exchange);
+                await setExchangedCard(peerDid, peerCardData);
 
-            await addExchange(exchange);
-
-            // 尝试下载并解密对方的名片
-            let peerCardData: BusinessCardData | null = null;
-            try {
-                const encryptedPackage = await downloadEncryptedCard(peerStorageUrl);
-                if (encryptedPackage) {
-                    const grant = await getAccessGrant(peerDid, identity.did);
-                    if (grant) {
-                        peerCardData = await decryptCardData(encryptedPackage, grant);
-                        if (peerCardData) {
-                            setExchangedCard(peerDid, peerCardData);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to decrypt peer card:', error);
-            }
-
-            // 关闭扫描模式，显示对方名片
-            setMode('qr');
-            if (peerCardData) {
+                // 退出扫描模式，显示名片预览弹窗
+                setMode('qr');
                 setScannedCard(peerCardData);
             }
-            
-            Alert.alert('成功', '名片交换成功！');
         } catch (error) {
             console.error('Failed to exchange card:', error);
             Alert.alert('错误', '名片交换失败，请重试');
@@ -231,22 +264,45 @@ const ExchangeScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* 扫描到的名片展示 */}
-                {scannedCard && (
-                    <View style={styles.scannedCardSection}>
-                        <View style={styles.scannedCardHeader}>
-                            <MaterialIcons name="check-circle" size={24} color="#10b981" />
-                            <Text style={styles.scannedCardTitle}>交换成功</Text>
+                {/* 扫描到的名片弹窗 */}
+                <Modal
+                    visible={!!scannedCard}
+                    animationType="slide"
+                    presentationStyle="pageSheet"
+                    onRequestClose={() => setScannedCard(null)}
+                >
+                    <SafeAreaView style={styles.modalContainer}>
+                        <View style={styles.modalHeader}>
+                            <View style={styles.modalTitleRow}>
+                                <MaterialIcons name="check-circle" size={28} color="#10b981" />
+                                <Text style={styles.modalTitle}>名片交换成功</Text>
+                            </View>
                             <TouchableOpacity 
-                                style={styles.closeScannedCard}
+                                style={styles.modalCloseButton}
                                 onPress={() => setScannedCard(null)}
                             >
-                                <MaterialIcons name="close" size={20} color="#64748b" />
+                                <MaterialIcons name="close" size={24} color="#64748b" />
                             </TouchableOpacity>
                         </View>
-                        <MyCard cardData={scannedCard} />
-                    </View>
-                )}
+                        
+                        <ScrollView style={styles.modalContent}>
+                            {scannedCard && (
+                                <View style={styles.modalCardWrapper}>
+                                    <MyCard cardData={scannedCard} />
+                                </View>
+                            )}
+                        </ScrollView>
+                        
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity 
+                                style={styles.modalButton}
+                                onPress={() => setScannedCard(null)}
+                            >
+                                <Text style={styles.modalButtonText}>完成</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </SafeAreaView>
+                </Modal>
 
                 {/* 扫描模态框 */}
                 {mode === 'scan' && (
@@ -527,6 +583,56 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 14,
         textAlign: 'center',
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: '#F8FAFC',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        backgroundColor: '#ffffff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e2e8f0',
+    },
+    modalTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1e293b',
+    },
+    modalCloseButton: {
+        padding: 8,
+    },
+    modalContent: {
+        flex: 1,
+    },
+    modalCardWrapper: {
+        padding: 16,
+    },
+    modalFooter: {
+        padding: 16,
+        backgroundColor: '#ffffff',
+        borderTopWidth: 1,
+        borderTopColor: '#e2e8f0',
+    },
+    modalButton: {
+        backgroundColor: '#4F46E5',
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    modalButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#ffffff',
     },
     scannedCardSection: {
         marginBottom: 16,

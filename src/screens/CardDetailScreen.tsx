@@ -12,13 +12,15 @@ const { width } = Dimensions.get('window');
 interface CardDetailScreenProps {
     cardData: BusinessCardData;
     onClose: () => void;
+    peerDid?: string; // 对方的 DID/address
+    exchangedAt?: number; // 交换时间戳
 }
 
 /**
  * 名片详情页面
  * 完整的独立页面展示名片信息
  */
-const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }) => {
+const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, peerDid, exchangedAt }) => {
     const handleCopy = async (text: string, label: string) => {
         try {
             await Clipboard.setStringAsync(text);
@@ -43,6 +45,47 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                 <View style={styles.cardSection}>
                     <MyCard cardData={cardData} />
                 </View>
+
+                {/* 身份地址 */}
+                {peerDid && (
+                    <View style={styles.card}>
+                        <View style={styles.cardTitle}>
+                            <MaterialIcons key="icon" name="account-balance-wallet" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                            <Text key="text" style={styles.cardTitleText}>身份地址</Text>
+                        </View>
+                        <View style={styles.contactItem}>
+                            <MaterialIcons name="fingerprint" size={18} color="#64748b" style={styles.contactIcon} />
+                            <View style={styles.contactInfo}>
+                                <Text style={styles.contactLabel}>DID</Text>
+                                <Text style={styles.contactValue} numberOfLines={1} ellipsizeMode="middle">{peerDid}</Text>
+                            </View>
+                            <TouchableOpacity 
+                                style={styles.copyButton}
+                                onPress={() => handleCopy(peerDid, 'DID')}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
+                            </TouchableOpacity>
+                        </View>
+                        {exchangedAt && (
+                            <View style={styles.contactItem}>
+                                <MaterialIcons name="schedule" size={18} color="#64748b" style={styles.contactIcon} />
+                                <View style={styles.contactInfo}>
+                                    <Text style={styles.contactLabel}>交换时间</Text>
+                                    <Text style={styles.contactValue}>
+                                        {new Date(exchangedAt).toLocaleString('zh-CN', {
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                            day: '2-digit',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+                    </View>
+                )}
 
                 {/* 联系方式 */}
                 {(cardData.phone || cardData.email || cardData.wechat || cardData.address || cardData.wechatQrCode) && (
