@@ -135,6 +135,27 @@ export async function createAccessGrant(peerDid: string, peerPublicKey: string):
     return grant;
 }
 
+// 为特定公钥创建预授权（用于二维码）
+export async function createPreAuthorizedGrant(targetPublicKey: string): Promise<string> {
+    const identity = await getIdentity();
+    const privateKey = await getPrivateKey();
+    
+    if (!identity || !privateKey) {
+        throw new Error('Identity not initialized');
+    }
+    
+    // 获取自己的 AES 密钥
+    const aesKey = await AsyncStorage.getItem(`${STORAGE_PREFIX}${identity.did}_key`);
+    if (!aesKey) {
+        throw new Error('AES key not found');
+    }
+    
+    // 用目标公钥加密 AES 密钥
+    const encryptedAESKey = encryptWithPublicKey(aesKey, targetPublicKey);
+    
+    return encryptedAESKey;
+}
+
 // 获取访问授权
 export async function getAccessGrant(granterDid: string, granteeDid: string): Promise<AccessGrant | null> {
     try {

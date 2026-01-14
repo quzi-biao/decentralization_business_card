@@ -6,7 +6,7 @@ import { BusinessCardData } from '../store/useCardStore';
 
 export type CardsStackParamList = {
   CardsList: undefined;
-  CardDetail: { cardData: BusinessCardData };
+  CardDetail: { cardData: BusinessCardData; peerDid?: string; exchangedAt?: number };
 };
 
 const Stack = createStackNavigator<CardsStackParamList>();
@@ -17,6 +17,8 @@ const CardDetailWrapper: React.FC<CardDetailProps> = ({ route, navigation }) => 
   return (
     <CardDetailScreen
       cardData={route.params.cardData}
+      peerDid={route.params.peerDid}
+      exchangedAt={route.params.exchangedAt}
       onClose={() => navigation.goBack()}
     />
   );

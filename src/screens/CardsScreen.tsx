@@ -120,7 +120,11 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                                     <TouchableOpacity 
                                         key={exchange.id} 
                                         style={styles.cardItem}
-                                        onPress={() => cardData && navigation.navigate('CardDetail', { cardData })}
+                                        onPress={() => cardData && navigation.navigate('CardDetail', { 
+                                            cardData, 
+                                            peerDid: exchange.peerDid,
+                                            exchangedAt: exchange.exchangedAt
+                                        })}
                                     >
                                         <View style={styles.cardAvatar}>
                                             <Text style={styles.cardAvatarText}>
@@ -135,9 +139,6 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                                         </Text>
                                         <Text style={styles.cardCompany} numberOfLines={1}>
                                             {cardData?.companyName || '未知公司'}
-                                        </Text>
-                                        <Text style={styles.cardTime}>
-                                            {formatTime(exchange.exchangedAt)}
                                         </Text>
                                     </TouchableOpacity>
                                 );

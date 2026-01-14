@@ -31,7 +31,7 @@ interface ExchangeStore {
     addExchange: (exchange: CardExchange) => Promise<void>;
     removeExchange: (peerDid: string) => Promise<void>;
     updateExchange: (peerDid: string, updates: Partial<CardExchange>) => Promise<void>;
-    setExchangedCard: (peerDid: string, cardData: BusinessCardData) => void;
+    setExchangedCard: (peerDid: string, cardData: BusinessCardData) => Promise<void>;
     revokeExchange: (peerDid: string) => Promise<void>;
     
     // 查询
@@ -43,9 +43,12 @@ interface ExchangeStore {
     // 持久化
     loadExchanges: () => Promise<void>;
     saveExchanges: () => Promise<void>;
+    saveExchangedCards: () => Promise<void>;
+    loadExchangedCards: () => Promise<void>;
 }
 
 const EXCHANGES_KEY = 'card_exchanges';
+const EXCHANGED_CARDS_KEY = 'exchanged_cards';
 
 export const useExchangeStore = create<ExchangeStore>((set, get) => ({
     exchanges: [],
@@ -84,7 +87,7 @@ export const useExchangeStore = create<ExchangeStore>((set, get) => ({
         await get().saveExchanges();
     },
     
-    setExchangedCard: (peerDid: string, cardData: BusinessCardData) => {
+    setExchangedCard: async (peerDid: string, cardData: BusinessCardData) => {
         set((state) => {
             const newCards = new Map(state.exchangedCards);
             const existing = newCards.get(peerDid);
@@ -97,6 +100,7 @@ export const useExchangeStore = create<ExchangeStore>((set, get) => ({
             }
             return { exchangedCards: newCards };
         });
+        await get().saveExchangedCards();
     },
     
     revokeExchange: async (peerDid: string) => {
@@ -133,6 +137,7 @@ export const useExchangeStore = create<ExchangeStore>((set, get) => ({
                     });
                 });
                 set({ exchanges, exchangedCards });
+                await get().loadExchangedCards();
             }
         } catch (error) {
             console.error('Failed to load exchanges:', error);
@@ -145,6 +150,46 @@ export const useExchangeStore = create<ExchangeStore>((set, get) => ({
             await AsyncStorage.setItem(EXCHANGES_KEY, JSON.stringify(exchanges));
         } catch (error) {
             console.error('Failed to save exchanges:', error);
+        }
+    },
+    
+    saveExchangedCards: async () => {
+        try {
+            const { exchangedCards } = get();
+            const cardsData: Record<string, BusinessCardData> = {};
+            exchangedCards.forEach((value, key) => {
+                if (value.cardData) {
+                    cardsData[key] = value.cardData;
+                }
+            });
+            await AsyncStorage.setItem(EXCHANGED_CARDS_KEY, JSON.stringify(cardsData));
+        } catch (error) {
+            console.error('Failed to save exchanged cards:', error);
+        }
+    },
+    
+    loadExchangedCards: async () => {
+        try {
+            const cardsJson = await AsyncStorage.getItem(EXCHANGED_CARDS_KEY);
+            if (cardsJson) {
+                const cardsData: Record<string, BusinessCardData> = JSON.parse(cardsJson);
+                set((state) => {
+                    const newCards = new Map(state.exchangedCards);
+                    Object.entries(cardsData).forEach(([peerDid, cardData]) => {
+                        const existing = newCards.get(peerDid);
+                        if (existing) {
+                            newCards.set(peerDid, {
+                                ...existing,
+                                cardData,
+                                isDecrypted: true
+                            });
+                        }
+                    });
+                    return { exchangedCards: newCards };
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load exchanged cards:', error);
         }
     }
 }));
