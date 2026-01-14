@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { BusinessCardData } from '../store/useCardStore';
 import MyCard from '../components/MyCard';
+import { RichTextRenderer } from '../components/RichTextRenderer';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +19,14 @@ interface CardDetailScreenProps {
  * 完整的独立页面展示名片信息
  */
 const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }) => {
+    const handleCopy = async (text: string, label: string) => {
+        try {
+            await Clipboard.setStringAsync(text);
+            Alert.alert('已复制', `${label}已复制到剪贴板`);
+        } catch (error) {
+            Alert.alert('复制失败', '无法复制到剪贴板');
+        }
+    };
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* 顶部导航栏 */}
@@ -35,55 +45,84 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                 </View>
 
                 {/* 联系方式 */}
+                {(cardData.phone || cardData.email || cardData.wechat || cardData.address || cardData.wechatQrCode) && (
                     <View style={styles.card}>
                         <View style={styles.cardTitle}>
-                            <MaterialIcons name="contact-mail" size={20} color="#1e293b" />
-                            <Text style={styles.cardTitleText}>联系方式</Text>
+                            <MaterialIcons key="icon" name="contact-mail" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                            <Text key="text" style={styles.cardTitleText}>联系方式</Text>
                         </View>
 
                         {cardData.phone && (
                             <View style={styles.contactItem}>
-                                <MaterialIcons name="phone" size={20} color="#64748b" />
+                                <MaterialIcons name="phone" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
                                     <Text style={styles.contactLabel}>电话</Text>
                                     <Text style={styles.contactValue}>{cardData.phone}</Text>
                                 </View>
+                                <TouchableOpacity 
+                                    style={styles.copyButton}
+                                    onPress={() => handleCopy(cardData.phone!, '电话')}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
+                                </TouchableOpacity>
                             </View>
                         )}
 
                         {cardData.email && (
                             <View style={styles.contactItem}>
-                                <MaterialIcons name="email" size={20} color="#64748b" />
+                                <MaterialIcons name="email" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
                                     <Text style={styles.contactLabel}>邮箱</Text>
                                     <Text style={styles.contactValue}>{cardData.email}</Text>
                                 </View>
+                                <TouchableOpacity 
+                                    style={styles.copyButton}
+                                    onPress={() => handleCopy(cardData.email!, '邮箱')}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
+                                </TouchableOpacity>
                             </View>
                         )}
 
                         {cardData.wechat && (
                             <View style={styles.contactItem}>
-                                <MaterialIcons name="chat" size={20} color="#64748b" />
+                                <MaterialIcons name="chat" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
                                     <Text style={styles.contactLabel}>微信</Text>
                                     <Text style={styles.contactValue}>{cardData.wechat}</Text>
                                 </View>
+                                <TouchableOpacity 
+                                    style={styles.copyButton}
+                                    onPress={() => handleCopy(cardData.wechat!, '微信')}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
+                                </TouchableOpacity>
                             </View>
                         )}
 
                         {cardData.address && (
                             <View style={styles.contactItem}>
-                                <MaterialIcons name="location-on" size={20} color="#64748b" />
+                                <MaterialIcons name="location-on" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
                                     <Text style={styles.contactLabel}>地址</Text>
                                     <Text style={styles.contactValue}>{cardData.address}</Text>
                                 </View>
+                                <TouchableOpacity 
+                                    style={styles.copyButton}
+                                    onPress={() => handleCopy(cardData.address!, '地址')}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
+                                </TouchableOpacity>
                             </View>
                         )}
 
                         {cardData.wechatQrCode && (
                             <View style={styles.contactItem}>
-                                <MaterialIcons name="qr-code" size={20} color="#64748b" />
+                                <MaterialIcons name="qr-code" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
                                     <Text style={styles.contactLabel}>微信二维码</Text>
                                     <Text style={styles.contactValue}>已设置</Text>
@@ -91,13 +130,14 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                             </View>
                         )}
                     </View>
+                )}
 
                     {/* 个人简介 */}
                     {cardData.aboutMe && (
                         <View style={styles.card}>
                             <View style={styles.cardTitle}>
-                                <MaterialIcons name="description" size={20} color="#1e293b" />
-                                <Text style={styles.cardTitleText}>个人简介</Text>
+                                <MaterialIcons key="icon" name="description" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>个人简介</Text>
                             </View>
                             <Text style={styles.sectionContent}>{cardData.aboutMe}</Text>
                         </View>
@@ -107,13 +147,13 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                     {(cardData.hometown || cardData.residence || cardData.hobbies || cardData.personality || cardData.focusIndustry || cardData.circles) && (
                         <View style={styles.card}>
                             <View style={styles.cardTitle}>
-                                <MaterialIcons name="person-outline" size={20} color="#1e293b" />
-                                <Text style={styles.cardTitleText}>个人背景</Text>
+                                <MaterialIcons key="icon" name="person-outline" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>个人背景</Text>
                             </View>
 
                             {cardData.hometown && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="home" size={20} color="#64748b" />
+                                    <MaterialIcons name="home" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>家乡</Text>
                                         <Text style={styles.contactValue}>{cardData.hometown}</Text>
@@ -123,7 +163,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
 
                             {cardData.residence && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="place" size={20} color="#64748b" />
+                                    <MaterialIcons name="place" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>常驻</Text>
                                         <Text style={styles.contactValue}>{cardData.residence}</Text>
@@ -133,7 +173,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
 
                             {cardData.hobbies && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="favorite" size={20} color="#64748b" />
+                                    <MaterialIcons name="favorite" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>兴趣爱好</Text>
                                         <Text style={styles.contactValue}>{cardData.hobbies}</Text>
@@ -143,7 +183,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
 
                             {cardData.personality && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="psychology" size={20} color="#64748b" />
+                                    <MaterialIcons name="psychology" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>性格特点</Text>
                                         <Text style={styles.contactValue}>{cardData.personality}</Text>
@@ -153,7 +193,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
 
                             {cardData.focusIndustry && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="trending-up" size={20} color="#64748b" />
+                                    <MaterialIcons name="trending-up" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>关注行业</Text>
                                         <Text style={styles.contactValue}>{cardData.focusIndustry}</Text>
@@ -163,7 +203,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
 
                             {cardData.circles && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="groups" size={20} color="#64748b" />
+                                    <MaterialIcons name="groups" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>加入的圈层</Text>
                                         <Text style={styles.contactValue}>{cardData.circles}</Text>
@@ -177,10 +217,13 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                     {cardData.companyIntro && (
                         <View style={styles.card}>
                             <View style={styles.cardTitle}>
-                                <MaterialIcons name="business" size={20} color="#1e293b" />
-                                <Text style={styles.cardTitleText}>公司简介</Text>
+                                <MaterialIcons key="icon" name="business" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>公司简介</Text>
                             </View>
-                            <Text style={styles.sectionContent}>{cardData.companyIntro}</Text>
+                            <RichTextRenderer 
+                                content={cardData.companyIntro} 
+                                style={styles.sectionContent}
+                            />
                         </View>
                     )}
 
@@ -188,8 +231,8 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                     {cardData.mainBusiness && cardData.mainBusiness.length > 0 && (
                         <View style={styles.card}>
                             <View style={styles.cardTitle}>
-                                <MaterialIcons name="work" size={20} color="#1e293b" />
-                                <Text style={styles.cardTitleText}>主营业务</Text>
+                                <MaterialIcons key="icon" name="work" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>主营业务</Text>
                             </View>
                             {cardData.mainBusiness.map((item, index) => (
                                 <View key={item.id || index} style={styles.businessItem}>
@@ -208,8 +251,8 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                     {cardData.serviceNeeds && cardData.serviceNeeds.length > 0 && (
                         <View style={styles.card}>
                             <View style={styles.cardTitle}>
-                                <MaterialIcons name="flag" size={20} color="#1e293b" />
-                                <Text style={styles.cardTitleText}>服务需求</Text>
+                                <MaterialIcons key="icon" name="flag" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>服务需求</Text>
                             </View>
                             {cardData.serviceNeeds.map((item, index) => (
                                 <View key={item.id || index} style={styles.businessItem}>
@@ -228,8 +271,8 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                     {cardData.companyImages && cardData.companyImages.length > 0 && (
                         <View style={styles.card}>
                             <View style={styles.cardTitle}>
-                                <MaterialIcons name="photo-library" size={20} color="#1e293b" />
-                                <Text style={styles.cardTitleText}>公司图片</Text>
+                                <MaterialIcons key="icon" name="photo-library" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>公司图片</Text>
                             </View>
                             <Text style={styles.sectionContent}>共 {cardData.companyImages.length} 张图片</Text>
                         </View>
@@ -239,13 +282,13 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
                     {(cardData.introVideoUrl || cardData.videoChannelId) && (
                         <View style={styles.card}>
                             <View style={styles.cardTitle}>
-                                <MaterialIcons name="videocam" size={20} color="#1e293b" />
-                                <Text style={styles.cardTitleText}>多媒体</Text>
+                                <MaterialIcons key="icon" name="videocam" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>多媒体</Text>
                             </View>
 
                             {cardData.introVideoUrl && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="play-circle" size={20} color="#64748b" />
+                                    <MaterialIcons name="play-circle" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>个人介绍视频</Text>
                                         <Text style={styles.contactValue}>已上传</Text>
@@ -255,7 +298,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose }
 
                             {cardData.videoChannelId && (
                                 <View style={styles.contactItem}>
-                                    <MaterialIcons name="video-library" size={20} color="#64748b" />
+                                    <MaterialIcons name="video-library" size={20} color="#64748b" style={styles.contactIcon} />
                                     <View style={styles.contactInfo}>
                                         <Text style={styles.contactLabel}>视频号ID</Text>
                                         <Text style={styles.contactValue}>{cardData.videoChannelId}</Text>
@@ -320,15 +363,24 @@ const styles = StyleSheet.create({
     // 卡片样式
     card: {
         backgroundColor: '#ffffff',
+        marginHorizontal: 16,
         marginTop: 12,
         paddingHorizontal: 20,
         paddingVertical: 20,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
     cardTitle: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
-        gap: 8,
+    },
+    cardTitleIcon: {
+        marginRight: 8,
     },
     cardTitleText: {
         fontSize: 18,
@@ -342,21 +394,27 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         borderBottomWidth: 1,
         borderBottomColor: '#f1f5f9',
-        gap: 14,
+    },
+    contactIcon: {
+        marginRight: 14,
     },
     contactInfo: {
         flex: 1,
     },
     contactLabel: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#94a3b8',
-        marginBottom: 4,
+        marginBottom: 3,
         fontWeight: '500',
     },
     contactValue: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '500',
         color: '#1e293b',
+    },
+    copyButton: {
+        padding: 8,
+        marginLeft: 8,
     },
     // 业务项
     businessItem: {
