@@ -5,6 +5,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 import PageHeader from '../components/PageHeader';
+import { ImageUploadHelper } from '../utils/imageUploadHelper';
+import { LazyImage } from '../components/LazyImage';
+import { imageStorage } from '../utils/imageStorage';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -87,68 +90,32 @@ const EditCardScreen = ({ onClose }: any) => {
                 return;
             }
 
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: 'images' as any,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.3,
-                base64: true,
-            });
+            setUploadingAvatar(true);
+            
+            try {
+                const imageId = await ImageUploadHelper.pickAndSaveImage('avatar', {
+                    allowsEditing: true,
+                    aspect: [1, 1],
+                    quality: 0.8,
+                });
 
-            if (!result.canceled && result.assets[0]) {
-                setUploadingAvatar(true);
-                const asset = result.assets[0];
-                
-                try {
-                    // 直接使用 ImagePicker 返回的 base64（如果有）
-                    let base64data = '';
-                    
-                    if (asset.base64) {
-                        // 使用 ImagePicker 提供的 base64
-                        base64data = `data:image/jpeg;base64,${asset.base64}`;
-                    } else {
-                        // 从 URI 读取
-                        const response = await fetch(asset.uri);
-                        const blob = await response.blob();
-                        
-                        base64data = await new Promise<string>((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                                if (reader.result && typeof reader.result === 'string') {
-                                    resolve(reader.result);
-                                } else {
-                                    reject(new Error('Failed to read image data'));
-                                }
-                            };
-                            reader.onerror = () => reject(new Error('FileReader error'));
-                            reader.readAsDataURL(blob);
-                        });
+                if (imageId) {
+                    // 删除旧头像
+                    if (cardData.avatarId) {
+                        await imageStorage.deleteImage(cardData.avatarId);
                     }
                     
-                    // 计算 base64 大小
-                    const base64Size = Math.ceil((base64data.length - base64data.indexOf(',') - 1) * 0.75);
-                    const maxSizeBytes = 100 * 1024; // 100kb
-                    const sizeKB = Math.round(base64Size / 1024);
-                    
-                    if (base64Size > maxSizeBytes) {
-                        Alert.alert(
-                            '图片过大',
-                            `当前图片大小为 ${sizeKB}KB，超过 100KB 限制。\n\n请尝试：\n1. 选择更小的图片\n2. 或使用图片编辑工具先压缩图片`,
-                            [{ text: '知道了' }]
-                        );
-                        setUploadingAvatar(false);
-                        return;
-                    }
-                    
-                    // 更新卡片数据
-                    updateCardData({ avatarUrl: base64data });
-                    
-                    setUploadingAvatar(false);
-                } catch (error) {
-                    console.error('Error processing image:', error);
-                    Alert.alert('错误', '处理图片失败，请重试');
-                    setUploadingAvatar(false);
+                    // 更新为新的图片ID
+                    await updateCardData({ 
+                        avatarId: imageId,
+                        avatarUrl: undefined // 清除旧的 base64 数据
+                    });
                 }
+            } catch (error) {
+                console.error('Error processing image:', error);
+                Alert.alert('错误', '处理图片失败，请重试');
+            } finally {
+                setUploadingAvatar(false);
             }
         } catch (error) {
             console.error('Error picking avatar:', error);
@@ -166,8 +133,16 @@ const EditCardScreen = ({ onClose }: any) => {
                 {
                     text: '移除',
                     style: 'destructive',
-                    onPress: () => {
-                        updateCardData({ avatarUrl: undefined });
+                    onPress: async () => {
+                        // 删除文件系统中的图片
+                        if (cardData.avatarId) {
+                            await imageStorage.deleteImage(cardData.avatarId);
+                        }
+                        // 清除数据
+                        await updateCardData({ 
+                            avatarId: undefined,
+                            avatarUrl: undefined 
+                        });
                     }
                 }
             ]
@@ -197,7 +172,13 @@ const EditCardScreen = ({ onClose }: any) => {
                             onPress={handlePickAvatar}
                             disabled={uploadingAvatar}
                         >
-                            {cardData.avatarUrl ? (
+                            {cardData.avatarId ? (
+                                <LazyImage 
+                                    imageId={cardData.avatarId}
+                                    useThumbnail={false}
+                                    style={styles.avatar}
+                                />
+                            ) : cardData.avatarUrl ? (
                                 <Image 
                                     source={{ uri: cardData.avatarUrl }}
                                     style={styles.avatar}
@@ -214,22 +195,24 @@ const EditCardScreen = ({ onClose }: any) => {
                         </TouchableOpacity>
                         <View style={styles.avatarActions}>
                             <TouchableOpacity 
+                                key="pick-avatar"
                                 style={styles.avatarButton}
                                 onPress={handlePickAvatar}
                                 disabled={uploadingAvatar}
                             >
-                                <MaterialIcons name="photo-library" size={20} color="#4F46E5" />
-                                <Text style={styles.avatarButtonText}>
+                                <MaterialIcons key="icon" name="photo-library" size={20} color="#4F46E5" />
+                                <Text key="text" style={styles.avatarButtonText}>
                                     {uploadingAvatar ? '上传中...' : '选择头像'}
                                 </Text>
                             </TouchableOpacity>
-                            {cardData.avatarUrl && (
+                            {(cardData.avatarId || cardData.avatarUrl) && (
                                 <TouchableOpacity 
+                                    key="remove-avatar"
                                     style={[styles.avatarButton, styles.removeButton]}
                                     onPress={handleRemoveAvatar}
                                 >
-                                    <MaterialIcons name="delete" size={20} color="#ef4444" />
-                                    <Text style={[styles.avatarButtonText, styles.removeButtonText]}>移除</Text>
+                                    <MaterialIcons key="icon" name="delete" size={20} color="#ef4444" />
+                                    <Text key="text" style={[styles.avatarButtonText, styles.removeButtonText]}>移除</Text>
                                 </TouchableOpacity>
                             )}
                         </View>

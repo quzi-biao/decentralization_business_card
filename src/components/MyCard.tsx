@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BusinessCardData } from '../store/useCardStore';
+import { LazyImage } from './LazyImage';
 
 interface MyCardProps {
     cardData: BusinessCardData;
@@ -21,7 +22,8 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
         cardData.personality || cardData.focusIndustry || cardData.circles ||
         cardData.companyIntro || cardData.mainBusiness?.length > 0 || 
         cardData.serviceNeeds?.length > 0 ||
-        cardData.avatarUrl || cardData.wechatQrCode || cardData.introVideoUrl || cardData.videoChannelId
+        cardData.avatarId || cardData.avatarUrl || cardData.wechatQrCodeId || 
+        cardData.wechatQrCode || cardData.introVideoUrl || cardData.videoChannelId
     );
     
     // 如果没有任何内容，显示空状态
@@ -56,7 +58,13 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
             {/* 顶部：基本信息 */}
             <View style={styles.topSection}>
                 <View style={styles.avatar}>
-                    {cardData.avatarUrl && cardData.avatarUrl.length < 150000 ? (
+                    {cardData.avatarId ? (
+                        <LazyImage 
+                            imageId={cardData.avatarId}
+                            useThumbnail={true}
+                            style={styles.avatarImage}
+                        />
+                    ) : cardData.avatarUrl && cardData.avatarUrl.length < 150000 ? (
                         <Image 
                             source={{ uri: cardData.avatarUrl }}
                             style={styles.avatarImage}
