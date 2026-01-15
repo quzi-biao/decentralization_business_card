@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Alert, ActionSheetIOS, Platform, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { fileManager } from '../services/fileManager';
+import { fileManager, FileMetadata } from '../services/fileManager';
 
 interface ChatInputProps {
     value: string;
     onChangeText: (text: string) => void;
-    onSend: (text: string, imageUrl?: string) => void;
+    onSend: (text: string, imageMinioUrl?: string, imageLocalPath?: string) => void;
     disabled?: boolean;
     placeholder?: string;
 }
@@ -23,13 +23,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
     placeholder = '输入消息...',
 }) => {
     const [uploading, setUploading] = useState(false);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedImageMetadata, setSelectedImageMetadata] = useState<FileMetadata | null>(null);
 
     const handleSend = () => {
-        if (!value.trim() && !selectedImage) return;
+        if (!value.trim() && !selectedImageMetadata) return;
         
-        onSend(value, selectedImage || undefined);
-        setSelectedImage(null);
+        // 发送给 AI 使用 minioUrl，本地显示使用 originalPath
+        const imageMinioUrl = selectedImageMetadata?.minioUrl || selectedImageMetadata?.originalPath;
+        const imageLocalPath = selectedImageMetadata?.originalPath;
+        onSend(value, imageMinioUrl, imageLocalPath);
+        setSelectedImageMetadata(null);
     };
 
     const handleImageAction = () => {
@@ -69,9 +72,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             const metadata = await fileManager.takePhoto({ context: 'chat' });
             
             if (metadata) {
-                const fileUrl = metadata.minioUrl || metadata.originalPath;
-                setSelectedImage(fileUrl);
-                Alert.alert('成功', '图片已上传');
+                setSelectedImageMetadata(metadata);
             }
         } catch (error) {
             console.error('Error taking photo:', error);
@@ -87,9 +88,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             const metadata = await fileManager.pickImage({ context: 'chat' });
             
             if (metadata) {
-                const fileUrl = metadata.minioUrl || metadata.originalPath;
-                setSelectedImage(fileUrl);
-                Alert.alert('成功', '图片已上传');
+                setSelectedImageMetadata(metadata);
             }
         } catch (error) {
             console.error('Error picking image:', error);
@@ -105,9 +104,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             const metadata = await fileManager.pickDocument({ context: 'chat' });
             
             if (metadata) {
-                const fileUrl = metadata.minioUrl || metadata.originalPath;
-                setSelectedImage(fileUrl);
-                Alert.alert('成功', '文件已上传');
+                setSelectedImageMetadata(metadata);
             }
         } catch (error) {
             console.error('Error picking document:', error);
@@ -118,14 +115,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
     };
 
     const handleRemoveImage = () => {
-        setSelectedImage(null);
+        setSelectedImageMetadata(null);
     };
 
     return (
         <View style={styles.container}>
-            {selectedImage && (
+            {selectedImageMetadata && (
                 <View style={styles.imagePreviewContainer}>
-                    <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                    <Image source={{ uri: selectedImageMetadata.originalPath }} style={styles.imagePreview} />
                     <TouchableOpacity 
                         style={styles.removeImageButton}
                         onPress={handleRemoveImage}
@@ -159,15 +156,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 <TouchableOpacity
                     style={[
                         styles.sendButton,
-                        (!value.trim() && !selectedImage || disabled || uploading) && styles.sendButtonDisabled
+                        (!value.trim() && !selectedImageMetadata || disabled || uploading) && styles.sendButtonDisabled
                     ]}
                     onPress={handleSend}
-                    disabled={!value.trim() && !selectedImage || disabled || uploading}
+                    disabled={!value.trim() && !selectedImageMetadata || disabled || uploading}
                 >
                     <MaterialIcons 
                         name="send" 
                         size={24} 
-                        color={(!value.trim() && !selectedImage || disabled || uploading) ? '#cbd5e1' : '#ffffff'} 
+                        color={(!value.trim() && !selectedImageMetadata || disabled || uploading) ? '#cbd5e1' : '#ffffff'} 
                     />
                 </TouchableOpacity>
             </View>

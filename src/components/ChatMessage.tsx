@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Platform, Image } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
 
 interface Message {
@@ -7,7 +8,9 @@ interface Message {
     text: string;
     isUser: boolean;
     timestamp: Date;
-    imageUrl?: string;
+    imageUrl?: string; // 向后兼容
+    imageLocalPath?: string; // 本地路径，用于显示
+    imageMinioUrl?: string; // MinIO 链接
 }
 
 interface ChatMessageProps {
@@ -19,6 +22,10 @@ interface ChatMessageProps {
  * 显示用户或AI的消息气泡
  */
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+    const [imageLoadFailed, setImageLoadFailed] = useState(false);
+    
+    // 优先使用本地路径，其次使用 imageUrl（向后兼容），最后使用 MinIO 链接
+    const displayImageUrl = message.imageLocalPath || message.imageUrl || message.imageMinioUrl;
     // 判断是否是今天的消息
     const isToday = () => {
         const today = new Date();
@@ -55,12 +62,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         >
             {message.isUser ? (
                 <View style={[styles.messageBubble, styles.userBubble]}>
-                    {message.imageUrl && (
-                        <Image 
-                            source={{ uri: message.imageUrl }} 
-                            style={styles.messageImage}
-                            resizeMode="cover"
-                        />
+                    {displayImageUrl && (
+                        imageLoadFailed ? (
+                            <View style={styles.imageFailedContainer}>
+                                <MaterialIcons name="broken-image" size={48} color="#94a3b8" />
+                                <Text style={styles.imageFailedText}>图片加载失败</Text>
+                            </View>
+                        ) : (
+                            <Image 
+                                source={{ uri: displayImageUrl }} 
+                                style={styles.messageImage}
+                                resizeMode="cover"
+                                onError={() => {
+                                    setImageLoadFailed(true);
+                                }}
+                            />
+                        )
                     )}
                     {message.text && (
                         <Text style={styles.userText}>
@@ -73,12 +90,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 </View>
             ) : (
                 <View style={[styles.messageBubble, styles.aiBubble]}>
-                    {message.imageUrl && (
-                        <Image 
-                            source={{ uri: message.imageUrl }} 
-                            style={styles.messageImage}
-                            resizeMode="cover"
-                        />
+                    {displayImageUrl && (
+                        imageLoadFailed ? (
+                            <View style={styles.imageFailedContainer}>
+                                <MaterialIcons name="broken-image" size={48} color="#94a3b8" />
+                                <Text style={styles.imageFailedText}>图片加载失败</Text>
+                            </View>
+                        ) : (
+                            <Image 
+                                source={{ uri: displayImageUrl }} 
+                                style={styles.messageImage}
+                                resizeMode="cover"
+                                onError={() => {
+                                    setImageLoadFailed(true);
+                                }}
+                            />
+                        )
                     )}
                     <Markdown style={markdownStyles}>
                         {message.text}
@@ -179,6 +206,20 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 8,
         backgroundColor: '#f1f5f9',
+    },
+    imageFailedContainer: {
+        width: 200,
+        height: 200,
+        borderRadius: 12,
+        marginBottom: 8,
+        backgroundColor: '#f1f5f9',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    imageFailedText: {
+        fontSize: 12,
+        color: '#94a3b8',
     },
 });
 

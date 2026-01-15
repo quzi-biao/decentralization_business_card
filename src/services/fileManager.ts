@@ -81,7 +81,7 @@ class FileManagerService {
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: options.allowsEditing ?? true,
         aspect: options.aspect ?? [4, 3],
         quality: options.quality ?? 0.8,
@@ -120,7 +120,7 @@ class FileManagerService {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: options.allowsEditing ?? true,
         aspect: options.aspect ?? [4, 3],
         quality: options.quality ?? 0.8,
@@ -300,6 +300,7 @@ class FileManagerService {
     if (shouldUploadToCloud) {
       try {
         metadata.minioUrl = await this.uploadToMinIO(originalPath, hash, fileName);
+        console.log(metadata)
       } catch (error) {
         console.error('Failed to upload to MinIO, continuing with local storage:', error);
       }
@@ -345,27 +346,51 @@ class FileManagerService {
       const objectName = `files/${hash}.${extension}`;
       const uploadUrl = `${MINIO_CONFIG.endpoint}/${MINIO_CONFIG.bucket}/${objectName}`;
 
-      const formData = new FormData();
-      formData.append('file', {
-        uri: localPath,
-        type: 'application/octet-stream',
-        name: fileName,
-      } as any);
-
-      const response = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`MinIO upload failed: ${response.statusText}`);
+      // 确定正确的 MIME 类型
+      let mimeType = 'application/octet-stream';
+      if (extension === 'jpg' || extension === 'jpeg') {
+        mimeType = 'image/jpeg';
+      } else if (extension === 'png') {
+        mimeType = 'image/png';
+      } else if (extension === 'gif') {
+        mimeType = 'image/gif';
+      } else if (extension === 'webp') {
+        mimeType = 'image/webp';
+      } else if (extension === 'pdf') {
+        mimeType = 'application/pdf';
       }
 
-      const publicUrl = `${MINIO_CONFIG.endpoint}/${MINIO_CONFIG.bucket}/${objectName}`;
-      return publicUrl;
+      // 读取文件内容为 base64
+      const base64Content = await FileSystem.readAsStringAsync(localPath, {
+        encoding: 'base64',
+      });
+
+      // 将 base64 转换为二进制字符串
+      const binaryString = atob(base64Content);
+      
+      // 使用 XMLHttpRequest 上传（React Native 支持）
+      return new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.open('PUT', uploadUrl, true);
+        xhr.setRequestHeader('Content-Type', mimeType);
+        
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const publicUrl = `${MINIO_CONFIG.endpoint}/${MINIO_CONFIG.bucket}/${objectName}`;
+            resolve(publicUrl);
+          } else {
+            reject(new Error(`MinIO upload failed: ${xhr.status} ${xhr.statusText}`));
+          }
+        };
+        
+        xhr.onerror = () => {
+          reject(new Error('MinIO upload network error'));
+        };
+        
+        // 发送二进制数据
+        xhr.send(binaryString);
+      });
     } catch (error) {
       console.error('Error uploading to MinIO:', error);
       throw error;
