@@ -64,6 +64,7 @@ export interface N8NAgentRequest {
     chatInput: string;
     sessionId?: string;
     imageUrl?: string; // 图片 URL，用于 Vision API
+    evaluation?: string; // 评分模式，设置为 "1" 时导向评分 agent
 }
 
 export interface N8NAgentResponse {
@@ -139,13 +140,17 @@ async function getAIApiKey(): Promise<string> {
  * @param workflowId - n8n workflow ID 或 webhook 路径
  * @param message - 发送给 AI 的消息
  * @param sessionId - 可选的会话 ID，用于保持对话上下文
+ * @param useAPI - 是否使用 API 方式
+ * @param imageUrl - 图片 URL，用于 Vision API
+ * @param evaluation - 评分模式，设置为 "1" 时导向评分 agent
  */
 export async function callN8NAgent(
     workflowId: string,
     message: string,
     sessionId?: string,
     useAPI: boolean = false,
-    imageUrl?: string
+    imageUrl?: string,
+    evaluation?: string
 ): Promise<N8NAgentResponse> {
     try {
         const identity = await getIdentity();
@@ -163,6 +168,7 @@ export async function callN8NAgent(
             chatInput: message,
             sessionId: sessionId || identity.did,
             imageUrl: imageUrl, // 传递图片 URL 给 n8n
+            evaluation: evaluation, // 传递评分参数
         };
         
         // 尝试 Webhook 方式
