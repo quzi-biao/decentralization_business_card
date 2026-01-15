@@ -16,6 +16,7 @@ import FAQScreen from './FAQScreen';
 import ContactScreen from './ContactScreen';
 import DataStatsScreen from './DataStatsScreen';
 import RevokeListScreen from './RevokeListScreen';
+import TagManagementScreen from './TagManagementScreen';
 import * as Clipboard from 'expo-clipboard';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -90,6 +91,7 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
     const [showContact, setShowContact] = useState(false);
     const [showDataStats, setShowDataStats] = useState(false);
     const [showRevokeList, setShowRevokeList] = useState(false);
+    const [showTagManagement, setShowTagManagement] = useState(false);
     const [publicKey, setPublicKey] = useState<string>('');
     const [dataStats, setDataStats] = useState({
         chatDates: 0,
@@ -264,6 +266,14 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                         <Text style={styles.menuText}>撤销列表</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowTagManagement(true)}
+                    >
+                        <MaterialIcons name="label" size={20} color="#64748b" style={styles.menuIcon} />
+                        <Text style={styles.menuText}>标签管理</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* 数据管理 */}
@@ -384,6 +394,14 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                 presentationStyle="fullScreen"
             >
                 <RevokeListScreen onClose={() => setShowRevokeList(false)} />
+            </Modal>
+
+            <Modal
+                visible={showTagManagement}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <TagManagementScreen onClose={() => setShowTagManagement(false)} />
             </Modal>
         </SafeAreaView>
     );

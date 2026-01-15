@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Dimensions, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { StackScreenProps } from '@react-navigation/stack';
-import { useCardStore, BusinessCardData } from '../store/useCardStore';
+import { useCardStore } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
+import { useTagStore } from '../store/useTagStore';
 import MyCard from '../components/MyCard';
-import { getIdentity } from '../services/identityService';
+import ContactCard from '../components/ContactCard';
+import { StackNavigationProp, StackScreenProps } from '@react-navigation/stack';
 import { CardsStackParamList } from '../navigation/CardsStack';
+import { getIdentity } from '../services/identityService';
 
 /**
  * 名片夹屏幕 - 主页面
@@ -19,11 +21,16 @@ type Props = StackScreenProps<CardsStackParamList, 'CardsList'>;
 const CardsScreen: React.FC<Props> = ({ navigation }) => {
     const { cardData } = useCardStore();
     const { exchanges, exchangedCards, loadExchanges } = useExchangeStore();
+    const { tags, cardMetadata, loadTags, loadCardMetadata } = useTagStore();
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
     const [myDid, setMyDid] = useState('');
+    const [showTagDropdown, setShowTagDropdown] = useState(false);
 
     useEffect(() => {
         loadExchanges();
+        loadTags();
+        loadCardMetadata();
         loadIdentity();
     }, []);
 
@@ -40,12 +47,27 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
         const card = exchangedCards.get(exchange.peerDid);
         if (!card?.cardData) return false;
         
-        const searchLower = searchQuery.toLowerCase();
-        return (
-            card.cardData.realName?.toLowerCase().includes(searchLower) ||
-            card.cardData.companyName?.toLowerCase().includes(searchLower) ||
-            card.cardData.position?.toLowerCase().includes(searchLower)
-        );
+        // 按标签筛选
+        if (selectedTagId) {
+            const metadata = cardMetadata.get(exchange.peerDid);
+            if (!metadata || !metadata.tags.includes(selectedTagId)) {
+                return false;
+            }
+        }
+        
+        // 按关键词搜索
+        if (searchQuery) {
+            const searchLower = searchQuery.toLowerCase();
+            const metadata = cardMetadata.get(exchange.peerDid);
+            return (
+                card.cardData.realName?.toLowerCase().includes(searchLower) ||
+                card.cardData.companyName?.toLowerCase().includes(searchLower) ||
+                card.cardData.position?.toLowerCase().includes(searchLower) ||
+                metadata?.note?.toLowerCase().includes(searchLower)
+            );
+        }
+        
+        return true;
     });
 
     return (
@@ -66,13 +88,87 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                         <MaterialIcons name="search" size={20} color="#94a3b8" style={styles.searchIcon} />
                         <TextInput
                             style={styles.searchInput}
-                            placeholder="搜索姓名、公司、职位"
+                            placeholder="搜索姓名、公司、职位、备注"
                             placeholderTextColor="#94a3b8"
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                         />
                     </View>
                 </View>
+
+                {/* 标签筛选下拉框 */}
+                <Modal
+                    visible={showTagDropdown}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowTagDropdown(false)}
+                >
+                    <TouchableOpacity 
+                        style={styles.modalOverlay}
+                        activeOpacity={1}
+                        onPress={() => setShowTagDropdown(false)}
+                    >
+                        <View style={styles.dropdownContainer}>
+                            <View style={styles.dropdownHeader}>
+                                <Text style={styles.dropdownTitle}>选择标签</Text>
+                                <TouchableOpacity onPress={() => setShowTagDropdown(false)}>
+                                    <MaterialIcons name="close" size={24} color="#64748b" />
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView style={styles.dropdownScroll}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.dropdownItem,
+                                        !selectedTagId && styles.dropdownItemActive
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedTagId(null);
+                                        setShowTagDropdown(false);
+                                    }}
+                                >
+                                    <MaterialIcons 
+                                        name="label-outline" 
+                                        size={20} 
+                                        color={!selectedTagId ? '#4F46E5' : '#94a3b8'} 
+                                    />
+                                    <Text style={[
+                                        styles.dropdownItemText,
+                                        !selectedTagId && styles.dropdownItemTextActive
+                                    ]}>
+                                        全部标签
+                                    </Text>
+                                    {!selectedTagId && (
+                                        <MaterialIcons name="check" size={20} color="#4F46E5" />
+                                    )}
+                                </TouchableOpacity>
+                                {tags.map((tag) => (
+                                    <TouchableOpacity
+                                        key={tag.id}
+                                        style={[
+                                            styles.dropdownItem,
+                                            selectedTagId === tag.id && styles.dropdownItemActive
+                                        ]}
+                                        onPress={() => {
+                                            setSelectedTagId(tag.id);
+                                            setShowTagDropdown(false);
+                                        }}
+                                    >
+                                        <View style={[styles.tagColorDot, { backgroundColor: tag.color }]} />
+                                        <Text style={[
+                                            styles.dropdownItemText,
+                                            selectedTagId === tag.id && styles.dropdownItemTextActive
+                                        ]}>
+                                            {tag.name}
+                                        </Text>
+                                        {selectedTagId === tag.id && (
+                                            <MaterialIcons name="check" size={20} color="#4F46E5" />
+                                        )}
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
 
                 {/* 名片列表 */}
                 <View style={styles.collectionSection}>
@@ -83,9 +179,16 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                                 名片列表 ({activeExchanges.length})
                             </Text>
                         </View>
-                        {activeExchanges.length > 0 && (
-                            <TouchableOpacity>
-                                <Text style={styles.filterButton}>筛选 ▼</Text>
+                        {activeExchanges.length > 0 && tags.length > 0 && (
+                            <TouchableOpacity 
+                                style={styles.tagFilterButton}
+                                onPress={() => setShowTagDropdown(true)}
+                            >
+                                <MaterialIcons name="label" size={16} color="#4F46E5" />
+                                <Text style={styles.tagFilterButtonText}>
+                                    {selectedTagId ? tags.find(t => t.id === selectedTagId)?.name : '全部'}
+                                </Text>
+                                <MaterialIcons name="arrow-drop-down" size={18} color="#4F46E5" />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -115,32 +218,23 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                             {filteredCards.map((exchange) => {
                                 const card = exchangedCards.get(exchange.peerDid);
                                 const cardData = card?.cardData;
+                                const metadata = cardMetadata.get(exchange.peerDid);
+                                const cardTags = metadata?.tags.map(tagId => tags.find(t => t.id === tagId)).filter(Boolean) || [];
                                 
                                 return (
-                                    <TouchableOpacity 
-                                        key={exchange.id} 
-                                        style={styles.cardItem}
+                                    <ContactCard
+                                        key={exchange.id}
+                                        realName={cardData?.realName}
+                                        position={cardData?.position}
+                                        companyName={cardData?.companyName}
+                                        tags={cardTags as any}
+                                        note={metadata?.note}
                                         onPress={() => cardData && navigation.navigate('CardDetail', { 
                                             cardData, 
                                             peerDid: exchange.peerDid,
                                             exchangedAt: exchange.exchangedAt
                                         })}
-                                    >
-                                        <View style={styles.cardAvatar}>
-                                            <Text style={styles.cardAvatarText}>
-                                                {cardData?.realName?.charAt(0) || '👤'}
-                                            </Text>
-                                        </View>
-                                        <Text style={styles.cardName} numberOfLines={1}>
-                                            {cardData?.realName || '未知'}
-                                        </Text>
-                                        <Text style={styles.cardPosition} numberOfLines={1}>
-                                            {cardData?.position || '未知职位'}
-                                        </Text>
-                                        <Text style={styles.cardCompany} numberOfLines={1}>
-                                            {cardData?.companyName || '未知公司'}
-                                        </Text>
-                                    </TouchableOpacity>
+                                    />
                                 );
                             })}
                         </View>
@@ -352,47 +446,87 @@ const styles = StyleSheet.create({
     cardGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        justifyContent: 'space-between',
     },
-    cardItem: {
-        width: '48%',
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-    },
-    cardAvatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#F8FAFC',
+    // 标签筛选按钮
+    tagFilterButton: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
+        backgroundColor: '#EEF2FF',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: '#C7D2FE',
+        gap: 4,
     },
-    cardAvatarText: {
-        fontSize: 20,
-    },
-    cardName: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 4,
-    },
-    cardPosition: {
+    tagFilterButtonText: {
         fontSize: 13,
-        color: '#64748b',
-        marginBottom: 2,
+        fontWeight: '600',
+        color: '#4F46E5',
+        maxWidth: 60,
     },
-    cardCompany: {
-        fontSize: 12,
-        color: '#94a3b8',
-        marginBottom: 8,
+    // 下拉框样式
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
-    cardTime: {
-        fontSize: 11,
-        color: '#cbd5e1',
+    dropdownContainer: {
+        width: '100%',
+        maxWidth: 400,
+        maxHeight: '70%',
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    dropdownHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    dropdownTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#1e293b',
+    },
+    dropdownScroll: {
+        maxHeight: 400,
+    },
+    dropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        gap: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f8fafc',
+    },
+    dropdownItemActive: {
+        backgroundColor: '#f8fafc',
+    },
+    dropdownItemText: {
+        flex: 1,
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#1e293b',
+    },
+    dropdownItemTextActive: {
+        color: '#4F46E5',
+        fontWeight: '600',
+    },
+    tagColorDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
     },
 });
 
