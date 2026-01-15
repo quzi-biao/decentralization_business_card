@@ -1,7 +1,7 @@
 import { EncryptedStorageService } from './encryptedStorage';
 import { ChatPersistenceService } from './chatPersistence';
 import { CardPersistenceService } from './cardPersistence';
-import { FilePersistenceService } from './filePersistence';
+import { fileManager } from './fileManager';
 
 /**
  * 数据管理服务
@@ -21,7 +21,7 @@ export class DataManager {
             await CardPersistenceService.clearAllCards();
             
             // 清除所有文件（头像、图片）
-            await FilePersistenceService.clearAllFiles();
+            await fileManager.clearAllFiles();
             
             // 清除所有加密存储
             await EncryptedStorageService.clear();
@@ -40,22 +40,21 @@ export class DataManager {
         chatDates: number;
         myCardExists: boolean;
         exchangedCardsCount: number;
-        avatarsCount: number;
-        imagesCount: number;
+        filesCount: number;
+        totalFileSize: number;
     }> {
         try {
             const chatDates = await ChatPersistenceService.getAllChatDates();
             const myCard = await CardPersistenceService.getMyCard();
             const exchangedCards = await CardPersistenceService.getExchangedCards();
-            const avatars = await FilePersistenceService.getAllAvatars();
-            const images = await FilePersistenceService.getAllImages();
+            const fileStats = await fileManager.getStorageStats();
 
             return {
                 chatDates: chatDates.length,
                 myCardExists: !!myCard,
                 exchangedCardsCount: exchangedCards.length,
-                avatarsCount: avatars.length,
-                imagesCount: images.length
+                filesCount: fileStats.totalFiles,
+                totalFileSize: fileStats.totalSize
             };
         } catch (error) {
             console.error('Failed to get data stats:', error);
