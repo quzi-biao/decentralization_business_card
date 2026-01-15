@@ -5,6 +5,7 @@ export interface Message {
     text: string;
     isUser: boolean;
     timestamp: Date;
+    imageUrl?: string;
 }
 
 export interface ChatSession {

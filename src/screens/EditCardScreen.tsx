@@ -68,7 +68,7 @@ const EditCardScreen = ({ onClose }: any) => {
 
     const handleAddItem = (field: 'mainBusiness' | 'serviceNeeds') => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        const newItem = { id: Math.random().toString(36).substr(2, 9), name: '', description: '' };
+        const newItem = { id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, name: '', description: '' };
         updateCardData({ [field]: [...cardData[field], newItem] });
     };
 
@@ -241,7 +241,7 @@ const EditCardScreen = ({ onClose }: any) => {
                     <SectionHeader title="主营业务" iconName="work" />
                     {cardData.mainBusiness.map(item => (
                         <BusinessItemCard
-                            key={item.id}
+                            key={`main-${item.id}-${Math.random().toString(36).substr(2, 9)}`}
                             item={item}
                             onUpdate={(data: any) => handleUpdateItem('mainBusiness', item.id, data)}
                             onDelete={() => handleDeleteItem('mainBusiness', item.id)}
@@ -257,7 +257,7 @@ const EditCardScreen = ({ onClose }: any) => {
                     <SectionHeader title="服务需求" iconName="flag" />
                     {cardData.serviceNeeds.map(item => (
                         <BusinessItemCard
-                            key={item.id}
+                            key={`need-${item.id}-${Math.random().toString(36).substr(2, 9)}`}
                             item={item}
                             onUpdate={(data: any) => handleUpdateItem('serviceNeeds', item.id, data)}
                             onDelete={() => handleDeleteItem('serviceNeeds', item.id)}
