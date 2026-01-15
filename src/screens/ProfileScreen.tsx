@@ -230,6 +230,14 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                         <Text style={styles.menuText}>导出名片</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => setShowTagManagement(true)}
+                    >
+                        <MaterialIcons name="label" size={20} color="#64748b" style={styles.menuIcon} />
+                        <Text style={styles.menuText}>标签管理</Text>
+                        <Text style={styles.menuArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* 安全中心 */}
@@ -264,14 +272,6 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                     >
                         <MaterialIcons name="block" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>撤销列表</Text>
-                        <Text style={styles.menuArrow}>›</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={styles.menuItem}
-                        onPress={() => setShowTagManagement(true)}
-                    >
-                        <MaterialIcons name="label" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>标签管理</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                 </View>
