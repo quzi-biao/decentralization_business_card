@@ -26,6 +26,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
     const [showTagModal, setShowTagModal] = useState(false);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [noteText, setNoteText] = useState('');
+    const [isEditMode, setIsEditMode] = useState(false);
     
     useEffect(() => {
         loadTags();
@@ -77,7 +78,20 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                     <MaterialIcons name="arrow-back" size={24} color="#1e293b" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>名片详情</Text>
-                <View style={styles.headerRight} />
+                <View style={styles.headerRight}>
+                    {peerDid && (
+                        <TouchableOpacity 
+                            onPress={() => setIsEditMode(!isEditMode)}
+                            style={styles.iconButton}
+                        >
+                            <MaterialIcons 
+                                name={isEditMode ? "check" : "edit"} 
+                                size={24} 
+                                color={isEditMode ? "#4F46E5" : "#64748b"} 
+                            />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -139,40 +153,58 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                         <View style={styles.tagsSection}>
                             <Text style={styles.subsectionLabel}>标签</Text>
                             <View style={styles.tagsContainer}>
-                                {cardTags.map((tag) => tag && (
-                                    <View 
-                                        key={tag.id}
-                                        style={[styles.tagChip, { backgroundColor: tag.color + '20', borderColor: tag.color }]}
+                                {cardTags.length > 0 ? (
+                                    cardTags.map((tag) => tag && (
+                                        <View 
+                                            key={tag.id}
+                                            style={[styles.tagChip, { backgroundColor: tag.color + '20', borderColor: tag.color }]}
+                                        >
+                                            <Text style={[styles.tagChipText, { color: tag.color }]}>
+                                                {tag.name}
+                                            </Text>
+                                        </View>
+                                    ))
+                                ) : (
+                                    !isEditMode && (
+                                        <Text style={styles.emptyText}>暂无标签</Text>
+                                    )
+                                )}
+                                {isEditMode && (
+                                    <TouchableOpacity 
+                                        style={styles.addTagButton}
+                                        onPress={() => setShowTagModal(true)}
                                     >
-                                        <Text style={[styles.tagChipText, { color: tag.color }]}>
-                                            {tag.name}
-                                        </Text>
-                                    </View>
-                                ))}
-                                <TouchableOpacity 
-                                    style={styles.addTagButton}
-                                    onPress={() => setShowTagModal(true)}
-                                >
-                                    <MaterialIcons name="add" size={16} color="#4F46E5" />
-                                    <Text style={styles.addTagText}>添加标签</Text>
-                                </TouchableOpacity>
+                                        <MaterialIcons name="add" size={16} color="#4F46E5" />
+                                        <Text style={styles.addTagText}>添加标签</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
                         
                         {/* 备注 */}
                         <View style={styles.noteSection}>
                             <Text style={styles.subsectionLabel}>备注</Text>
-                            <TouchableOpacity 
-                                style={styles.noteDisplay}
-                                onPress={() => setShowNoteModal(true)}
-                            >
-                                {metadata?.note ? (
-                                    <Text style={styles.noteText}>{metadata.note}</Text>
-                                ) : (
-                                    <Text style={styles.notePlaceholder}>点击添加备注...</Text>
-                                )}
-                                <MaterialIcons name="edit" size={16} color="#94a3b8" />
-                            </TouchableOpacity>
+                            {isEditMode ? (
+                                <TouchableOpacity 
+                                    style={styles.noteDisplay}
+                                    onPress={() => setShowNoteModal(true)}
+                                >
+                                    {metadata?.note ? (
+                                        <Text style={styles.noteText}>{metadata.note}</Text>
+                                    ) : (
+                                        <Text style={styles.notePlaceholder}>点击添加备注...</Text>
+                                    )}
+                                    <MaterialIcons name="edit" size={16} color="#94a3b8" />
+                                </TouchableOpacity>
+                            ) : (
+                                <View style={styles.noteDisplayReadOnly}>
+                                    {metadata?.note ? (
+                                        <Text style={styles.noteText}>{metadata.note}</Text>
+                                    ) : (
+                                        <Text style={styles.emptyText}>暂无备注</Text>
+                                    )}
+                                </View>
+                            )}
                         </View>
                     </View>
                 )}
@@ -728,6 +760,19 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 14,
         color: '#94a3b8',
+    },
+    noteDisplayReadOnly: {
+        backgroundColor: '#f8fafc',
+        padding: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        minHeight: 44,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#cbd5e1',
+        fontStyle: 'italic',
     },
     // 模态框样式
     modalContainer: {
