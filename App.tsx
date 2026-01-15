@@ -118,6 +118,7 @@ export default function App() {
             options={{
               tabBarLabel: '我的',
               tabBarIcon: ({ color }) => <TabIcon name="person" color={color} />,
+              unmountOnBlur: true,
             }}
           >
             {() => <ProfileStack onEditPress={() => setShowEditCard(true)} />}
