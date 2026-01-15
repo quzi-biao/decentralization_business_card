@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import Markdown from 'react-native-markdown-display';
 import { useNavigation } from '@react-navigation/native';
 import { useCardStore } from '../store/useCardStore';
 import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
 import { parseAIResponse, hasCompleteFormData, mergeFormData, generateFormSummary } from '../utils/formDataParser';
 import { ChatPersistenceService } from '../services/chatPersistence';
+import ChatMessage from '../components/ChatMessage';
+import UpdateConfirmCard from '../components/UpdateConfirmCard';
+import ProgressHeader from '../components/ProgressHeader';
 
 interface Message {
     id: string;
@@ -35,6 +37,9 @@ const AIAssistantScreen: React.FC = () => {
         messageId: string;
     } | null>(null);
     const scrollViewRef = useRef<ScrollView>(null);
+    const [loadedDates, setLoadedDates] = useState<string[]>([]);
+    const [hasMoreHistory, setHasMoreHistory] = useState(true);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     // 计算名片完成度
     const calculateProgress = () => {
@@ -72,19 +77,44 @@ const AIAssistantScreen: React.FC = () => {
         return () => clearTimeout(timer);
     }, [messages]);
 
-    // 加载今天的聊天历史或初始化新对话
+    // 加载最近的聊天历史或初始化新对话
     useEffect(() => {
         const initializeChat = async () => {
-            // 先尝试加载今天的聊天记录
-            const todayChat = await ChatPersistenceService.getTodayChat();
+            // 修复历史记录中的重复 ID
+            await ChatPersistenceService.fixDuplicateMessageIds();
             
-            if (todayChat && todayChat.messages.length > 0) {
-                // 如果有今天的聊天记录，直接加载
-                setMessages(todayChat.messages);
-                return;
+            // 获取所有聊天日期
+            const allDates = await ChatPersistenceService.getAllChatDates();
+            
+            if (allDates.length > 0) {
+                // 加载最近10条消息（跨日期）
+                const recentMessages: Message[] = [];
+                const loadedDatesList: string[] = [];
+                
+                for (const date of allDates) {
+                    const chat = await ChatPersistenceService.getChatByDate(date);
+                    if (chat && chat.messages.length > 0) {
+                        // 从最新的消息开始添加
+                        const remainingSlots = 10 - recentMessages.length;
+                        const messagesToAdd = chat.messages.slice(-remainingSlots);
+                        recentMessages.push(...messagesToAdd);
+                        loadedDatesList.push(date);
+                        
+                        if (recentMessages.length >= 10) {
+                            break;
+                        }
+                    }
+                }
+                
+                if (recentMessages.length > 0) {
+                    setMessages(recentMessages);
+                    setLoadedDates(loadedDatesList);
+                    setHasMoreHistory(loadedDatesList.length < allDates.length);
+                    return;
+                }
             }
             
-            // 如果没有今天的聊天记录，初始化新对话
+            // 如果没有任何聊天记录，初始化新对话
             const filledFields: string[] = [];
             if (cardData.realName) filledFields.push(`姓名：${cardData.realName}`);
             if (cardData.position) filledFields.push(`职位：${cardData.position}`);
@@ -109,7 +139,7 @@ const AIAssistantScreen: React.FC = () => {
                 const parsedResponse = parseAIResponse(rawResponse);
 
                 const welcomeMessage: Message = {
-                    id: 'welcome',
+                    id: `welcome-${Date.now()}`,
                     text: parsedResponse.output,
                     isUser: false,
                     timestamp: new Date(),
@@ -120,7 +150,7 @@ const AIAssistantScreen: React.FC = () => {
             } catch (error) {
                 console.error('Failed to initialize chat:', error);
                 const welcomeMessage: Message = {
-                    id: 'welcome',
+                    id: `welcome-${Date.now()}`,
                     text: '您好！我是您的名片信息收集助手 😊\n\n我会通过简单的对话，帮您一步步创建一张专业、完整的商务名片。整个过程大约需要5-10分钟，所有信息仅用于生成您的个人名片。\n\n您现在方便开始吗？如果准备好了，我们可以先从基本信息入手！',
                     isUser: false,
                     timestamp: new Date(),
@@ -132,6 +162,36 @@ const AIAssistantScreen: React.FC = () => {
 
         initializeChat();
     }, []); // 只在组件挂载时执行一次
+
+    // 加载更多历史记录
+    const loadMoreHistory = async () => {
+        if (loadingHistory || !hasMoreHistory) return;
+        
+        setLoadingHistory(true);
+        try {
+            const allDates = await ChatPersistenceService.getAllChatDates();
+            const nextDateIndex = loadedDates.length;
+            
+            if (nextDateIndex >= allDates.length) {
+                setHasMoreHistory(false);
+                return;
+            }
+            
+            const nextDate = allDates[nextDateIndex];
+            const nextChat = await ChatPersistenceService.getChatByDate(nextDate);
+            
+            if (nextChat && nextChat.messages.length > 0) {
+                // 将历史消息添加到开头
+                setMessages(prev => [...nextChat.messages, ...prev]);
+                setLoadedDates(prev => [...prev, nextDate]);
+                setHasMoreHistory(nextDateIndex + 1 < allDates.length);
+            }
+        } catch (error) {
+            console.error('Failed to load more history:', error);
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
 
     const sendMessage = async () => {
         if (!inputText.trim() || loading) return;
@@ -342,142 +402,33 @@ const AIAssistantScreen: React.FC = () => {
         setPendingUpdate(null);
     };
 
-    const renderMessage = (message: Message) => {
+    const renderMessage = (message: Message, index: number) => {
         // 检查这条消息是否有待确认的更新
         const hasPendingUpdate = pendingUpdate && pendingUpdate.messageId === message.id;
         
-        return (
-            <View 
-                key={message.id} 
-                style={[
-                    styles.messageContainer,
-                    message.isUser ? styles.userMessage : styles.aiMessage
-                ]}
-            >
-                {/* 用户消息：正常显示 */}
-                {message.isUser ? (
-                    <View style={[styles.messageBubble, styles.userBubble]}>
-                        <Text style={styles.userText}>
-                            {message.text}
-                        </Text>
-                        <Text style={styles.timestamp}>
-                            {message.timestamp.toLocaleTimeString('zh-CN', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                            })}
-                        </Text>
-                    </View>
-                ) : (
-                    /* AI 消息：如果有待确认更新，只显示字段信息；否则显示完整消息 */
-                    hasPendingUpdate ? (
-                        <View style={styles.updateCard}>
-                            <View style={styles.updateHeader}>
-                                <MaterialIcons name="edit" size={18} color="#4F46E5" />
-                                <Text style={styles.updateTitle}>请确认以下信息</Text>
-                            </View>
-                            {Object.entries(pendingUpdate.formData).map(([key, value]) => {
-                                if (value === undefined || value === null) return null;
-                                
-                                const fieldMap: Record<string, string> = {
-                                    realName: '姓名',
-                                    position: '职位',
-                                    companyName: '公司',
-                                    phone: '电话',
-                                    email: '邮箱',
-                                    wechat: '微信',
-                                    address: '地址',
-                                    industry: '行业',
-                                    aboutMe: '个人简介',
-                                    hometown: '家乡',
-                                    residence: '常驻',
-                                    hobbies: '兴趣爱好',
-                                    personality: '性格特点',
-                                    focusIndustry: '关注行业',
-                                    circles: '圈层',
-                                    companyIntro: '公司简介',
-                                    mainBusiness: '主营业务',
-                                    serviceNeeds: '服务需求',
-                                };
-                                
-                                const fieldName = fieldMap[key] || key;
-                                
-                                // 格式化数组类型的值
-                                let displayValue: string;
-                                if (Array.isArray(value)) {
-                                    displayValue = value.map(item => 
-                                        typeof item === 'object' && item.name ? item.name : String(item)
-                                    ).join('、');
-                                } else {
-                                    displayValue = String(value);
-                                }
-                                
-                                return (
-                                    <View key={key} style={styles.fieldItem}>
-                                        <Text style={styles.fieldLabel}>{fieldName}</Text>
-                                        <Text style={styles.fieldValue}>{displayValue}</Text>
-                                    </View>
-                                );
-                            })}
-                            <View style={styles.confirmButtons}>
-                                <TouchableOpacity 
-                                    style={styles.confirmButton}
-                                    onPress={confirmUpdate}
-                                >
-                                    <MaterialIcons name="check" size={18} color="#ffffff" />
-                                    <Text style={styles.confirmButtonText}>确认更新</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={styles.cancelButton}
-                                    onPress={cancelUpdate}
-                                >
-                                    <MaterialIcons name="close" size={18} color="#64748b" />
-                                    <Text style={styles.cancelButtonText}>取消</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    ) : (
-                        <View style={[styles.messageBubble, styles.aiBubble]}>
-                            <Markdown style={markdownStyles}>
-                                {message.text}
-                            </Markdown>
-                            <Text style={styles.timestamp}>
-                                {message.timestamp.toLocaleTimeString('zh-CN', { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                })}
-                            </Text>
-                        </View>
-                    )
-                )}
-            </View>
-        );
+        if (hasPendingUpdate) {
+            return (
+                <View key={`msg-${index}`} style={styles.messageContainer}>
+                    <UpdateConfirmCard
+                        formData={pendingUpdate.formData}
+                        onConfirm={confirmUpdate}
+                        onCancel={cancelUpdate}
+                    />
+                </View>
+            );
+        }
+        
+        return <ChatMessage key={`msg-${index}`} message={message} />;
     };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <MaterialIcons name="smart-toy" size={24} color="#4F46E5" />
-                    <Text style={styles.headerTitle}>AI 名片助手</Text>
-                </View>
-                <TouchableOpacity 
-                    style={styles.progressContainer}
-                    onPress={handleProgressPress}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.progressInfo}>
-                        <Text style={styles.progressText}>{progressInfo.progress}%</Text>
-                        <Text style={styles.progressLabel}>完成度</Text>
-                    </View>
-                    <View style={styles.progressBarContainer}>
-                        <View style={[styles.progressBar, { width: `${progressInfo.progress}%` }]} />
-                    </View>
-                    <View style={styles.qualityBadge}>
-                        <MaterialIcons name="star" size={14} color="#f59e0b" />
-                        <Text style={styles.qualityText}>{progressInfo.progress}分</Text>
-                    </View>
-                </TouchableOpacity>
-            </View>
+            <ProgressHeader
+                progress={progressInfo.progress}
+                filledCount={progressInfo.filledCount}
+                totalCount={progressInfo.totalCount}
+                onPress={handleProgressPress}
+            />
 
             <KeyboardAvoidingView 
                 style={styles.content}
@@ -489,6 +440,15 @@ const AIAssistantScreen: React.FC = () => {
                     style={styles.messagesContainer}
                     contentContainerStyle={styles.messagesContent}
                     showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={loadingHistory}
+                            onRefresh={loadMoreHistory}
+                            tintColor="#4F46E5"
+                            title={hasMoreHistory ? "加载更多历史记录" : "没有更多记录"}
+                            titleColor="#64748b"
+                        />
+                    }
                 >
                     {messages.map(renderMessage)}
                     {loading && (
@@ -530,133 +490,10 @@ const AIAssistantScreen: React.FC = () => {
     );
 };
 
-const markdownStyles = {
-    body: {
-        color: '#1e293b',
-        fontSize: 15,
-        lineHeight: 22,
-    },
-    paragraph: {
-        marginTop: 0,
-        marginBottom: 8,
-    },
-    strong: {
-        fontWeight: '700' as '700',
-    },
-    em: {
-        fontStyle: 'italic' as 'italic',
-    },
-    code_inline: {
-        backgroundColor: '#f1f5f9',
-        color: '#4F46E5',
-        paddingHorizontal: 4,
-        paddingVertical: 2,
-        borderRadius: 4,
-        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-        fontSize: 14,
-    },
-    code_block: {
-        backgroundColor: '#f1f5f9',
-        padding: 12,
-        borderRadius: 8,
-        marginVertical: 8,
-        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-        fontSize: 14,
-    },
-    bullet_list: {
-        marginVertical: 4,
-    },
-    ordered_list: {
-        marginVertical: 4,
-    },
-    list_item: {
-        marginVertical: 2,
-    },
-};
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f8fafc',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        backgroundColor: '#f8fafc',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
-    },
-    headerLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1e293b',
-        marginLeft: 8,
-    },
-    progressContainer: {
-        alignItems: 'flex-end',
-        gap: 4,
-    },
-    progressInfo: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-        gap: 4,
-    },
-    progressText: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#4F46E5',
-    },
-    progressLabel: {
-        fontSize: 11,
-        color: '#64748b',
-    },
-    progressBarContainer: {
-        width: 80,
-        height: 4,
-        backgroundColor: '#e2e8f0',
-        borderRadius: 2,
-        overflow: 'hidden',
-    },
-    progressBar: {
-        height: '100%',
-        backgroundColor: '#4F46E5',
-        borderRadius: 2,
-    },
-    qualityBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 2,
-        backgroundColor: '#fef3c7',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    qualityText: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: '#f59e0b',
-    },
-    completedBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        backgroundColor: '#d1fae5',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    completedText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#10b981',
     },
     content: {
         flex: 1,
@@ -670,123 +507,6 @@ const styles = StyleSheet.create({
     },
     messageContainer: {
         marginBottom: 16,
-    },
-    userMessage: {
-        alignItems: 'flex-end',
-    },
-    aiMessage: {
-    },
-    messageBubble: {
-        maxWidth: '80%',
-        padding: 12,
-        borderRadius: 16,
-    },
-    userBubble: {
-        backgroundColor: '#4F46E5',
-        borderBottomRightRadius: 4,
-    },
-    aiBubble: {
-        backgroundColor: '#ffffff',
-        borderBottomLeftRadius: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-    messageText: {
-        fontSize: 15,
-        lineHeight: 22,
-        marginBottom: 4,
-    },
-    userText: {
-        color: '#ffffff',
-    },
-    aiText: {
-        color: '#1e293b',
-    },
-    timestamp: {
-        fontSize: 11,
-        color: '#94a3b8',
-        marginTop: 4,
-    },
-    updateCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
-        width: '100%',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-    },
-    updateHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: 12,
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
-    },
-    updateTitle: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#4F46E5',
-    },
-    fieldItem: {
-        marginBottom: 12,
-    },
-    fieldLabel: {
-        fontSize: 12,
-        color: '#64748b',
-        marginBottom: 4,
-        fontWeight: '500',
-    },
-    fieldValue: {
-        fontSize: 15,
-        color: '#1e293b',
-        fontWeight: '500',
-    },
-    confirmButtons: {
-        flexDirection: 'row',
-        marginTop: 4,
-        gap: 8,
-    },
-    confirmButton: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#4F46E5',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
-        gap: 6,
-    },
-    confirmButtonText: {
-        color: '#ffffff',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    cancelButton: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f1f5f9',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
-        gap: 6,
-    },
-    cancelButtonText: {
-        color: '#64748b',
-        fontSize: 14,
-        fontWeight: '600',
     },
     loadingContainer: {
         flexDirection: 'row',

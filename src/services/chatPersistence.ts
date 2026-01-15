@@ -153,4 +153,48 @@ export class ChatPersistenceService {
             await EncryptedStorageService.setItem(CHAT_INDEX_KEY, index);
         }
     }
+
+    // 修复重复的消息 ID（特别是 welcome 消息）
+    static async fixDuplicateMessageIds(): Promise<void> {
+        const dates = await this.getAllChatDates();
+        
+        for (const date of dates) {
+            const chat = await this.getChatByDate(date);
+            if (!chat) continue;
+            
+            const seenIds = new Set<string>();
+            let hasChanges = false;
+            let counter = 0;
+            
+            const fixedMessages = chat.messages.map(msg => {
+                // 检查 ID 是否包含特殊字符或是否重复
+                const hasSpecialChars = /[$]/.test(msg.id);
+                const isDuplicate = seenIds.has(msg.id);
+                
+                if (isDuplicate || hasSpecialChars) {
+                    // 生成新的唯一 ID（不包含特殊字符）
+                    hasChanges = true;
+                    counter++;
+                    const timestamp = Date.now();
+                    const random = Math.random().toString(36).substr(2, 9);
+                    const newId = `msg_${timestamp}_${counter}_${random}`;
+                    seenIds.add(newId);
+                    return {
+                        ...msg,
+                        id: newId
+                    };
+                }
+                seenIds.add(msg.id);
+                return msg;
+            });
+            
+            if (hasChanges) {
+                const storageKey = `${CHAT_HISTORY_PREFIX}${date}`;
+                await EncryptedStorageService.setItem(storageKey, {
+                    ...chat,
+                    messages: fixedMessages
+                });
+            }
+        }
+    }
 }
