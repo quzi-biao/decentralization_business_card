@@ -6,7 +6,7 @@ import { fileManager, FileMetadata } from '../services/fileManager';
 interface ChatInputProps {
     value: string;
     onChangeText: (text: string) => void;
-    onSend: (text: string, imageMinioUrl?: string, imageLocalPath?: string) => void;
+    onSend: (text: string, imageMinioUrl?: string, imageLocalPath?: string, imageFileId?: string) => void;
     disabled?: boolean;
     placeholder?: string;
 }
@@ -31,7 +31,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         // 发送给 AI 使用 minioUrl，本地显示使用 originalPath
         const imageMinioUrl = selectedImageMetadata?.minioUrl || selectedImageMetadata?.originalPath;
         const imageLocalPath = selectedImageMetadata?.originalPath;
-        onSend(value, imageMinioUrl, imageLocalPath);
+        const imageFileId = selectedImageMetadata?.id;
+        onSend(value, imageMinioUrl, imageLocalPath, imageFileId);
         setSelectedImageMetadata(null);
     };
 
