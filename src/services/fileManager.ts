@@ -197,6 +197,75 @@ class FileManagerService {
   }
 
   /**
+   * 从 URL 下载文件并保存
+   */
+  async downloadFromUrl(
+    url: string,
+    options?: {
+      fileName?: string;
+      context?: FileContext;
+      uploadToCloud?: boolean;
+    }
+  ): Promise<FileMetadata> {
+    try {
+      await this.initialize();
+
+      // 下载文件到临时目录
+      const fileName = options?.fileName || `download_${Date.now()}_${url.split('/').pop() || 'file'}`;
+      const tempPath = `${cacheDirectory}temp_${Date.now()}_${fileName}`;
+
+      console.log('Downloading file from URL:', url);
+      const downloadResult = await FileSystem.downloadAsync(url, tempPath);
+
+      if (downloadResult.status !== 200) {
+        throw new Error(`Failed to download file: HTTP ${downloadResult.status}`);
+      }
+
+      // 获取文件信息
+      const fileInfo = await FileSystem.getInfoAsync(downloadResult.uri);
+      if (!fileInfo.exists) {
+        throw new Error('Downloaded file does not exist');
+      }
+
+      // 推断文件类型和 MIME 类型
+      const extension = fileName.split('.').pop()?.toLowerCase() || 'bin';
+      let mimeType = 'application/octet-stream';
+      let fileType: FileType = 'other';
+
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(extension)) {
+        fileType = 'image';
+        mimeType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+      } else if (['mp4', 'mov', 'avi', 'mkv'].includes(extension)) {
+        fileType = 'video';
+        mimeType = `video/${extension}`;
+      } else if (['mp3', 'wav', 'ogg', 'm4a'].includes(extension)) {
+        fileType = 'audio';
+        mimeType = `audio/${extension}`;
+      } else if (['pdf', 'doc', 'docx', 'txt'].includes(extension)) {
+        fileType = 'document';
+        mimeType = extension === 'pdf' ? 'application/pdf' : 'application/octet-stream';
+      }
+
+      // 使用 saveFile 保存下载的文件
+      const metadata = await this.saveFile(downloadResult.uri, {
+        source: 'external',
+        fileName,
+        fileType,
+        mimeType,
+        fileSize: fileInfo.size || 0,
+        context: options?.context || 'other',
+        uploadToCloud: options?.uploadToCloud,
+      });
+
+      console.log('✓ File downloaded and saved:', metadata.id);
+      return metadata;
+    } catch (error) {
+      console.error('Error downloading file from URL:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 保存文件
    */
   private async saveFile(
@@ -620,6 +689,49 @@ class FileManagerService {
     } catch (error) {
       console.error('Failed to cleanup orphaned indexes:', error);
       return 0;
+    }
+  }
+
+  /**
+   * 确保文件已上传到 MinIO
+   * 如果文件已有 minioUrl 则直接返回，否则上传并更新元数据
+   */
+  async ensureFileUploaded(fileId: string): Promise<FileMetadata | null> {
+    try {
+      const metadata = await this.getFileMetadata(fileId);
+      if (!metadata) {
+        console.error('File metadata not found:', fileId);
+        return null;
+      }
+
+      // 如果已有 MinIO URL，直接返回
+      if (metadata.minioUrl) {
+        return metadata;
+      }
+
+      // 检查本地文件是否存在
+      const fileInfo = await FileSystem.getInfoAsync(metadata.originalPath);
+      if (!fileInfo.exists) {
+        console.error('Local file not found:', metadata.originalPath);
+        return null;
+      }
+
+      // 上传到 MinIO
+      console.log('Uploading file to MinIO:', metadata.originalPath);
+      metadata.minioUrl = await this.uploadToMinIO(
+        metadata.originalPath,
+        metadata.hash,
+        metadata.fileName
+      );
+      console.log('✓ File uploaded to MinIO:', metadata.minioUrl);
+
+      // 更新元数据索引
+      await this.saveFileIndex(fileId, metadata);
+
+      return metadata;
+    } catch (error) {
+      console.error('Failed to ensure file uploaded:', error);
+      return null;
     }
   }
 

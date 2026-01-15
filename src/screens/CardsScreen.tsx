@@ -223,6 +223,8 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                                 return (
                                     <ContactCard
                                         key={exchange.id}
+                                        avatarId={cardData?.avatarId}
+                                        avatarUrl={cardData?.avatarUrl}
                                         realName={cardData?.realName}
                                         position={cardData?.position}
                                         companyName={cardData?.companyName}

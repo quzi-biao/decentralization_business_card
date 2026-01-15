@@ -15,6 +15,8 @@ import { useTagStore, TAG_COLORS } from '../store/useTagStore';
 import { getIdentity } from '../services/identityService';
 import { uploadEncryptedCard, createAccessGrant, downloadEncryptedCard, getAccessGrant, decryptCardData } from '../services/storageService';
 import { generateRandomId } from '../utils/crypto';
+import { checkMinioFileExists } from '../services/minioService';
+import { fileManager } from '../services/fileManager';
 import MyCard from '../components/MyCard';
 
 /**
@@ -86,19 +88,54 @@ const ExchangeScreen = () => {
                 throw new Error('AES key not found');
             }
 
-            // 生成二维码数据（包含 AES 密钥）
+            // Step 5: 检查并上传头像到 MinIO
+            let avatarMinioUrl: string | undefined;
+            if (cardData.avatarId) {
+                console.log('Step 5: Checking avatar in MinIO...');
+                try {
+                    const avatarFile = await fileManager.getFileMetadata(cardData.avatarId);
+                    if (avatarFile) {
+                        // 检查 MinIO URL 是否存在且有效
+                        if (avatarFile.minioUrl) {
+                            const exists = await checkMinioFileExists(avatarFile.minioUrl);
+                            if (exists) {
+                                console.log('✓ Avatar already exists in MinIO:', avatarFile.minioUrl);
+                                avatarMinioUrl = avatarFile.minioUrl;
+                            } else {
+                                console.log('⚠ Avatar URL exists but file not found, re-uploading...');
+                            }
+                        }
+                        
+                        // 如果 MinIO 中不存在，重新上传
+                        if (!avatarMinioUrl) {
+                            console.log('Uploading avatar to MinIO...');
+                            const updatedFile = await fileManager.ensureFileUploaded(cardData.avatarId);
+                            if (updatedFile?.minioUrl) {
+                                avatarMinioUrl = updatedFile.minioUrl;
+                                console.log('✓ Avatar uploaded to MinIO:', avatarMinioUrl);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to upload avatar:', error);
+                    // 头像上传失败不影响整体流程
+                }
+            }
+
+            // 生成二维码数据（包含 AES 密钥和头像 URL）
             const qrPayload = {
                 did: identity.did,
                 publicKey: identity.publicKey,
                 storageUrl: encryptedPackage.storageUrl,
                 aesKey: aesKey, // 直接包含 AES 密钥
                 signature: encryptedPackage.signature,
+                avatarUrl: avatarMinioUrl, // 添加头像 URL
                 timestamp: Date.now()
             };
 
-            console.log('Step 5: Setting QR data...');
+            console.log('Step 6: Setting QR data...');
             setQrData(JSON.stringify(qrPayload));
-            console.log('Step 6: QR code generated successfully with latest card data');
+            console.log('Step 7: QR code generated successfully with latest card data and avatar');
         } catch (error: any) {
             console.error('Failed to generate QR code:', error);
             console.error('Error stack:', error.stack);
@@ -243,6 +280,21 @@ const ExchangeScreen = () => {
                 
                 if (!peerCardData) {
                     throw new Error('无法解密对方的名片');
+                }
+                
+                // 下载头像（如果二维码中包含头像 URL）
+                if (qrPayload.avatarUrl && peerCardData) {
+                    try {
+                        console.log('Downloading avatar from:', qrPayload.avatarUrl);
+                        const avatarFile = await fileManager.downloadFromUrl(qrPayload.avatarUrl);
+                        if (avatarFile) {
+                            peerCardData.avatarId = avatarFile.id;
+                            console.log('✓ Avatar downloaded and saved:', avatarFile.id);
+                        }
+                    } catch (error) {
+                        console.error('Failed to download avatar:', error);
+                        // 头像下载失败不影响整体流程
+                    }
                 }
                 
                 // 保存 AES 密钥以便后续使用
