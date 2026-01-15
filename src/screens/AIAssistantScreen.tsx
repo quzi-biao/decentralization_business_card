@@ -11,12 +11,14 @@ import { ChatPersistenceService } from '../services/chatPersistence';
 import ChatMessage from '../components/ChatMessage';
 import UpdateConfirmCard from '../components/UpdateConfirmCard';
 import ProgressHeader from '../components/ProgressHeader';
+import ChatInput from '../components/ChatInput';
 
 interface Message {
     id: string;
     text: string;
     isUser: boolean;
     timestamp: Date;
+    imageUrl?: string;
 }
 
 /**
@@ -193,14 +195,15 @@ const AIAssistantScreen: React.FC = () => {
         }
     };
 
-    const sendMessage = async () => {
-        if (!inputText.trim() || loading) return;
+    const sendMessage = async (text: string, imageUrl?: string) => {
+        if ((!text.trim() && !imageUrl) || loading) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
-            text: inputText.trim(),
+            text: text.trim() || (imageUrl ? '发送了一张图片' : ''),
             isUser: true,
             timestamp: new Date(),
+            imageUrl,
         };
 
         setMessages(prev => [...prev, userMessage]);
@@ -211,10 +214,16 @@ const AIAssistantScreen: React.FC = () => {
         await ChatPersistenceService.saveMessage(userMessage, sessionId);
 
         try {
+            // 构建发送内容
+            let messageContent = userMessage.text;
+            if (imageUrl) {
+                messageContent = `${messageContent}\n\n[图片]: ${imageUrl}`;
+            }
+
             // 调用 n8n AI Agent
             const rawResponse = await callN8NAgent(
                 N8N_CONFIG.agentWebhookPath,
-                userMessage.text,
+                messageContent,
                 sessionId
             );
 
@@ -459,32 +468,13 @@ const AIAssistantScreen: React.FC = () => {
                     )}
                 </ScrollView>
 
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        value={inputText}
-                        onChangeText={setInputText}
-                        placeholder="输入消息..."
-                        placeholderTextColor="#94a3b8"
-                        multiline
-                        maxLength={500}
-                        editable={!loading}
-                    />
-                    <TouchableOpacity
-                        style={[
-                            styles.sendButton,
-                            (!inputText.trim() || loading) && styles.sendButtonDisabled
-                        ]}
-                        onPress={sendMessage}
-                        disabled={!inputText.trim() || loading}
-                    >
-                        <MaterialIcons 
-                            name="send" 
-                            size={24} 
-                            color={!inputText.trim() || loading ? '#cbd5e1' : '#ffffff'} 
-                        />
-                    </TouchableOpacity>
-                </View>
+                <ChatInput
+                    value={inputText}
+                    onChangeText={setInputText}
+                    onSend={sendMessage}
+                    disabled={loading}
+                    placeholder="输入消息..."
+                />
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -517,37 +507,6 @@ const styles = StyleSheet.create({
     loadingText: {
         fontSize: 14,
         color: '#64748b',
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        padding: 16,
-        backgroundColor: '#ffffff',
-        borderTopWidth: 1,
-        borderTopColor: '#e2e8f0',
-        gap: 12,
-    },
-    input: {
-        flex: 1,
-        minHeight: 40,
-        maxHeight: 100,
-        backgroundColor: '#f1f5f9',
-        borderRadius: 20,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        fontSize: 15,
-        color: '#1e293b',
-    },
-    sendButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#4F46E5',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    sendButtonDisabled: {
-        backgroundColor: '#e2e8f0',
     },
 });
 

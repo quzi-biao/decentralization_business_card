@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, Image } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 
 interface Message {
@@ -7,6 +7,7 @@ interface Message {
     text: string;
     isUser: boolean;
     timestamp: Date;
+    imageUrl?: string;
 }
 
 interface ChatMessageProps {
@@ -54,15 +55,31 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         >
             {message.isUser ? (
                 <View style={[styles.messageBubble, styles.userBubble]}>
-                    <Text style={styles.userText}>
-                        {message.text}
-                    </Text>
+                    {message.imageUrl && (
+                        <Image 
+                            source={{ uri: message.imageUrl }} 
+                            style={styles.messageImage}
+                            resizeMode="cover"
+                        />
+                    )}
+                    {message.text && (
+                        <Text style={styles.userText}>
+                            {message.text}
+                        </Text>
+                    )}
                     <Text style={styles.timestamp}>
                         {formatTimestamp()}
                     </Text>
                 </View>
             ) : (
                 <View style={[styles.messageBubble, styles.aiBubble]}>
+                    {message.imageUrl && (
+                        <Image 
+                            source={{ uri: message.imageUrl }} 
+                            style={styles.messageImage}
+                            resizeMode="cover"
+                        />
+                    )}
                     <Markdown style={markdownStyles}>
                         {message.text}
                     </Markdown>
@@ -155,6 +172,13 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: '#94a3b8',
         marginTop: 4,
+    },
+    messageImage: {
+        width: 200,
+        height: 200,
+        borderRadius: 12,
+        marginBottom: 8,
+        backgroundColor: '#f1f5f9',
     },
 });
 
