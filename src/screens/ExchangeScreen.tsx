@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator, Modal, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import ViewShot from 'react-native-view-shot';
 import { useCardStore, BusinessCardData } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
+import { useTagStore, TAG_COLORS } from '../store/useTagStore';
 import { getIdentity } from '../services/identityService';
 import { uploadEncryptedCard, createAccessGrant, downloadEncryptedCard, getAccessGrant, decryptCardData } from '../services/storageService';
 import { generateRandomId } from '../utils/crypto';
@@ -33,8 +34,14 @@ const ExchangeScreen = () => {
     const [lastScannedData, setLastScannedData] = useState<string>('');
     const [lastScanTime, setLastScanTime] = useState<number>(0);
     const [scannedCard, setScannedCard] = useState<BusinessCardData | null>(null);
+    const [scannedPeerDid, setScannedPeerDid] = useState<string>('');
     const [isSaving, setIsSaving] = useState(false);
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [note, setNote] = useState('');
     const qrRef = useRef<ViewShot>(null);
+
+    // 预设标签
+    const availableTags = ['客户', '供应商', '合作伙伴', '朋友', '同事', '潜在客户'];
 
     useEffect(() => {
         // 延迟生成二维码，让页面先渲染
@@ -256,9 +263,17 @@ const ExchangeScreen = () => {
                 });
                 await setExchangedCard(peerDid, peerCardData);
                 
+                // 加载已有的标签和备注
+                const existingExchange = useExchangeStore.getState().getExchange(peerDid);
+                if (existingExchange) {
+                    setSelectedTags(existingExchange.tags || []);
+                    setNote(existingExchange.note || '');
+                }
+                
                 // 退出扫描模式，显示名片预览弹窗
                 setMode('qr');
                 setScannedCard(peerCardData);
+                setScannedPeerDid(peerDid);
             } else {
                 // 创建新的交换记录
                 const exchange = {
@@ -275,9 +290,14 @@ const ExchangeScreen = () => {
                 await addExchange(exchange);
                 await setExchangedCard(peerDid, peerCardData);
 
+                // 新建交换记录，清空标签和备注
+                setSelectedTags([]);
+                setNote('');
+                
                 // 退出扫描模式，显示名片预览弹窗
                 setMode('qr');
                 setScannedCard(peerCardData);
+                setScannedPeerDid(peerDid);
             }
         } catch (error) {
             console.error('Failed to exchange card:', error);
@@ -380,7 +400,10 @@ const ExchangeScreen = () => {
                     presentationStyle="pageSheet"
                     onRequestClose={() => {
                         setScannedCard(null);
-                        // 重置扫描状态，允许再次扫描
+                        setScannedPeerDid('');
+                        // 重置状态
+                        setSelectedTags([]);
+                        setNote('');
                         setLastScannedData('');
                         setLastScanTime(0);
                     }}
@@ -408,6 +431,51 @@ const ExchangeScreen = () => {
                             {scannedCard && (
                                 <View style={styles.modalCardWrapper}>
                                     <MyCard cardData={scannedCard} />
+                                    
+                                    {/* 标签选择 */}
+                                    <View style={styles.tagsSection}>
+                                        <Text style={styles.sectionLabel}>标签</Text>
+                                        <View style={styles.tagsContainer}>
+                                            {availableTags.map((tag) => (
+                                                <TouchableOpacity
+                                                    key={tag}
+                                                    style={[
+                                                        styles.tagButton,
+                                                        selectedTags.includes(tag) && styles.tagButtonSelected
+                                                    ]}
+                                                    onPress={() => {
+                                                        setSelectedTags(prev => 
+                                                            prev.includes(tag)
+                                                                ? prev.filter(t => t !== tag)
+                                                                : [...prev, tag]
+                                                        );
+                                                    }}
+                                                >
+                                                    <Text style={[
+                                                        styles.tagButtonText,
+                                                        selectedTags.includes(tag) && styles.tagButtonTextSelected
+                                                    ]}>
+                                                        {tag}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </View>
+
+                                    {/* 备注输入框 */}
+                                    <View style={styles.noteSection}>
+                                        <Text style={styles.sectionLabel}>备注</Text>
+                                        <TextInput
+                                            style={styles.noteInput}
+                                            placeholder="添加备注信息..."
+                                            placeholderTextColor="#94a3b8"
+                                            multiline
+                                            numberOfLines={4}
+                                            value={note}
+                                            onChangeText={setNote}
+                                            textAlignVertical="top"
+                                        />
+                                    </View>
                                 </View>
                             )}
                         </ScrollView>
@@ -415,9 +483,72 @@ const ExchangeScreen = () => {
                         <View style={styles.modalFooter}>
                             <TouchableOpacity 
                                 style={styles.modalButton}
-                                onPress={() => {
+                                onPress={async () => {
+                                    // 保存标签和备注到交换记录
+                                    if (scannedPeerDid) {
+                                        try {
+                                            console.log('开始保存标签和备注...');
+                                            console.log('peerDid:', scannedPeerDid);
+                                            console.log('标签:', selectedTags);
+                                            console.log('备注:', note);
+                                            
+                                            // 检查交换记录是否存在
+                                            const exchange = useExchangeStore.getState().getExchange(scannedPeerDid);
+                                            if (!exchange) {
+                                                console.error('未找到交换记录:', scannedPeerDid);
+                                                Alert.alert('错误', '未找到对应的交换记录');
+                                                return;
+                                            }
+                                            
+                                            // 1. 保存到 CardExchange（用于记录原始标签名称）
+                                            await useExchangeStore.getState().updateExchange(scannedPeerDid, {
+                                                tags: selectedTags.length > 0 ? selectedTags : undefined,
+                                                note: note.trim() || undefined,
+                                            });
+                                            
+                                            // 2. 转换标签名称为标签ID并保存到 useTagStore
+                                            const tagStore = useTagStore.getState();
+                                            const tagIds: string[] = [];
+                                            
+                                            for (const tagName of selectedTags) {
+                                                // 查找是否已存在该标签
+                                                let existingTag = tagStore.tags.find(t => t.name === tagName);
+                                                
+                                                if (!existingTag) {
+                                                    // 创建新标签
+                                                    const colorIndex = tagStore.tags.length % TAG_COLORS.length;
+                                                    await tagStore.addTag({
+                                                        name: tagName,
+                                                        color: TAG_COLORS[colorIndex]
+                                                    });
+                                                    // 重新获取创建的标签
+                                                    existingTag = tagStore.tags.find(t => t.name === tagName);
+                                                }
+                                                
+                                                if (existingTag) {
+                                                    tagIds.push(existingTag.id);
+                                                }
+                                            }
+                                            
+                                            // 保存到 cardMetadata
+                                            await tagStore.setCardMetadata(scannedPeerDid, {
+                                                tags: tagIds,
+                                                note: note.trim()
+                                            });
+                                            
+                                            console.log('✓ 标签和备注已成功保存到两个存储');
+                                        } catch (error) {
+                                            console.error('保存标签和备注失败:', error);
+                                            Alert.alert('错误', '保存失败，请重试');
+                                            return;
+                                        }
+                                    }
+                                    
                                     setScannedCard(null);
-                                    // 重置扫描状态
+                                    setScannedPeerDid('');
+                                    // 重置状态
+                                    setSelectedTags([]);
+                                    setNote('');
                                     setLastScannedData('');
                                     setLastScanTime(0);
                                 }}
@@ -752,6 +883,53 @@ const styles = StyleSheet.create({
     },
     modalCardWrapper: {
         padding: 16,
+    },
+    tagsSection: {
+        marginTop: 20,
+    },
+    sectionLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1e293b',
+        marginBottom: 12,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    tagButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: '#f1f5f9',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    tagButtonSelected: {
+        backgroundColor: '#4F46E5',
+        borderColor: '#4F46E5',
+    },
+    tagButtonText: {
+        fontSize: 14,
+        color: '#64748b',
+        fontWeight: '500',
+    },
+    tagButtonTextSelected: {
+        color: '#ffffff',
+    },
+    noteSection: {
+        marginTop: 20,
+    },
+    noteInput: {
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        padding: 12,
+        fontSize: 15,
+        color: '#1e293b',
+        minHeight: 100,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
     },
     modalFooter: {
         padding: 16,
