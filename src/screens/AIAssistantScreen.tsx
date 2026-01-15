@@ -50,6 +50,7 @@ const AIAssistantScreen: React.FC = () => {
     const buildCurrentCardInfo = (data: typeof cardData): string => {
         const currentCardInfo: string[] = [];
         if (data.realName) currentCardInfo.push(`姓名：${data.realName}`);
+        if (data.avatarId || data.avatarUrl) currentCardInfo.push(`头像已上传`);
         if (data.position) currentCardInfo.push(`职位：${data.position}`);
         if (data.companyName) currentCardInfo.push(`公司：${data.companyName}`);
         if (data.industry) currentCardInfo.push(`行业：${data.industry}`);
