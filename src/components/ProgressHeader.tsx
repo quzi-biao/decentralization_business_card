@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import CardEvaluation from './CardEvaluation';
+import { BusinessCardData } from '../store/useCardStore';
+import { EvaluationResult } from '../services/evaluationPersistence';
 
 interface ProgressHeaderProps {
     progress: number;
     filledCount: number;
     totalCount: number;
     onPress: () => void;
+    cardData: BusinessCardData;
+    sessionId: string;
+    autoEvaluate?: boolean;
 }
 
 /**
@@ -17,31 +23,79 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
     progress,
     filledCount,
     totalCount,
-    onPress
+    onPress,
+    cardData,
+    sessionId,
+    autoEvaluate = false
 }) => {
+    const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
+    const [showEvaluationModal, setShowEvaluationModal] = useState(false);
+
+    // 获取评分颜色
+    const getScoreColor = (score: number): string => {
+        if (score >= 90) return '#10b981'; // 优秀 - 绿色
+        if (score >= 80) return '#3b82f6'; // 良好 - 蓝色
+        if (score >= 70) return '#8b5cf6'; // 中等偏上 - 紫色
+        if (score >= 60) return '#f59e0b'; // 中等 - 橙色
+        if (score >= 50) return '#f97316'; // 中等偏下 - 深橙色
+        return '#ef4444'; // 不及格 - 红色
+    };
+
+    // 处理评分加载
+    const handleEvaluationLoaded = (loadedEvaluation: EvaluationResult | null) => {
+        setEvaluation(loadedEvaluation);
+    };
     return (
         <View style={styles.header}>
             <View style={styles.headerLeft}>
                 <MaterialIcons name="smart-toy" size={24} color="#4F46E5" />
                 <Text style={styles.headerTitle}>AI 名片助手</Text>
             </View>
-            <TouchableOpacity 
-                style={styles.progressContainer}
-                onPress={onPress}
-                activeOpacity={0.7}
-            >
-                <View style={styles.progressInfo}>
-                    <Text style={styles.progressText}>{progress}%</Text>
-                    <Text style={styles.progressLabel}>完成度</Text>
+            <View style={styles.headerRight}>
+                <View style={styles.progressContainer}>
+                    <TouchableOpacity 
+                        style={styles.progressInfo}
+                        onPress={onPress}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.progressText}>{progress}%</Text>
+                        <Text style={styles.progressLabel}>完成度</Text>
+                    </TouchableOpacity>
+                    <View style={styles.progressBarContainer}>
+                        <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                    </View>
+                    {evaluation && (
+                        <TouchableOpacity
+                            style={[
+                                styles.scoreBadge,
+                                { backgroundColor: getScoreColor(evaluation.totalScore) + '20' }
+                            ]}
+                            onPress={() => setShowEvaluationModal(true)}
+                            activeOpacity={0.7}
+                        >
+                            <MaterialIcons 
+                                name="star" 
+                                size={14} 
+                                color={getScoreColor(evaluation.totalScore)} 
+                            />
+                            <Text style={[
+                                styles.scoreText,
+                                { color: getScoreColor(evaluation.totalScore) }
+                            ]}>
+                                {evaluation.totalScore}分
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
-                <View style={styles.progressBarContainer}>
-                    <View style={[styles.progressBar, { width: `${progress}%` }]} />
-                </View>
-                <View style={styles.qualityBadge}>
-                    <MaterialIcons name="star" size={14} color="#f59e0b" />
-                    <Text style={styles.qualityText}>{progress}分</Text>
-                </View>
-            </TouchableOpacity>
+                <CardEvaluation 
+                    cardData={cardData} 
+                    sessionId={sessionId}
+                    onEvaluationLoaded={handleEvaluationLoaded}
+                    autoEvaluate={autoEvaluate}
+                    visible={showEvaluationModal}
+                    onClose={() => setShowEvaluationModal(false)}
+                />
+            </View>
         </View>
     );
 };
@@ -67,6 +121,11 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#1e293b',
         marginLeft: 8,
+    },
+    headerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
     },
     progressContainer: {
         alignItems: 'flex-end',
@@ -98,19 +157,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#4F46E5',
         borderRadius: 2,
     },
-    qualityBadge: {
+    scoreBadge: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 2,
-        backgroundColor: '#fef3c7',
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
+        marginTop: 4,
     },
-    qualityText: {
+    scoreText: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#f59e0b',
     },
 });
 

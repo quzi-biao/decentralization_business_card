@@ -12,6 +12,7 @@ import ChatMessage from '../components/ChatMessage';
 import UpdateConfirmCard from '../components/UpdateConfirmCard';
 import ProgressHeader from '../components/ProgressHeader';
 import ChatInput from '../components/ChatInput';
+import ProgressDetailsModal from '../components/ProgressDetailsModal';
 
 interface Message {
     id: string;
@@ -45,6 +46,7 @@ const AIAssistantScreen: React.FC = () => {
     const [loadedDates, setLoadedDates] = useState<string[]>([]);
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [showProgressModal, setShowProgressModal] = useState(false);
 
     // 构建当前名片信息的通用方法
     const buildCurrentCardInfo = (data: typeof cardData): string => {
@@ -101,10 +103,7 @@ const AIAssistantScreen: React.FC = () => {
     const progressInfo = calculateProgress();
 
     const handleProgressPress = () => {
-        navigation.navigate('Profile', {
-            screen: 'CardDetail',
-            params: { cardData }
-        });
+        setShowProgressModal(true);
     };
 
     useEffect(() => {
@@ -491,6 +490,9 @@ const AIAssistantScreen: React.FC = () => {
                 filledCount={progressInfo.filledCount}
                 totalCount={progressInfo.totalCount}
                 onPress={handleProgressPress}
+                cardData={cardData}
+                sessionId={sessionId}
+                autoEvaluate={true}
             />
 
             <KeyboardAvoidingView 
@@ -530,6 +532,15 @@ const AIAssistantScreen: React.FC = () => {
                     placeholder="输入消息..."
                 />
             </KeyboardAvoidingView>
+            
+            <ProgressDetailsModal
+                visible={showProgressModal}
+                onClose={() => setShowProgressModal(false)}
+                cardData={cardData}
+                progress={progressInfo.progress}
+                filledCount={progressInfo.filledCount}
+                totalCount={progressInfo.totalCount}
+            />
         </SafeAreaView>
     );
 };
