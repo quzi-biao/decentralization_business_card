@@ -12,12 +12,13 @@ export interface Tag {
 }
 
 /**
- * 名片元数据（标签和备注）
+ * 名片元数据（标签、备注和重要度）
  */
 export interface CardMetadata {
     peerDid: string;
     tags: string[]; // tag IDs
     note: string;
+    importance: number; // 重要度（默认20）
     updatedAt: number;
 }
 
@@ -38,6 +39,7 @@ interface TagStore {
     addTagToCard: (peerDid: string, tagId: string) => Promise<void>;
     removeTagFromCard: (peerDid: string, tagId: string) => Promise<void>;
     setCardNote: (peerDid: string, note: string) => Promise<void>;
+    setCardImportance: (peerDid: string, importance: number) => Promise<void>;
     
     // 持久化
     loadTags: () => Promise<void>;
@@ -125,6 +127,7 @@ export const useTagStore = create<TagStore>((set, get) => ({
                 peerDid,
                 tags: existing?.tags || [],
                 note: existing?.note || '',
+                importance: existing?.importance ?? 20,
                 ...metadata,
                 updatedAt: Date.now()
             });
@@ -148,6 +151,7 @@ export const useTagStore = create<TagStore>((set, get) => ({
                     peerDid,
                     tags: [...currentTags, tagId],
                     note: existing?.note || '',
+                    importance: existing?.importance ?? 20,
                     updatedAt: Date.now()
                 });
             }
@@ -174,6 +178,10 @@ export const useTagStore = create<TagStore>((set, get) => ({
     
     setCardNote: async (peerDid, note) => {
         await get().setCardMetadata(peerDid, { note });
+    },
+    
+    setCardImportance: async (peerDid, importance) => {
+        await get().setCardMetadata(peerDid, { importance });
     },
     
     loadTags: async () => {
