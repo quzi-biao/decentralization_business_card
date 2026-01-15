@@ -83,7 +83,6 @@ class FileManagerService {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
         allowsEditing: options.allowsEditing ?? true,
-        aspect: options.aspect ?? [4, 3],
         quality: options.quality ?? 0.8,
       });
 
@@ -122,7 +121,6 @@ class FileManagerService {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: options.allowsEditing ?? true,
-        aspect: options.aspect ?? [4, 3],
         quality: options.quality ?? 0.8,
       });
 
