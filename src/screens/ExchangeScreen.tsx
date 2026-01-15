@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
+import ViewShot from 'react-native-view-shot';
 import { useCardStore, BusinessCardData } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
 import { getIdentity } from '../services/identityService';
@@ -29,6 +33,8 @@ const ExchangeScreen = () => {
     const [lastScannedData, setLastScannedData] = useState<string>('');
     const [lastScanTime, setLastScanTime] = useState<number>(0);
     const [scannedCard, setScannedCard] = useState<BusinessCardData | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const qrRef = useRef<ViewShot>(null);
 
     useEffect(() => {
         // 延迟生成二维码，让页面先渲染
@@ -92,6 +98,83 @@ const ExchangeScreen = () => {
             Alert.alert('错误', `生成二维码失败: ${error.message}`);
         } finally {
             setIsGeneratingQR(false);
+        }
+    };
+
+    // 保存二维码到相册
+    const handleSaveQRCode = async () => {
+        if (!qrRef.current || !qrData) {
+            Alert.alert('提示', '二维码还未生成完成');
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+
+            // 请求媒体库权限
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+
+            if (status !== 'granted') {
+                Alert.alert('需要权限', '请允许访问相册以保存二维码');
+                return;
+            }
+
+            // 捕获二维码视图
+            if (!qrRef.current) {
+                Alert.alert('错误', '二维码视图未准备好');
+                return;
+            }
+            const uri = await qrRef.current.capture();
+            
+            // 直接保存到相册
+            await MediaLibrary.saveToLibraryAsync(uri);
+            console.log("保存成功")
+
+            Alert.alert('成功', '二维码已保存到相册');
+        } catch (error) {
+            console.error('Failed to save QR code:', error);
+            Alert.alert('错误', '保存二维码失败，请重试');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // 分享二维码
+    const handleShareQRCode = async () => {
+        if (!qrRef.current || !qrData) {
+            Alert.alert('提示', '二维码还未生成完成');
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+
+            // 检查是否支持分享
+            const isAvailable = await Sharing.isAvailableAsync();
+            if (!isAvailable) {
+                Alert.alert('提示', '当前设备不支持分享功能');
+                return;
+            }
+
+            // 捕获二维码视图
+            if (!qrRef.current) {
+                Alert.alert('错误', '二维码视图未准备好');
+                return;
+            }
+
+            const uri = await qrRef.current.capture();
+            
+            // 分享图片
+            await Sharing.shareAsync(uri, {
+                mimeType: 'image/png',
+                dialogTitle: '分享我的名片二维码',
+                UTI: 'public.png',
+            });
+        } catch (error) {
+            console.error('Failed to share QR code:', error);
+            Alert.alert('错误', '分享二维码失败，请重试');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -218,30 +301,44 @@ const ExchangeScreen = () => {
                             </View>
                         </View>
                             
-                        <View style={styles.qrWrapper}>
-                            {qrData ? (
-                                <QRCode
-                                    value={qrData}
-                                    size={220}
-                                    backgroundColor="white"
-                                    color="#4F46E5"
-                                />
-                            ) : (
-                                <View style={styles.qrPlaceholder}>
-                                    <ActivityIndicator size="large" color="#4F46E5" />
-                                    <Text style={styles.placeholderText}>正在生成二维码...</Text>
-                                </View>
-                            )}
-                        </View>
+                        <ViewShot ref={qrRef} options={{ format: 'png', quality: 1.0 }}>
+                            <View style={styles.qrWrapper}>
+                                {qrData ? (
+                                    <QRCode
+                                        value={qrData}
+                                        size={220}
+                                        backgroundColor="white"
+                                        color="#4F46E5"
+                                    />
+                                ) : (
+                                    <View style={styles.qrPlaceholder}>
+                                        <ActivityIndicator size="large" color="#4F46E5" />
+                                        <Text style={styles.placeholderText}>正在生成二维码...</Text>
+                                    </View>
+                                )}
+                            </View>
+                        </ViewShot>
 
                         <View style={styles.qrActions}>
-                            <TouchableOpacity style={styles.qrActionButton}>
-                                <MaterialIcons name="save-alt" size={18} color="#64748b" />
-                                <Text style={styles.qrActionText}>保存图片</Text>
+                            <TouchableOpacity 
+                                style={styles.qrActionButton}
+                                onPress={handleSaveQRCode}
+                                disabled={!qrData || isSaving}
+                            >
+                                <MaterialIcons name="save-alt" size={18} color={!qrData || isSaving ? "#cbd5e1" : "#64748b"} />
+                                <Text style={[styles.qrActionText, (!qrData || isSaving) && styles.qrActionTextDisabled]}>
+                                    {isSaving ? '保存中...' : '保存图片'}
+                                </Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.qrActionButton, styles.qrActionButtonPrimary]}>
-                                <MaterialIcons name="share" size={18} color="#ffffff" />
-                                <Text style={[styles.qrActionText, styles.qrActionTextPrimary]}>分享</Text>
+                            <TouchableOpacity 
+                                style={[styles.qrActionButton, styles.qrActionButtonPrimary, (!qrData || isSaving) && styles.qrActionButtonDisabled]}
+                                onPress={handleShareQRCode}
+                                disabled={!qrData || isSaving}
+                            >
+                                <MaterialIcons name="share" size={18} color={!qrData || isSaving ? "#cbd5e1" : "#ffffff"} />
+                                <Text style={[styles.qrActionText, styles.qrActionTextPrimary, (!qrData || isSaving) && styles.qrActionTextDisabled]}>
+                                    分享
+                                </Text>
                             </TouchableOpacity>
                         </View>
 
@@ -485,6 +582,13 @@ const styles = StyleSheet.create({
     },
     qrActionTextPrimary: {
         color: '#ffffff',
+    },
+    qrActionButtonDisabled: {
+        backgroundColor: '#e2e8f0',
+        borderColor: '#e2e8f0',
+    },
+    qrActionTextDisabled: {
+        color: '#cbd5e1',
     },
     qrInfo: {
         paddingTop: 16,
