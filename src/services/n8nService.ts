@@ -63,6 +63,7 @@ async function getAvailableBaseUrl(): Promise<string> {
 export interface N8NAgentRequest {
     chatInput: string;
     sessionId?: string;
+    imageUrl?: string; // 图片 URL，用于 Vision API
 }
 
 export interface N8NAgentResponse {
@@ -143,7 +144,8 @@ export async function callN8NAgent(
     workflowId: string,
     message: string,
     sessionId?: string,
-    useAPI: boolean = false
+    useAPI: boolean = false,
+    imageUrl?: string
 ): Promise<N8NAgentResponse> {
     try {
         const identity = await getIdentity();
@@ -160,6 +162,7 @@ export async function callN8NAgent(
         const requestBody: N8NAgentRequest = {
             chatInput: message,
             sessionId: sessionId || identity.did,
+            imageUrl: imageUrl, // 传递图片 URL 给 n8n
         };
         
         // 尝试 Webhook 方式
