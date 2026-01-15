@@ -45,6 +45,39 @@ const AIAssistantScreen: React.FC = () => {
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
+    // 构建当前名片信息的通用方法
+    const buildCurrentCardInfo = (data: typeof cardData): string => {
+        const currentCardInfo: string[] = [];
+        if (data.realName) currentCardInfo.push(`姓名：${data.realName}`);
+        if (data.position) currentCardInfo.push(`职位：${data.position}`);
+        if (data.companyName) currentCardInfo.push(`公司：${data.companyName}`);
+        if (data.industry) currentCardInfo.push(`行业：${data.industry}`);
+        if (data.phone) currentCardInfo.push(`电话：${data.phone}`);
+        if (data.email) currentCardInfo.push(`邮箱：${data.email}`);
+        if (data.wechat) currentCardInfo.push(`微信：${data.wechat}`);
+        if (data.address) currentCardInfo.push(`地址：${data.address}`);
+        if (data.aboutMe) currentCardInfo.push(`个人简介：${data.aboutMe}`);
+        if (data.hometown) currentCardInfo.push(`家乡：${data.hometown}`);
+        if (data.residence) currentCardInfo.push(`常驻：${data.residence}`);
+        if (data.hobbies) currentCardInfo.push(`兴趣爱好：${data.hobbies}`);
+        if (data.personality) currentCardInfo.push(`性格特点：${data.personality}`);
+        if (data.focusIndustry) currentCardInfo.push(`关注行业：${data.focusIndustry}`);
+        if (data.circles) currentCardInfo.push(`圈层：${data.circles}`);
+        if (data.companyIntro) currentCardInfo.push(`公司简介：${data.companyIntro}`);
+        if (data.mainBusiness && data.mainBusiness.length > 0) {
+            const businessList = data.mainBusiness.map(item => item.name).join('、');
+            currentCardInfo.push(`主营业务：${businessList}`);
+        }
+        if (data.serviceNeeds && data.serviceNeeds.length > 0) {
+            const needsList = data.serviceNeeds.map(item => item.name).join('、');
+            currentCardInfo.push(`服务需求：${needsList}`);
+        }
+        
+        return currentCardInfo.length > 0 
+            ? `\n\n当前已填写的名片信息：\n${currentCardInfo.join('\n')}` 
+            : '';
+    };
+
     // 计算名片完成度
     const calculateProgress = () => {
         const requiredFields = [
@@ -217,17 +250,23 @@ const AIAssistantScreen: React.FC = () => {
         await ChatPersistenceService.saveMessage(userMessage, sessionId);
 
         try {
-            // 构建发送内容，使用 MinIO 链接发送给 AI
+            // 构建发送内容，附加当前名片信息
             let messageContent = userMessage.text;
             if (imageMinioUrl) {
-                messageContent = `${messageContent}\n\n[图片]: ${imageMinioUrl}`;
+                messageContent = messageContent || '请帮我识别这张图片';
             }
+            
+            // 附加当前名片信息，帮助 AI 更好地理解上下文
+            const cardInfoContext = buildCurrentCardInfo(cardData);
+            messageContent += cardInfoContext;
 
-            // 调用 n8n AI Agent
+            // 调用 n8n AI Agent，传递图片 URL
             const rawResponse = await callN8NAgent(
                 N8N_CONFIG.agentWebhookPath,
                 messageContent,
-                sessionId
+                sessionId,
+                false, // useAPI
+                imageMinioUrl // 传递图片 URL 给 Vision API
             );
 
             // 解析 AI 响应
@@ -342,34 +381,9 @@ const AIAssistantScreen: React.FC = () => {
         // 发送确认消息给 AI，获取下一步引导并展示
         setLoading(true);
         try {
-            // 构建完整的名片信息（不包含头像等媒体数据）
-            const currentCardInfo: string[] = [];
-            if (mergedData.realName) currentCardInfo.push(`姓名：${mergedData.realName}`);
-            if (mergedData.position) currentCardInfo.push(`职位：${mergedData.position}`);
-            if (mergedData.companyName) currentCardInfo.push(`公司：${mergedData.companyName}`);
-            if (mergedData.industry) currentCardInfo.push(`行业：${mergedData.industry}`);
-            if (mergedData.phone) currentCardInfo.push(`电话：${mergedData.phone}`);
-            if (mergedData.email) currentCardInfo.push(`邮箱：${mergedData.email}`);
-            if (mergedData.wechat) currentCardInfo.push(`微信：${mergedData.wechat}`);
-            if (mergedData.address) currentCardInfo.push(`地址：${mergedData.address}`);
-            if (mergedData.aboutMe) currentCardInfo.push(`个人简介：${mergedData.aboutMe}`);
-            if (mergedData.hometown) currentCardInfo.push(`家乡：${mergedData.hometown}`);
-            if (mergedData.residence) currentCardInfo.push(`常驻：${mergedData.residence}`);
-            if (mergedData.hobbies) currentCardInfo.push(`兴趣爱好：${mergedData.hobbies}`);
-            if (mergedData.personality) currentCardInfo.push(`性格特点：${mergedData.personality}`);
-            if (mergedData.focusIndustry) currentCardInfo.push(`关注行业：${mergedData.focusIndustry}`);
-            if (mergedData.circles) currentCardInfo.push(`圈层：${mergedData.circles}`);
-            if (mergedData.companyIntro) currentCardInfo.push(`公司简介：${mergedData.companyIntro}`);
-            if (mergedData.mainBusiness && mergedData.mainBusiness.length > 0) {
-                const businessList = mergedData.mainBusiness.map(item => item.name).join('、');
-                currentCardInfo.push(`主营业务：${businessList}`);
-            }
-            if (mergedData.serviceNeeds && mergedData.serviceNeeds.length > 0) {
-                const needsList = mergedData.serviceNeeds.map(item => item.name).join('、');
-                currentCardInfo.push(`服务需求：${needsList}`);
-            }
-            
-            const confirmationMessage = `已确认更新：${fieldNames}。\n\n当前已填写的完整信息：\n${currentCardInfo.join('\n')}\n\n请根据已有信息，引导我填写下一个缺失的内容。`;
+            // 使用通用方法构建当前名片信息
+            const cardInfoContext = buildCurrentCardInfo(mergedData);
+            const confirmationMessage = `已确认更新：${fieldNames}。${cardInfoContext}\n\n请根据已有信息，引导我填写下一个缺失的内容。`;
             
             const rawResponse = await callN8NAgent(
                 N8N_CONFIG.agentWebhookPath,

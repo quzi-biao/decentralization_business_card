@@ -269,7 +269,27 @@ class FileManagerService {
     if (calculateHash) {
       const existingFile = await this.findFileByHash(hash);
       if (existingFile) {
-        console.log('File already exists, returning existing metadata');
+        console.log('File already exists, checking MinIO URL...');
+        
+        // 如果需要上传到云端但文件没有 minioUrl，则补充上传
+        if (shouldUploadToCloud && !existingFile.minioUrl) {
+          try {
+            console.log('补充上传到 MinIO:', existingFile.originalPath);
+            existingFile.minioUrl = await this.uploadToMinIO(
+              existingFile.originalPath,
+              existingFile.hash,
+              existingFile.fileName
+            );
+            console.log('✓ 补充上传成功:', existingFile.minioUrl);
+            
+            // 更新元数据索引
+            await this.saveFileIndex(existingFile.id, existingFile);
+          } catch (error) {
+            console.error('✗ 补充上传失败:', error);
+          }
+        }
+        
+        console.log('返回已存在文件:', existingFile);
         return existingFile;
       }
     }
@@ -299,9 +319,12 @@ class FileManagerService {
     // 上传到云端（如果需要）
     if (shouldUploadToCloud) {
       try {
+        console.log('开始上传到 MinIO:', { originalPath, hash, fileName });
         metadata.minioUrl = await this.uploadToMinIO(originalPath, hash, fileName);
-        console.log(metadata)
+        console.log('✓ MinIO 上传成功:', metadata.minioUrl);
+        console.log('完整 metadata:', metadata);
       } catch (error) {
+        console.error('✗ MinIO 上传失败:', error);
         console.error('Failed to upload to MinIO, continuing with local storage:', error);
       }
     }
