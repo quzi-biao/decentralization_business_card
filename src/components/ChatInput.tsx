@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Alert, ActionSheetIOS, Platform, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { imageManager } from '../services/imageManager';
+import { fileManager } from '../services/fileManager';
 
 interface ChatInputProps {
     value: string;
@@ -36,7 +36,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         if (Platform.OS === 'ios') {
             ActionSheetIOS.showActionSheetWithOptions(
                 {
-                    options: ['取消', '拍照', '从相册选择'],
+                    options: ['取消', '拍照', '从相册选择', '选择文件'],
                     cancelButtonIndex: 0,
                 },
                 async (buttonIndex) => {
@@ -44,18 +44,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
                         await handleTakePhoto();
                     } else if (buttonIndex === 2) {
                         await handlePickImage();
+                    } else if (buttonIndex === 3) {
+                        await handlePickDocument();
                     }
                 }
             );
         } else {
-            // Android 使用 Alert
             Alert.alert(
-                '选择图片',
-                '请选择图片来源',
+                '选择文件',
+                '请选择文件来源',
                 [
                     { text: '取消', style: 'cancel' },
                     { text: '拍照', onPress: handleTakePhoto },
                     { text: '从相册选择', onPress: handlePickImage },
+                    { text: '选择文件', onPress: handlePickDocument },
                 ]
             );
         }
@@ -64,11 +66,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
     const handleTakePhoto = async () => {
         try {
             setUploading(true);
-            const metadata = await imageManager.takePhoto({ uploadToCloud: true });
+            const metadata = await fileManager.takePhoto({ context: 'chat' });
             
             if (metadata) {
-                const imageUrl = metadata.minioUrl || metadata.originalPath;
-                setSelectedImage(imageUrl);
+                const fileUrl = metadata.minioUrl || metadata.originalPath;
+                setSelectedImage(fileUrl);
                 Alert.alert('成功', '图片已上传');
             }
         } catch (error) {
@@ -82,16 +84,34 @@ const ChatInput: React.FC<ChatInputProps> = ({
     const handlePickImage = async () => {
         try {
             setUploading(true);
-            const metadata = await imageManager.pickImage({ uploadToCloud: true });
+            const metadata = await fileManager.pickImage({ context: 'chat' });
             
             if (metadata) {
-                const imageUrl = metadata.minioUrl || metadata.originalPath;
-                setSelectedImage(imageUrl);
+                const fileUrl = metadata.minioUrl || metadata.originalPath;
+                setSelectedImage(fileUrl);
                 Alert.alert('成功', '图片已上传');
             }
         } catch (error) {
             console.error('Error picking image:', error);
             Alert.alert('错误', error instanceof Error ? error.message : '选择图片失败');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handlePickDocument = async () => {
+        try {
+            setUploading(true);
+            const metadata = await fileManager.pickDocument({ context: 'chat' });
+            
+            if (metadata) {
+                const fileUrl = metadata.minioUrl || metadata.originalPath;
+                setSelectedImage(fileUrl);
+                Alert.alert('成功', '文件已上传');
+            }
+        } catch (error) {
+            console.error('Error picking document:', error);
+            Alert.alert('错误', error instanceof Error ? error.message : '选择文件失败');
         } finally {
             setUploading(false);
         }

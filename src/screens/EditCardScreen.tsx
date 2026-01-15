@@ -5,9 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useCardStore, BusinessItem } from '../store/useCardStore';
 import PageHeader from '../components/PageHeader';
-import { ImageUploadHelper } from '../utils/imageUploadHelper';
 import { LazyImage } from '../components/LazyImage';
-import { imageStorage } from '../utils/imageStorage';
+import { fileManager } from '../services/fileManager';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -93,22 +92,23 @@ const EditCardScreen = ({ onClose }: any) => {
             setUploadingAvatar(true);
             
             try {
-                const imageId = await ImageUploadHelper.pickAndSaveImage('avatar', {
+                const metadata = await fileManager.pickImage({
+                    context: 'profile',
                     allowsEditing: true,
                     aspect: [1, 1],
                     quality: 0.8,
                 });
 
-                if (imageId) {
+                if (metadata) {
                     // 删除旧头像
                     if (cardData.avatarId) {
-                        await imageStorage.deleteImage(cardData.avatarId);
+                        await fileManager.deleteFile(cardData.avatarId);
                     }
                     
                     // 更新为新的图片ID
                     await updateCardData({ 
-                        avatarId: imageId,
-                        avatarUrl: undefined // 清除旧的 base64 数据
+                        avatarId: metadata.id,
+                        avatarUrl: undefined
                     });
                 }
             } catch (error) {
@@ -136,7 +136,7 @@ const EditCardScreen = ({ onClose }: any) => {
                     onPress: async () => {
                         // 删除文件系统中的图片
                         if (cardData.avatarId) {
-                            await imageStorage.deleteImage(cardData.avatarId);
+                            await fileManager.deleteFile(cardData.avatarId);
                         }
                         // 清除数据
                         await updateCardData({ 

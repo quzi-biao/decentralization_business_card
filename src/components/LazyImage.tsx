@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Image, ImageProps, ActivityIndicator, View, StyleSheet } from 'react-native';
-import { imageStorage } from '../utils/imageStorage';
+import { fileManager } from '../services/fileManager';
 import { imageCache } from '../utils/imageCache';
 
 interface LazyImageProps extends Omit<ImageProps, 'source'> {
@@ -47,7 +47,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         }
 
         // 从存储加载
-        const uri = await imageStorage.getImageUri(imageId, useThumbnail);
+        const uri = await fileManager.getFileUri(imageId, false);
         
         if (isMounted) {
           if (uri) {

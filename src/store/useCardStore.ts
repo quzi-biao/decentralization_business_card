@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { CardPersistenceService } from '../services/cardPersistence';
-import { ImageMigrationService } from '../utils/imageMigration';
 
 export interface BusinessItem {
     id: string;
@@ -120,33 +119,6 @@ export const useCardStore = create<CardStore>((set, get) => ({
     loadData: async () => {
         const myCard = await CardPersistenceService.getMyCard();
         const exchangedCards = await CardPersistenceService.getExchangedCards();
-        
-        // 检查是否需要迁移图片数据
-        const needsMigration = myCard && ImageMigrationService.needsMigration(myCard);
-        
-        if (needsMigration) {
-            console.log('Migrating image data to FileSystem...');
-            const migrationResult = await ImageMigrationService.migrateAllCards(
-                myCard || defaultCardData,
-                exchangedCards
-            );
-            
-            if (migrationResult.migrated) {
-                // 保存迁移后的数据
-                await CardPersistenceService.saveMyCard(migrationResult.myCard);
-                for (const card of migrationResult.exchangedCards) {
-                    await CardPersistenceService.addExchangedCard(card);
-                }
-                
-                set({
-                    cardData: migrationResult.myCard,
-                    exchangedCards: migrationResult.exchangedCards,
-                    isLoaded: true
-                });
-                console.log('Image migration completed');
-                return;
-            }
-        }
         
         set({
             cardData: myCard || defaultCardData,
