@@ -58,7 +58,7 @@ export default function App() {
   if (!initialized) {
     return (
       <SafeAreaProvider>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <InitScreen onComplete={handleInitComplete} />
       </SafeAreaProvider>
     );
@@ -67,7 +67,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer theme={DarkTheme}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <Tab.Navigator
           screenOptions={{
             headerShown: false,
