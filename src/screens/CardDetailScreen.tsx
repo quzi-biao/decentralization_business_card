@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { BusinessCardData } from '../store/useCardStore';
+import { BusinessCardData, useCardStore } from '../store/useCardStore';
 import { useTagStore } from '../store/useTagStore';
 import MyCard from '../components/MyCard';
 import { RichTextRenderer } from '../components/RichTextRenderer';
@@ -22,10 +22,11 @@ interface CardDetailScreenProps {
  * 完整的独立页面展示名片信息
  */
 const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, peerDid, exchangedAt }) => {
-    const { tags, cardMetadata, loadTags, loadCardMetadata, addTagToCard, removeTagFromCard, setCardNote } = useTagStore();
+    const { tags, cardMetadata, loadTags, loadCardMetadata, addTagToCard, removeTagFromCard, setCardNote, setCardImportance } = useTagStore();
     const [showTagModal, setShowTagModal] = useState(false);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [noteText, setNoteText] = useState('');
+    const [importanceValue, setImportanceValue] = useState(20);
     const [isEditMode, setIsEditMode] = useState(false);
     
     useEffect(() => {
@@ -37,6 +38,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
         if (peerDid) {
             const metadata = cardMetadata.get(peerDid);
             setNoteText(metadata?.note || '');
+            setImportanceValue(metadata?.importance ?? 20);
         }
     }, [peerDid, cardMetadata]);
     
@@ -69,6 +71,14 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
         await setCardNote(peerDid, noteText);
         setShowNoteModal(false);
         Alert.alert('成功', '备注已保存');
+    };
+    
+    const handleImportanceChange = async (value: number) => {
+        if (!peerDid) return;
+        
+        const clampedValue = Math.max(0, Math.min(100, value));
+        setImportanceValue(clampedValue);
+        await setCardImportance(peerDid, clampedValue);
     };
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -138,6 +148,43 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                                 </View>
                             </View>
                         )}
+                    </View>
+                )}
+
+                {/* 重要度 */}
+                {peerDid && (
+                    <View style={styles.card}>
+                        <View style={styles.cardTitle}>
+                            <MaterialIcons key="icon" name="star" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                            <Text key="text" style={styles.cardTitleText}>重要度</Text>
+                        </View>
+                        <View style={styles.importanceSection}>
+                            {isEditMode ? (
+                                <View style={styles.importanceEditContainer}>
+                                    <View style={styles.importanceInputWrapper}>
+                                        <Text style={styles.importanceInputLabel}>重要度值（0-100）</Text>
+                                        <TextInput
+                                            style={styles.importanceInputField}
+                                            value={importanceValue.toString()}
+                                            onChangeText={(text) => {
+                                                const num = parseInt(text) || 0;
+                                                handleImportanceChange(num);
+                                            }}
+                                            keyboardType="number-pad"
+                                            placeholder="0-100"
+                                            placeholderTextColor="#94a3b8"
+                                        />
+                                    </View>
+                                    <Text style={styles.importanceHint}>重要度越高，名片排序越靠前（默认值：20）</Text>
+                                </View>
+                            ) : (
+                                <View style={styles.importanceDisplayReadOnly}>
+                                    <Text style={styles.importanceLabel}>当前重要度</Text>
+                                    <Text style={styles.importanceValue}>{importanceValue}</Text>
+                                    <Text style={styles.importanceHint}>重要度越高，名片排序越靠前（默认值：20）</Text>
+                                </View>
+                            )}
+                        </View>
                     </View>
                 )}
 
@@ -870,6 +917,53 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#ffffff',
+    },
+    // 重要度样式
+    importanceSection: {
+        gap: 8,
+    },
+    importanceEditContainer: {
+        gap: 12,
+    },
+    importanceInputWrapper: {
+        gap: 8,
+    },
+    importanceInputLabel: {
+        fontSize: 13,
+        color: '#64748b',
+        fontWeight: '500',
+    },
+    importanceInputField: {
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        padding: 16,
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#1e293b',
+        borderWidth: 2,
+        borderColor: '#4F46E5',
+    },
+    importanceDisplayReadOnly: {
+        backgroundColor: '#f8fafc',
+        padding: 16,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        gap: 8,
+    },
+    importanceLabel: {
+        fontSize: 11,
+        color: '#94a3b8',
+        fontWeight: '500',
+    },
+    importanceValue: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#4F46E5',
+    },
+    importanceHint: {
+        fontSize: 12,
+        color: '#94a3b8',
     },
 });
 

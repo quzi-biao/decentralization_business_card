@@ -46,6 +46,20 @@ export class CardPersistenceService {
         await this.saveExchangedCards(cards);
     }
 
+    // 更新一张交换的名片
+    static async updateExchangedCard(card: BusinessCardData): Promise<void> {
+        const cards = await this.getExchangedCards();
+        
+        const existingIndex = cards.findIndex(
+            c => c.realName === card.realName && c.companyName === card.companyName
+        );
+        
+        if (existingIndex >= 0) {
+            cards[existingIndex] = card;
+            await this.saveExchangedCards(cards);
+        }
+    }
+
     // 删除一张交换的名片
     static async deleteExchangedCard(card: BusinessCardData): Promise<void> {
         const cards = await this.getExchangedCards();

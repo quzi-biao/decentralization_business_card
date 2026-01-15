@@ -43,32 +43,41 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
 
     const activeExchanges = exchanges.filter(e => e.status === 'active');
 
-    const filteredCards = activeExchanges.filter(exchange => {
-        const card = exchangedCards.get(exchange.peerDid);
-        if (!card?.cardData) return false;
-        
-        // 按标签筛选
-        if (selectedTagId) {
-            const metadata = cardMetadata.get(exchange.peerDid);
-            if (!metadata || !metadata.tags.includes(selectedTagId)) {
-                return false;
+    const filteredCards = activeExchanges
+        .filter(exchange => {
+            const card = exchangedCards.get(exchange.peerDid);
+            if (!card?.cardData) return false;
+            
+            // 按标签筛选
+            if (selectedTagId) {
+                const metadata = cardMetadata.get(exchange.peerDid);
+                if (!metadata || !metadata.tags.includes(selectedTagId)) {
+                    return false;
+                }
             }
-        }
-        
-        // 按关键词搜索
-        if (searchQuery) {
-            const searchLower = searchQuery.toLowerCase();
-            const metadata = cardMetadata.get(exchange.peerDid);
-            return (
-                card.cardData.realName?.toLowerCase().includes(searchLower) ||
-                card.cardData.companyName?.toLowerCase().includes(searchLower) ||
-                card.cardData.position?.toLowerCase().includes(searchLower) ||
-                metadata?.note?.toLowerCase().includes(searchLower)
-            );
-        }
-        
-        return true;
-    });
+            
+            // 按关键词搜索
+            if (searchQuery) {
+                const searchLower = searchQuery.toLowerCase();
+                const metadata = cardMetadata.get(exchange.peerDid);
+                return (
+                    card.cardData.realName?.toLowerCase().includes(searchLower) ||
+                    card.cardData.companyName?.toLowerCase().includes(searchLower) ||
+                    card.cardData.position?.toLowerCase().includes(searchLower) ||
+                    metadata?.note?.toLowerCase().includes(searchLower)
+                );
+            }
+            
+            return true;
+        })
+        .sort((a, b) => {
+            // 按重要度降序排序
+            const metadataA = cardMetadata.get(a.peerDid);
+            const metadataB = cardMetadata.get(b.peerDid);
+            const importanceA = metadataA?.importance ?? 20;
+            const importanceB = metadataB?.importance ?? 20;
+            return importanceB - importanceA;
+        });
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
