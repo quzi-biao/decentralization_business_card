@@ -18,7 +18,9 @@ interface Message {
     text: string;
     isUser: boolean;
     timestamp: Date;
-    imageUrl?: string;
+    imageUrl?: string; // 向后兼容
+    imageLocalPath?: string; // 本地路径，用于显示
+    imageMinioUrl?: string; // MinIO 链接，用于发送给 AI
 }
 
 /**
@@ -195,15 +197,16 @@ const AIAssistantScreen: React.FC = () => {
         }
     };
 
-    const sendMessage = async (text: string, imageUrl?: string) => {
-        if ((!text.trim() && !imageUrl) || loading) return;
+    const sendMessage = async (text: string, imageMinioUrl?: string, imageLocalPath?: string) => {
+        if ((!text.trim() && !imageMinioUrl) || loading) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
-            text: text.trim() || (imageUrl ? '发送了一张图片' : ''),
+            text: text.trim() || (imageMinioUrl ? '发送了一张图片' : ''),
             isUser: true,
             timestamp: new Date(),
-            imageUrl,
+            imageMinioUrl,
+            imageLocalPath,
         };
 
         setMessages(prev => [...prev, userMessage]);
@@ -214,10 +217,10 @@ const AIAssistantScreen: React.FC = () => {
         await ChatPersistenceService.saveMessage(userMessage, sessionId);
 
         try {
-            // 构建发送内容
+            // 构建发送内容，使用 MinIO 链接发送给 AI
             let messageContent = userMessage.text;
-            if (imageUrl) {
-                messageContent = `${messageContent}\n\n[图片]: ${imageUrl}`;
+            if (imageMinioUrl) {
+                messageContent = `${messageContent}\n\n[图片]: ${imageMinioUrl}`;
             }
 
             // 调用 n8n AI Agent

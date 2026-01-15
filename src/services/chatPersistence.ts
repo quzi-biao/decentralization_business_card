@@ -5,7 +5,9 @@ export interface Message {
     text: string;
     isUser: boolean;
     timestamp: Date;
-    imageUrl?: string;
+    imageUrl?: string; // 向后兼容，优先使用 imageLocalPath
+    imageLocalPath?: string; // 本地路径，用于显示
+    imageMinioUrl?: string; // MinIO 链接，用于发送给 AI
 }
 
 export interface ChatSession {
