@@ -181,14 +181,13 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                         {activeExchanges.length > 0 && tags.length > 0 && (
                             <TouchableOpacity 
-                                style={styles.tagFilterButton}
+                                style={styles.tagFilterLink}
                                 onPress={() => setShowTagDropdown(true)}
                             >
-                                <MaterialIcons name="label" size={16} color="#4F46E5" />
-                                <Text style={styles.tagFilterButtonText}>
+                                <Text style={styles.tagFilterLinkText}>
                                     {selectedTagId ? tags.find(t => t.id === selectedTagId)?.name : '全部'}
                                 </Text>
-                                <MaterialIcons name="arrow-drop-down" size={18} color="#4F46E5" />
+                                <MaterialIcons name="arrow-drop-down" size={16} color="#4F46E5" />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -448,23 +447,16 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'space-between',
     },
-    // 标签筛选按钮
-    tagFilterButton: {
+    // 标签筛选链接样式
+    tagFilterLink: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#EEF2FF',
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderWidth: 1,
-        borderColor: '#C7D2FE',
-        gap: 4,
+        gap: 2,
     },
-    tagFilterButtonText: {
+    tagFilterLinkText: {
         fontSize: 13,
         fontWeight: '600',
         color: '#4F46E5',
-        maxWidth: 60,
     },
     // 下拉框样式
     modalOverlay: {
@@ -498,6 +490,11 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '700',
         color: '#1e293b',
+    },
+    dropdownCloseText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#64748b',
     },
     dropdownScroll: {
         maxHeight: 400,
