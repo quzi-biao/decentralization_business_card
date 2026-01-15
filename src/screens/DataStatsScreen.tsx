@@ -92,6 +92,69 @@ const DataStatsScreen: React.FC<Props> = ({ onClose }) => {
         );
     };
 
+    const handleClearChatHistory = () => {
+        if (dataStats.chatDates === 0) {
+            Alert.alert('提示', '没有聊天记录需要清除');
+            return;
+        }
+
+        Alert.alert(
+            '清除聊天记录',
+            `确定要清除所有 ${dataStats.chatDates} 天的聊天记录吗？此操作不可恢复。`,
+            [
+                {
+                    text: '取消',
+                    style: 'cancel',
+                },
+                {
+                    text: '清除',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await DataManager.clearChatHistory();
+                            await loadDataStats();
+                            Alert.alert('成功', '聊天记录已清除');
+                        } catch (error) {
+                            Alert.alert('错误', '清除聊天记录失败，请重试');
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleClearImages = () => {
+        const totalImages = dataStats.avatarsCount + dataStats.imagesCount;
+        if (totalImages === 0) {
+            Alert.alert('提示', '没有图片文件需要清除');
+            return;
+        }
+
+        Alert.alert(
+            '清除图片文件',
+            `确定要清除所有 ${totalImages} 个图片文件吗？此操作不可恢复。`,
+            [
+                {
+                    text: '取消',
+                    style: 'cancel',
+                },
+                {
+                    text: '清除',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await DataManager.clearAllImages();
+                            await loadDataStats();
+                            Alert.alert('成功', '图片文件已清除');
+                        } catch (error) {
+                            Alert.alert('错误', '清除图片文件失败，请重试');
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
     return (
         <SafeAreaProvider>
             <View style={styles.container}>
@@ -114,13 +177,18 @@ const DataStatsScreen: React.FC<Props> = ({ onClose }) => {
 
                     {/* 数据统计卡片 */}
                     <View style={styles.statsGrid}>
-                        <View style={styles.statCard}>
+                        <TouchableOpacity 
+                            style={styles.statCard}
+                            onPress={handleClearChatHistory}
+                            activeOpacity={0.7}
+                        >
                             <View style={[styles.statIcon, { backgroundColor: '#dbeafe' }]}>
                                 <MaterialIcons name="chat" size={28} color="#3b82f6" />
                             </View>
                             <Text style={styles.statValue}>{dataStats.chatDates}</Text>
                             <Text style={styles.statLabel}>聊天记录天数</Text>
-                        </View>
+                            <Text style={styles.statHint}>点击清除</Text>
+                        </TouchableOpacity>
 
                         <View style={styles.statCard}>
                             <View style={[styles.statIcon, { backgroundColor: '#dcfce7' }]}>
@@ -138,13 +206,18 @@ const DataStatsScreen: React.FC<Props> = ({ onClose }) => {
                             <Text style={styles.statLabel}>交换的名片</Text>
                         </View>
 
-                        <View style={styles.statCard}>
+                        <TouchableOpacity 
+                            style={styles.statCard}
+                            onPress={handleClearImages}
+                            activeOpacity={0.7}
+                        >
                             <View style={[styles.statIcon, { backgroundColor: '#fce7f3' }]}>
                                 <MaterialIcons name="image" size={28} color="#ec4899" />
                             </View>
                             <Text style={styles.statValue}>{dataStats.avatarsCount + dataStats.imagesCount}</Text>
                             <Text style={styles.statLabel}>图片文件</Text>
-                        </View>
+                            <Text style={styles.statHint}>点击清除</Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* 详细信息 */}
@@ -273,6 +346,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#64748b',
         textAlign: 'center',
+    },
+    statHint: {
+        fontSize: 10,
+        color: '#94a3b8',
+        textAlign: 'center',
+        marginTop: 4,
     },
     section: {
         marginBottom: 24,

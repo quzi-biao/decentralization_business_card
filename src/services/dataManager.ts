@@ -34,14 +34,40 @@ export class DataManager {
     }
 
     /**
+     * 清除所有聊天记录
+     */
+    static async clearChatHistory(): Promise<void> {
+        try {
+            await ChatPersistenceService.clearAllChats();
+            console.log('Chat history cleared successfully');
+        } catch (error) {
+            console.error('Failed to clear chat history:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 清除所有图片文件
+     */
+    static async clearAllImages(): Promise<void> {
+        try {
+            await fileManager.clearAllFiles();
+            console.log('All images cleared successfully');
+        } catch (error) {
+            console.error('Failed to clear images:', error);
+            throw error;
+        }
+    }
+
+    /**
      * 获取数据统计信息
      */
     static async getDataStats(): Promise<{
         chatDates: number;
         myCardExists: boolean;
         exchangedCardsCount: number;
-        filesCount: number;
-        totalFileSize: number;
+        avatarsCount: number;
+        imagesCount: number;
     }> {
         try {
             const chatDates = await ChatPersistenceService.getAllChatDates();
@@ -49,12 +75,17 @@ export class DataManager {
             const exchangedCards = await CardPersistenceService.getExchangedCards();
             const fileStats = await fileManager.getStorageStats();
 
+            // 统计头像数量（profile context）
+            const avatarsCount = fileStats.byContext.profile || 0;
+            // 统计其他图片数量（chat + card context）
+            const imagesCount = (fileStats.byContext.chat || 0) + (fileStats.byContext.card || 0);
+
             return {
                 chatDates: chatDates.length,
                 myCardExists: !!myCard,
                 exchangedCardsCount: exchangedCards.length,
-                filesCount: fileStats.totalFiles,
-                totalFileSize: fileStats.totalSize
+                avatarsCount: avatarsCount,
+                imagesCount: imagesCount
             };
         } catch (error) {
             console.error('Failed to get data stats:', error);
