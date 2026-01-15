@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { BusinessCardData } from '../store/useCardStore';
+import { useTagStore } from '../store/useTagStore';
 import MyCard from '../components/MyCard';
 import { RichTextRenderer } from '../components/RichTextRenderer';
 
@@ -21,6 +22,26 @@ interface CardDetailScreenProps {
  * 完整的独立页面展示名片信息
  */
 const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, peerDid, exchangedAt }) => {
+    const { tags, cardMetadata, loadTags, loadCardMetadata, addTagToCard, removeTagFromCard, setCardNote } = useTagStore();
+    const [showTagModal, setShowTagModal] = useState(false);
+    const [showNoteModal, setShowNoteModal] = useState(false);
+    const [noteText, setNoteText] = useState('');
+    
+    useEffect(() => {
+        loadTags();
+        loadCardMetadata();
+    }, []);
+    
+    useEffect(() => {
+        if (peerDid) {
+            const metadata = cardMetadata.get(peerDid);
+            setNoteText(metadata?.note || '');
+        }
+    }, [peerDid, cardMetadata]);
+    
+    const metadata = peerDid ? cardMetadata.get(peerDid) : undefined;
+    const cardTags = metadata?.tags.map(tagId => tags.find(t => t.id === tagId)).filter(Boolean) || [];
+    
     const handleCopy = async (text: string, label: string) => {
         try {
             await Clipboard.setStringAsync(text);
@@ -28,6 +49,25 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
         } catch (error) {
             Alert.alert('复制失败', '无法复制到剪贴板');
         }
+    };
+    
+    const handleToggleTag = async (tagId: string) => {
+        if (!peerDid) return;
+        
+        const hasTag = metadata?.tags.includes(tagId);
+        if (hasTag) {
+            await removeTagFromCard(peerDid, tagId);
+        } else {
+            await addTagToCard(peerDid, tagId);
+        }
+    };
+    
+    const handleSaveNote = async () => {
+        if (!peerDid) return;
+        
+        await setCardNote(peerDid, noteText);
+        setShowNoteModal(false);
+        Alert.alert('成功', '备注已保存');
     };
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -84,6 +124,56 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                                 </View>
                             </View>
                         )}
+                    </View>
+                )}
+
+                {/* 标签和备注 */}
+                {peerDid && (
+                    <View style={styles.card}>
+                        <View style={styles.cardTitle}>
+                            <MaterialIcons key="icon" name="label" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                            <Text key="text" style={styles.cardTitleText}>标签和备注</Text>
+                        </View>
+                        
+                        {/* 标签 */}
+                        <View style={styles.tagsSection}>
+                            <Text style={styles.subsectionLabel}>标签</Text>
+                            <View style={styles.tagsContainer}>
+                                {cardTags.map((tag) => tag && (
+                                    <View 
+                                        key={tag.id}
+                                        style={[styles.tagChip, { backgroundColor: tag.color + '20', borderColor: tag.color }]}
+                                    >
+                                        <Text style={[styles.tagChipText, { color: tag.color }]}>
+                                            {tag.name}
+                                        </Text>
+                                    </View>
+                                ))}
+                                <TouchableOpacity 
+                                    style={styles.addTagButton}
+                                    onPress={() => setShowTagModal(true)}
+                                >
+                                    <MaterialIcons name="add" size={16} color="#4F46E5" />
+                                    <Text style={styles.addTagText}>添加标签</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        
+                        {/* 备注 */}
+                        <View style={styles.noteSection}>
+                            <Text style={styles.subsectionLabel}>备注</Text>
+                            <TouchableOpacity 
+                                style={styles.noteDisplay}
+                                onPress={() => setShowNoteModal(true)}
+                            >
+                                {metadata?.note ? (
+                                    <Text style={styles.noteText}>{metadata.note}</Text>
+                                ) : (
+                                    <Text style={styles.notePlaceholder}>点击添加备注...</Text>
+                                )}
+                                <MaterialIcons name="edit" size={16} color="#94a3b8" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
 
@@ -353,6 +443,90 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
 
                     <View style={styles.spacer} />
                 </ScrollView>
+                
+                {/* 标签选择模态框 */}
+                <Modal
+                    visible={showTagModal}
+                    animationType="slide"
+                    presentationStyle="pageSheet"
+                    onRequestClose={() => setShowTagModal(false)}
+                >
+                    <SafeAreaView style={styles.modalContainer}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>选择标签</Text>
+                            <TouchableOpacity onPress={() => setShowTagModal(false)}>
+                                <MaterialIcons name="close" size={24} color="#64748b" />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView style={styles.modalContent}>
+                            {tags.length === 0 ? (
+                                <View style={styles.emptyTags}>
+                                    <MaterialIcons name="label-outline" size={48} color="#cbd5e1" />
+                                    <Text style={styles.emptyTagsText}>暂无标签</Text>
+                                    <Text style={styles.emptyTagsHint}>请先在"我的"页面创建标签</Text>
+                                </View>
+                            ) : (
+                                <View style={styles.tagsList}>
+                                    {tags.map((tag) => {
+                                        const isSelected = metadata?.tags.includes(tag.id);
+                                        return (
+                                            <TouchableOpacity
+                                                key={tag.id}
+                                                style={[
+                                                    styles.tagSelectItem,
+                                                    isSelected && styles.tagSelectItemActive
+                                                ]}
+                                                onPress={() => handleToggleTag(tag.id)}
+                                            >
+                                                <View style={styles.tagSelectInfo}>
+                                                    <View style={[styles.tagColorDot, { backgroundColor: tag.color }]} />
+                                                    <Text style={styles.tagSelectName}>{tag.name}</Text>
+                                                </View>
+                                                {isSelected && (
+                                                    <MaterialIcons name="check" size={20} color="#4F46E5" />
+                                                )}
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            )}
+                        </ScrollView>
+                    </SafeAreaView>
+                </Modal>
+                
+                {/* 备注编辑模态框 */}
+                <Modal
+                    visible={showNoteModal}
+                    animationType="slide"
+                    presentationStyle="pageSheet"
+                    onRequestClose={() => setShowNoteModal(false)}
+                >
+                    <SafeAreaView style={styles.modalContainer}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>编辑备注</Text>
+                            <TouchableOpacity onPress={() => setShowNoteModal(false)}>
+                                <MaterialIcons name="close" size={24} color="#64748b" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.noteModalContent}>
+                            <TextInput
+                                style={styles.noteInput}
+                                value={noteText}
+                                onChangeText={setNoteText}
+                                placeholder="输入备注信息..."
+                                placeholderTextColor="#94a3b8"
+                                multiline
+                                textAlignVertical="top"
+                            />
+                            <TouchableOpacity 
+                                style={styles.saveNoteButton}
+                                onPress={handleSaveNote}
+                            >
+                                <Text style={styles.saveNoteButtonText}>保存</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </SafeAreaView>
+                </Modal>
         </SafeAreaView>
     );
 };
@@ -487,6 +661,170 @@ const styles = StyleSheet.create({
     // 底部间距
     spacer: {
         height: 24,
+    },
+    // 标签和备注样式
+    tagsSection: {
+        marginBottom: 16,
+    },
+    subsectionLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#64748b',
+        marginBottom: 8,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    tagChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 12,
+        borderWidth: 1,
+    },
+    tagChipText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    addTagButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+        gap: 4,
+    },
+    addTagText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#4F46E5',
+    },
+    noteSection: {
+        marginTop: 8,
+    },
+    noteDisplay: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#f8fafc',
+        padding: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    noteText: {
+        flex: 1,
+        fontSize: 14,
+        color: '#1e293b',
+        lineHeight: 20,
+    },
+    notePlaceholder: {
+        flex: 1,
+        fontSize: 14,
+        color: '#94a3b8',
+    },
+    // 模态框样式
+    modalContainer: {
+        flex: 1,
+        backgroundColor: '#f8fafc',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        backgroundColor: '#ffffff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e2e8f0',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1e293b',
+    },
+    modalContent: {
+        flex: 1,
+        padding: 16,
+    },
+    emptyTags: {
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    emptyTagsText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#64748b',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    emptyTagsHint: {
+        fontSize: 14,
+        color: '#94a3b8',
+    },
+    tagsList: {
+        gap: 8,
+    },
+    tagSelectItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#ffffff',
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    tagSelectItemActive: {
+        borderColor: '#4F46E5',
+        backgroundColor: '#eff6ff',
+    },
+    tagSelectInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    tagColorDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+    },
+    tagSelectName: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#1e293b',
+    },
+    noteModalContent: {
+        flex: 1,
+        padding: 16,
+    },
+    noteInput: {
+        flex: 1,
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        padding: 16,
+        fontSize: 15,
+        color: '#1e293b',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        marginBottom: 16,
+    },
+    saveNoteButton: {
+        backgroundColor: '#4F46E5',
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    saveNoteButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#ffffff',
     },
 });
 
