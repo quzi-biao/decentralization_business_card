@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tag } from '../store/useTagStore';
+import { LazyImage } from './LazyImage';
 
 interface ContactCardProps {
+    avatarId?: string;
+    avatarUrl?: string;
     realName?: string;
     position?: string;
     companyName?: string;
@@ -17,6 +20,8 @@ interface ContactCardProps {
  * 用于展示名片列表中的单个联系人信息
  */
 const ContactCard: React.FC<ContactCardProps> = ({
+    avatarId,
+    avatarUrl,
     realName,
     position,
     companyName,
@@ -32,9 +37,23 @@ const ContactCard: React.FC<ContactCardProps> = ({
         >
             <View style={styles.cardHeader}>
                 <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                        {realName?.charAt(0) || '👤'}
-                    </Text>
+                    {avatarId ? (
+                        <LazyImage 
+                            imageId={avatarId}
+                            useThumbnail={true}
+                            style={styles.avatarImage}
+                        />
+                    ) : avatarUrl && avatarUrl.length < 150000 ? (
+                        <Image 
+                            source={{ uri: avatarUrl }}
+                            style={styles.avatarImage}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <Text style={styles.avatarText}>
+                            {realName?.charAt(0) || '👤'}
+                        </Text>
+                    )}
                 </View>
                 <View style={styles.info}>
                     <Text style={styles.name} numberOfLines={1}>
@@ -107,6 +126,11 @@ const styles = StyleSheet.create({
         borderColor: '#C7D2FE',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 22,
     },
     avatarText: {
         fontSize: 18,
