@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, Platform, Image, TouchableOpacity, Alert, ActionSheetIOS } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
+import { fileManager } from '../services/fileManager';
 
 interface Message {
     id: string;
@@ -11,21 +12,25 @@ interface Message {
     imageUrl?: string; // 向后兼容
     imageLocalPath?: string; // 本地路径，用于显示
     imageMinioUrl?: string; // MinIO 链接
+    imageFileId?: string; // 文件管理器中的文件ID，用于删除
 }
 
 interface ChatMessageProps {
     message: Message;
+    onDelete?: (messageId: string) => void;
+    onResend?: (message: Message) => void;
 }
 
 /**
  * 聊天消息组件
  * 显示用户或AI的消息气泡
  */
-const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }) => {
     const [imageLoadFailed, setImageLoadFailed] = useState(false);
     
     // 优先使用本地路径，其次使用 imageUrl（向后兼容），最后使用 MinIO 链接
     const displayImageUrl = message.imageLocalPath || message.imageUrl || message.imageMinioUrl;
+    
     // 判断是否是今天的消息
     const isToday = () => {
         const today = new Date();
@@ -53,6 +58,79 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         }
     };
 
+    // 处理长按
+    const handleLongPress = () => {
+        if (Platform.OS === 'ios') {
+            // iOS 使用 ActionSheetIOS
+            const options = message.isUser 
+                ? ['删除', '重发', '取消']
+                : ['删除', '取消'];
+            const destructiveButtonIndex = 0;
+            const cancelButtonIndex = message.isUser ? 2 : 1;
+
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options,
+                    destructiveButtonIndex,
+                    cancelButtonIndex,
+                },
+                (buttonIndex) => {
+                    if (buttonIndex === 0) {
+                        // 删除
+                        handleDelete();
+                    } else if (buttonIndex === 1 && message.isUser) {
+                        // 重发
+                        handleResend();
+                    }
+                }
+            );
+        } else {
+            // Android 使用 Alert
+            const buttons = message.isUser
+                ? [
+                    { text: '取消', style: 'cancel' as const },
+                    { text: '重发', onPress: handleResend },
+                    { text: '删除', onPress: handleDelete, style: 'destructive' as const },
+                ]
+                : [
+                    { text: '取消', style: 'cancel' as const },
+                    { text: '删除', onPress: handleDelete, style: 'destructive' as const },
+                ];
+
+            Alert.alert('消息操作', '选择要执行的操作', buttons);
+        }
+    };
+
+    const handleDelete = () => {
+        Alert.alert(
+            '删除消息',
+            '确定要删除这条消息吗？',
+            [
+                { text: '取消', style: 'cancel' },
+                {
+                    text: '删除',
+                    style: 'destructive',
+                    onPress: async () => {
+                        // 如果消息有关联的图片文件，先删除图片
+                        if (message.imageFileId) {
+                            try {
+                                await fileManager.deleteFile(message.imageFileId);
+                            } catch (error) {
+                                console.error('Failed to delete image file:', error);
+                            }
+                        }
+                        // 删除消息
+                        onDelete?.(message.id);
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleResend = () => {
+        onResend?.(message);
+    };
+
     return (
         <View 
             style={[
@@ -61,7 +139,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             ]}
         >
             {message.isUser ? (
-                <View style={[styles.messageBubble, styles.userBubble]}>
+                <TouchableOpacity 
+                    onLongPress={handleLongPress}
+                    activeOpacity={0.7}
+                    style={[styles.messageBubble, styles.userBubble]}
+                >
                     {displayImageUrl && (
                         imageLoadFailed ? (
                             <View style={styles.imageFailedContainer}>
@@ -87,9 +169,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     <Text style={styles.timestamp}>
                         {formatTimestamp()}
                     </Text>
-                </View>
+                </TouchableOpacity>
             ) : (
-                <View style={[styles.messageBubble, styles.aiBubble]}>
+                <TouchableOpacity 
+                    onLongPress={handleLongPress}
+                    activeOpacity={0.7}
+                    style={[styles.messageBubble, styles.aiBubble]}
+                >
                     {displayImageUrl && (
                         imageLoadFailed ? (
                             <View style={styles.imageFailedContainer}>
@@ -113,7 +199,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     <Text style={styles.timestamp}>
                         {formatTimestamp()}
                     </Text>
-                </View>
+                </TouchableOpacity>
             )}
         </View>
     );

@@ -21,6 +21,7 @@ interface Message {
     imageUrl?: string; // 向后兼容
     imageLocalPath?: string; // 本地路径，用于显示
     imageMinioUrl?: string; // MinIO 链接，用于发送给 AI
+    imageFileId?: string; // 文件管理器中的文件ID，用于删除
 }
 
 /**
@@ -230,7 +231,7 @@ const AIAssistantScreen: React.FC = () => {
         }
     };
 
-    const sendMessage = async (text: string, imageMinioUrl?: string, imageLocalPath?: string) => {
+    const sendMessage = async (text: string, imageMinioUrl?: string, imageLocalPath?: string, imageFileId?: string) => {
         if ((!text.trim() && !imageMinioUrl) || loading) return;
 
         const userMessage: Message = {
@@ -240,6 +241,7 @@ const AIAssistantScreen: React.FC = () => {
             timestamp: new Date(),
             imageMinioUrl,
             imageLocalPath,
+            imageFileId,
         };
 
         setMessages(prev => [...prev, userMessage]);
@@ -428,6 +430,33 @@ const AIAssistantScreen: React.FC = () => {
         setPendingUpdate(null);
     };
 
+    const handleDeleteMessage = async (messageId: string) => {
+        try {
+            // 从消息列表中删除
+            const updatedMessages = messages.filter(msg => msg.id !== messageId);
+            setMessages(updatedMessages);
+            
+            // 从持久化存储中删除
+            await ChatPersistenceService.saveMessages(updatedMessages, sessionId);
+        } catch (error) {
+            console.error('Failed to delete message:', error);
+            Alert.alert('错误', '删除消息失败');
+        }
+    };
+
+    const handleResendMessage = async (message: Message) => {
+        try {
+            // 先删除原消息
+            await handleDeleteMessage(message.id);
+            
+            // 重新发送
+            await sendMessage(message.text, message.imageMinioUrl, message.imageLocalPath, message.imageFileId);
+        } catch (error) {
+            console.error('Failed to resend message:', error);
+            Alert.alert('错误', '重发消息失败');
+        }
+    };
+
     const renderMessage = (message: Message, index: number) => {
         // 检查这条消息是否有待确认的更新
         const hasPendingUpdate = pendingUpdate && pendingUpdate.messageId === message.id;
@@ -444,7 +473,14 @@ const AIAssistantScreen: React.FC = () => {
             );
         }
         
-        return <ChatMessage key={`msg-${index}`} message={message} />;
+        return (
+            <ChatMessage 
+                key={`msg-${index}`} 
+                message={message}
+                onDelete={handleDeleteMessage}
+                onResend={message.isUser ? handleResendMessage : undefined}
+            />
+        );
     };
 
     return (
