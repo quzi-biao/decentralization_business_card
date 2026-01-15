@@ -365,32 +365,30 @@ class FileManagerService {
         encoding: 'base64',
       });
 
-      // 将 base64 转换为二进制字符串
+      // 将 base64 解码为二进制数据
       const binaryString = atob(base64Content);
-      
-      // 使用 XMLHttpRequest 上传（React Native 支持）
-      return new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        
-        xhr.open('PUT', uploadUrl, true);
-        xhr.setRequestHeader('Content-Type', mimeType);
-        
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const publicUrl = `${MINIO_CONFIG.endpoint}/${MINIO_CONFIG.bucket}/${objectName}`;
-            resolve(publicUrl);
-          } else {
-            reject(new Error(`MinIO upload failed: ${xhr.status} ${xhr.statusText}`));
-          }
-        };
-        
-        xhr.onerror = () => {
-          reject(new Error('MinIO upload network error'));
-        };
-        
-        // 发送二进制数据
-        xhr.send(binaryString);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // 使用 fetch PUT 上传二进制数据
+      const response = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': mimeType,
+          'Content-Length': bytes.length.toString(),
+        },
+        body: bytes,
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`MinIO upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const publicUrl = `${MINIO_CONFIG.endpoint}/${MINIO_CONFIG.bucket}/${objectName}`;
+      return publicUrl;
     } catch (error) {
       console.error('Error uploading to MinIO:', error);
       throw error;
