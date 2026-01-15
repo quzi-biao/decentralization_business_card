@@ -15,6 +15,8 @@ export interface CardExchange {
     exchangedAt: number;
     lastSyncAt: number;
     status: 'active' | 'revoked';
+    tags?: string[];
+    note?: string;
 }
 
 export interface ExchangedCard {

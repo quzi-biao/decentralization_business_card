@@ -69,7 +69,7 @@ const ContactCard: React.FC<ContactCardProps> = ({
             {note && (
                 <View style={styles.noteContainer}>
                     <MaterialIcons name="note" size={11} color="#94a3b8" />
-                    <Text style={styles.noteText} numberOfLines={2}>
+                    <Text style={styles.noteText} numberOfLines={1}>
                         {note}
                     </Text>
                 </View>
