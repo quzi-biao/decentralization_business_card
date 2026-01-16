@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -18,6 +18,9 @@ import DataStatsScreen from './DataStatsScreen';
 import RevokeListScreen from './RevokeListScreen';
 import TagManagementScreen from './TagManagementScreen';
 import * as Clipboard from 'expo-clipboard';
+import { captureRef } from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -92,6 +95,8 @@ const ProfileScreen = ({ navigation, route, onEditPress }: Props) => {
     const [showDataStats, setShowDataStats] = useState(false);
     const [showRevokeList, setShowRevokeList] = useState(false);
     const [showTagManagement, setShowTagManagement] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const cardRef = useRef<View>(null);
     const [publicKey, setPublicKey] = useState<string>('');
     const [dataStats, setDataStats] = useState({
         chatDates: 0,
@@ -177,31 +182,68 @@ const ProfileScreen = ({ navigation, route, onEditPress }: Props) => {
         navigation.navigate('CardDetail', { cardData });
     };
 
-    const handleUpdateItem = (field: 'mainBusiness' | 'serviceNeeds', id: string, data: Partial<BusinessItem>) => {
-        const newList = cardData[field].map(item => item.id === id ? { ...item, ...data } : item);
-        updateCardData({ [field]: newList });
-    };
+    const handleExportCard = async () => {
+        if (!cardRef.current) {
+            Alert.alert('错误', '名片组件未准备好');
+            return;
+        }
 
-    const handleAddItem = (field: 'mainBusiness' | 'serviceNeeds') => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        const newItem = { id: Math.random().toString(36).substr(2, 9), name: '', description: '' };
-        updateCardData({ [field]: [...cardData[field], newItem] });
-    };
+        try {
+            setIsExporting(true);
 
-    const handleDeleteItem = (field: 'mainBusiness' | 'serviceNeeds', id: string) => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        updateCardData({ [field]: cardData[field].filter(item => item.id !== id) });
+            // 请求媒体库权限
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('权限不足', '需要相册权限才能保存图片');
+                setIsExporting(false);
+                return;
+            }
+
+            // 捕获名片视图为图片
+            const uri = await captureRef(cardRef);
+
+            // 保存到相册
+            await MediaLibrary.saveToLibraryAsync(uri);
+
+            // 询问是否分享
+            Alert.alert(
+                '导出成功',
+                '名片已保存到相册，是否立即分享？',
+                [
+                    { text: '稍后分享', style: 'cancel' },
+                    {
+                        text: '立即分享',
+                        onPress: async () => {
+                            const isAvailable = await Sharing.isAvailableAsync();
+                            if (isAvailable) {
+                                await Sharing.shareAsync(uri, {
+                                    mimeType: 'image/png',
+                                    dialogTitle: '分享我的名片',
+                                });
+                            }
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            console.error('导出名片失败:', error);
+            Alert.alert('导出失败', '无法导出名片图片，请重试');
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* 我的名片 */}
             <View style={styles.profileHeader}>
-                <MyCard 
-                    cardData={cardData} 
-                    onPress={handleCardPress}
-                    onAIAssistantPress={() => (navigation as any).navigate('AIAssistant')}
-                />
+                <View ref={cardRef} collapsable={false} style={{ backgroundColor: 'transparent' }}>
+                    <MyCard 
+                        cardData={cardData} 
+                        onPress={handleCardPress}
+                        onAIAssistantPress={() => (navigation as any).navigate('AIAssistant')}
+                    />
+                </View>
             </View>
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -241,10 +283,19 @@ const ProfileScreen = ({ navigation, route, onEditPress }: Props) => {
                         <Text style={styles.menuText}>名片模板选择</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={handleExportCard}
+                        disabled={isExporting}
+                    >
                         <MaterialIcons name="file-upload" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>导出名片</Text>
-                        <Text style={styles.menuArrow}>›</Text>
+                        <Text style={styles.menuText}>
+                            {isExporting ? '导出中...' : '导出名片'}
+                        </Text>
+                        {!isExporting && <Text style={styles.menuArrow}>›</Text>}
+                        {isExporting && (
+                            <MaterialIcons name="hourglass-empty" size={20} color="#64748b" />
+                        )}
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={styles.menuItem}
