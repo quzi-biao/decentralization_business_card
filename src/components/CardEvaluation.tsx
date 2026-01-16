@@ -5,7 +5,7 @@ import { BusinessCardData } from '../store/useCardStore';
 import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
 import { EvaluationPersistenceService, EvaluationResult, EvaluationScore } from '../services/evaluationPersistence';
-import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
+import { FIELD_METADATA } from '../constants/fieldNames';
 
 interface CardEvaluationProps {
     cardData: BusinessCardData;
@@ -55,41 +55,48 @@ const CardEvaluation: React.FC<CardEvaluationProps> = ({ cardData, sessionId, on
     const buildCardInfoText = (): string => {
         const info: string[] = [];
         
-        if (cardData.realName) info.push(`${FIELD_DISPLAY_NAMES.realName}：${cardData.realName}`);
-        if (cardData.avatarId || cardData.avatarUrl) info.push(`${FIELD_DISPLAY_NAMES.avatar}：已上传`);
-        if (cardData.position) info.push(`${FIELD_DISPLAY_NAMES.position}：${cardData.position}`);
-        if (cardData.companyName) info.push(`${FIELD_DISPLAY_NAMES.companyName}：${cardData.companyName}`);
-        if (cardData.industry) info.push(`${FIELD_DISPLAY_NAMES.industry}：${cardData.industry}`);
-        if (cardData.phone) info.push(`${FIELD_DISPLAY_NAMES.phone}：${cardData.phone}`);
-        if (cardData.email) info.push(`${FIELD_DISPLAY_NAMES.email}：${cardData.email}`);
-        if (cardData.wechat) info.push(`${FIELD_DISPLAY_NAMES.wechat}：${cardData.wechat}`);
-        if (cardData.wechatQrCodeId || cardData.wechatQrCode) info.push(`${FIELD_DISPLAY_NAMES.wechatQrCode}：已上传`);
-        if (cardData.address) info.push(`${FIELD_DISPLAY_NAMES.address}：${cardData.address}`);
-        if (cardData.aboutMe) info.push(`${FIELD_DISPLAY_NAMES.aboutMe}：${cardData.aboutMe}`);
-        if (cardData.hometown) info.push(`${FIELD_DISPLAY_NAMES.hometown}：${cardData.hometown}`);
-        if (cardData.residence) info.push(`${FIELD_DISPLAY_NAMES.residence}：${cardData.residence}`);
-        if (cardData.hobbies) info.push(`${FIELD_DISPLAY_NAMES.hobbies}：${cardData.hobbies}`);
-        if (cardData.personality) info.push(`${FIELD_DISPLAY_NAMES.personality}：${cardData.personality}`);
-        if (cardData.focusIndustry) info.push(`${FIELD_DISPLAY_NAMES.focusIndustry}：${cardData.focusIndustry}`);
-        if (cardData.circles) info.push(`${FIELD_DISPLAY_NAMES.circles}：${cardData.circles}`);
-        if (cardData.companyIntro) info.push(`${FIELD_DISPLAY_NAMES.companyIntro}：${cardData.companyIntro}`);
-        
-        if (cardData.mainBusiness && cardData.mainBusiness.length > 0) {
-            const businessList = cardData.mainBusiness.map(item => item.name).join('、');
-            info.push(`${FIELD_DISPLAY_NAMES.mainBusiness}：${businessList}`);
-        }
-        
-        if (cardData.serviceNeeds && cardData.serviceNeeds.length > 0) {
-            const needsList = cardData.serviceNeeds.map(item => item.name).join('、');
-            info.push(`${FIELD_DISPLAY_NAMES.serviceNeeds}：${needsList}`);
-        }
-        
-        if (cardData.companyImageIds && cardData.companyImageIds.length > 0) {
-            info.push(`${FIELD_DISPLAY_NAMES.companyImages}：已上传 ${cardData.companyImageIds.length} 张`);
-        }
-        
-        if (cardData.introVideoUrl) info.push(`${FIELD_DISPLAY_NAMES.introVideoUrl}：已上传`);
-        if (cardData.videoChannelId) info.push(`${FIELD_DISPLAY_NAMES.videoChannelId}：${cardData.videoChannelId}`);
+        FIELD_METADATA.forEach(field => {
+            const value = (cardData as any)[field.key];
+            
+            // 跳过空值
+            if (value === undefined || value === null || value === '') {
+                return;
+            }
+            
+            // 处理不同类型的字段值
+            let displayValue: string;
+            
+            // 头像和二维码字段显示"已上传"
+            if (['avatar', 'avatarId', 'avatarUrl', 'wechatQrCode', 'wechatQrCodeId'].includes(field.key)) {
+                displayValue = '已上传';
+            }
+            // 数组类型字段（主营业务、服务需求）
+            else if (Array.isArray(value)) {
+                if (value.length === 0) return;
+                displayValue = value.map(item => 
+                    typeof item === 'object' && item.name ? item.name : String(item)
+                ).join('、');
+            }
+            // 公司图片数组
+            else if (field.key === 'companyImageIds' || field.key === 'companyImages') {
+                if (Array.isArray(value) && value.length > 0) {
+                    displayValue = `已上传 ${value.length} 张`;
+                } else {
+                    return;
+                }
+            }
+            // 视频URL显示"已上传"
+            else if (field.key === 'introVideoUrl') {
+                displayValue = '已上传';
+            }
+            // 普通字段直接显示值
+            else {
+                displayValue = String(value).trim();
+                if (!displayValue) return;
+            }
+            
+            info.push(`${field.label}：${displayValue}`);
+        });
         
         return info.join('\n');
     };

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
+import { FIELD_METADATA } from '../constants/fieldNames';
 
 const VISIBILITY_KEY = 'card_field_visibility';
 const PRIVACY_KEY = 'ai_privacy_fields';
@@ -10,48 +10,23 @@ const PRIVACY_KEY = 'ai_privacy_fields';
 export interface CardField {
     id: string;
     name: string;
-    category: 'basic' | 'contact' | 'personal' | 'business' | 'media';
+    category: string;
     isVisible: boolean; // 交换时是否可见
     isPrivate: boolean; // AI 是否使用虚拟值
 }
 
 /**
- * 默认字段配置
+ * 默认字段配置（从 FIELD_METADATA 派生）
  */
-export const DEFAULT_CARD_FIELDS: CardField[] = [
-    // 基本信息
-    { id: 'avatar', name: FIELD_DISPLAY_NAMES.avatar, category: 'basic', isVisible: true, isPrivate: false },
-    { id: 'realName', name: FIELD_DISPLAY_NAMES.realName, category: 'basic', isVisible: true, isPrivate: true },
-    { id: 'position', name: FIELD_DISPLAY_NAMES.position, category: 'basic', isVisible: true, isPrivate: false },
-    { id: 'companyName', name: FIELD_DISPLAY_NAMES.companyName, category: 'basic', isVisible: true, isPrivate: false },
-    { id: 'industry', name: FIELD_DISPLAY_NAMES.industry, category: 'basic', isVisible: true, isPrivate: false },
-    
-    // 联系方式
-    { id: 'phone', name: FIELD_DISPLAY_NAMES.phone, category: 'contact', isVisible: true, isPrivate: true },
-    { id: 'email', name: FIELD_DISPLAY_NAMES.email, category: 'contact', isVisible: true, isPrivate: true },
-    { id: 'wechat', name: FIELD_DISPLAY_NAMES.wechat, category: 'contact', isVisible: true, isPrivate: true },
-    { id: 'wechatQrCode', name: FIELD_DISPLAY_NAMES.wechatQrCode, category: 'contact', isVisible: true, isPrivate: false },
-    { id: 'address', name: FIELD_DISPLAY_NAMES.address, category: 'contact', isVisible: true, isPrivate: true },
-    
-    // 个人信息
-    { id: 'aboutMe', name: FIELD_DISPLAY_NAMES.aboutMe, category: 'personal', isVisible: true, isPrivate: false },
-    { id: 'hometown', name: FIELD_DISPLAY_NAMES.hometown, category: 'personal', isVisible: true, isPrivate: false },
-    { id: 'residence', name: FIELD_DISPLAY_NAMES.residence, category: 'personal', isVisible: true, isPrivate: false },
-    { id: 'hobbies', name: FIELD_DISPLAY_NAMES.hobbies, category: 'personal', isVisible: true, isPrivate: false },
-    { id: 'personality', name: FIELD_DISPLAY_NAMES.personality, category: 'personal', isVisible: true, isPrivate: false },
-    { id: 'focusIndustry', name: FIELD_DISPLAY_NAMES.focusIndustry, category: 'personal', isVisible: true, isPrivate: false },
-    { id: 'circles', name: FIELD_DISPLAY_NAMES.circles, category: 'personal', isVisible: true, isPrivate: false },
-    
-    // 企业信息
-    { id: 'companyIntro', name: FIELD_DISPLAY_NAMES.companyIntro, category: 'business', isVisible: true, isPrivate: false },
-    { id: 'mainBusiness', name: FIELD_DISPLAY_NAMES.mainBusiness, category: 'business', isVisible: true, isPrivate: false },
-    { id: 'serviceNeeds', name: FIELD_DISPLAY_NAMES.serviceNeeds, category: 'business', isVisible: true, isPrivate: false },
-    { id: 'companyImages', name: FIELD_DISPLAY_NAMES.companyImages, category: 'business', isVisible: true, isPrivate: false },
-    
-    // 多媒体
-    { id: 'introVideoUrl', name: FIELD_DISPLAY_NAMES.introVideoUrl, category: 'media', isVisible: true, isPrivate: false },
-    { id: 'videoChannelId', name: FIELD_DISPLAY_NAMES.videoChannelId, category: 'media', isVisible: true, isPrivate: false },
-];
+export const DEFAULT_CARD_FIELDS: CardField[] = FIELD_METADATA
+    .filter(field => field.accessCategory && field.isVisible !== undefined && field.isPrivate !== undefined)
+    .map(field => ({
+        id: field.key,
+        name: field.label,
+        category: field.accessCategory!,
+        isVisible: field.isVisible!,
+        isPrivate: field.isPrivate!,
+    }));
 
 /**
  * 数据访问控制服务
