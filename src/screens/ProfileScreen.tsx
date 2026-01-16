@@ -357,13 +357,13 @@ const ProfileScreen = ({ navigation, route, onEditPress }: Props) => {
                 </View>
 
                 {/* 设置 */}
-                <View style={styles.section}>
+                {/* <View style={styles.section}>
                     <TouchableOpacity style={styles.menuItem}>
                         <MaterialIcons name="language" size={20} color="#64748b" style={styles.menuIcon} />
                         <Text style={styles.menuText}>语言选择</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 {/* 关于 */}
                 <View style={styles.section}>
