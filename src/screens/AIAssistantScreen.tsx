@@ -8,6 +8,7 @@ import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
 import { parseAIResponse, hasCompleteFormData, mergeFormData, generateFormSummary } from '../utils/formDataParser';
 import { ChatPersistenceService } from '../services/chatPersistence';
+import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
 import ChatMessage from '../components/ChatMessage';
 import UpdateConfirmCard from '../components/UpdateConfirmCard';
 import ProgressHeader from '../components/ProgressHeader';
@@ -61,29 +62,29 @@ const AIAssistantScreen: React.FC = () => {
         
         // 创建字段映射
         const fieldMap: Record<string, { name: string; getValue: (d: typeof cardData) => any }> = {
-            avatar: { name: '头像', getValue: (d) => d.avatarId || d.avatarUrl },
-            realName: { name: '姓名', getValue: (d) => d.realName },
-            position: { name: '职位', getValue: (d) => d.position },
-            companyName: { name: '公司', getValue: (d) => d.companyName },
-            industry: { name: '行业', getValue: (d) => d.industry },
-            phone: { name: '电话', getValue: (d) => d.phone },
-            email: { name: '邮箱', getValue: (d) => d.email },
-            wechat: { name: '微信', getValue: (d) => d.wechat },
-            wechatQrCode: { name: '微信二维码', getValue: (d) => d.wechatQrCodeId || d.wechatQrCode },
-            address: { name: '地址', getValue: (d) => d.address },
-            aboutMe: { name: '个人简介', getValue: (d) => d.aboutMe },
-            hometown: { name: '家乡', getValue: (d) => d.hometown },
-            residence: { name: '常驻', getValue: (d) => d.residence },
-            hobbies: { name: '兴趣爱好', getValue: (d) => d.hobbies },
-            personality: { name: '性格特点', getValue: (d) => d.personality },
-            focusIndustry: { name: '关注行业', getValue: (d) => d.focusIndustry },
-            circles: { name: '圈层', getValue: (d) => d.circles },
-            companyIntro: { name: '公司简介', getValue: (d) => d.companyIntro },
-            mainBusiness: { name: '主营业务', getValue: (d) => d.mainBusiness && d.mainBusiness.length > 0 ? d.mainBusiness.map((item: any) => item.name).join('、') : null },
-            serviceNeeds: { name: '服务需求', getValue: (d) => d.serviceNeeds && d.serviceNeeds.length > 0 ? d.serviceNeeds.map((item: any) => item.name).join('、') : null },
-            companyImages: { name: '公司图片', getValue: (d) => (d.companyImageIds && d.companyImageIds.length > 0) || (d.companyImages && d.companyImages.length > 0) ? '已上传' : null },
-            introVideoUrl: { name: '个人介绍视频', getValue: (d) => d.introVideoUrl },
-            videoChannelId: { name: '视频号ID', getValue: (d) => d.videoChannelId },
+            avatar: { name: FIELD_DISPLAY_NAMES.avatar, getValue: (d) => d.avatarId || d.avatarUrl },
+            realName: { name: FIELD_DISPLAY_NAMES.realName, getValue: (d) => d.realName },
+            position: { name: FIELD_DISPLAY_NAMES.position, getValue: (d) => d.position },
+            companyName: { name: FIELD_DISPLAY_NAMES.companyName, getValue: (d) => d.companyName },
+            industry: { name: FIELD_DISPLAY_NAMES.industry, getValue: (d) => d.industry },
+            phone: { name: FIELD_DISPLAY_NAMES.phone, getValue: (d) => d.phone },
+            email: { name: FIELD_DISPLAY_NAMES.email, getValue: (d) => d.email },
+            wechat: { name: FIELD_DISPLAY_NAMES.wechat, getValue: (d) => d.wechat },
+            wechatQrCode: { name: FIELD_DISPLAY_NAMES.wechatQrCode, getValue: (d) => d.wechatQrCodeId || d.wechatQrCode },
+            address: { name: FIELD_DISPLAY_NAMES.address, getValue: (d) => d.address },
+            aboutMe: { name: FIELD_DISPLAY_NAMES.aboutMe, getValue: (d) => d.aboutMe },
+            hometown: { name: FIELD_DISPLAY_NAMES.hometown, getValue: (d) => d.hometown },
+            residence: { name: FIELD_DISPLAY_NAMES.residence, getValue: (d) => d.residence },
+            hobbies: { name: FIELD_DISPLAY_NAMES.hobbies, getValue: (d) => d.hobbies },
+            personality: { name: FIELD_DISPLAY_NAMES.personality, getValue: (d) => d.personality },
+            focusIndustry: { name: FIELD_DISPLAY_NAMES.focusIndustry, getValue: (d) => d.focusIndustry },
+            circles: { name: FIELD_DISPLAY_NAMES.circles, getValue: (d) => d.circles },
+            companyIntro: { name: FIELD_DISPLAY_NAMES.companyIntro, getValue: (d) => d.companyIntro },
+            mainBusiness: { name: FIELD_DISPLAY_NAMES.mainBusiness, getValue: (d) => d.mainBusiness && d.mainBusiness.length > 0 ? d.mainBusiness.map((item: any) => item.name).join('、') : null },
+            serviceNeeds: { name: FIELD_DISPLAY_NAMES.serviceNeeds, getValue: (d) => d.serviceNeeds && d.serviceNeeds.length > 0 ? d.serviceNeeds.map((item: any) => item.name).join('、') : null },
+            companyImages: { name: FIELD_DISPLAY_NAMES.companyImages, getValue: (d) => (d.companyImageIds && d.companyImageIds.length > 0) || (d.companyImages && d.companyImages.length > 0) ? '已上传' : null },
+            introVideoUrl: { name: FIELD_DISPLAY_NAMES.introVideoUrl, getValue: (d) => d.introVideoUrl },
+            videoChannelId: { name: FIELD_DISPLAY_NAMES.videoChannelId, getValue: (d) => d.videoChannelId },
         };
         
         // 遍历字段配置
