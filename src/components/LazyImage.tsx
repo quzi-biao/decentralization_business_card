@@ -75,43 +75,43 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     };
   }, [imageId, useThumbnail]);
 
-  if (loading && showLoader) {
-    return (
-      <View style={[styles.loaderContainer, style]}>
-        <ActivityIndicator size="small" color={ThemeConfig.colors.textSecondary} />
-      </View>
-    );
-  }
-
-  if (error || !imageUri) {
-    if (fallbackSource) {
-      return <Image source={fallbackSource} style={style} {...imageProps} />;
-    }
-    return (
-      <View style={[styles.placeholderContainer, style]}>
-        <View style={styles.placeholder} />
-      </View>
-    );
-  }
-
+  // 始终保持容器尺寸一致，避免布局跳变
   return (
-    <Image
-      source={{ uri: imageUri }}
-      style={style}
-      {...imageProps}
-      progressiveRenderingEnabled
-      onError={() => setError(true)}
-    />
+    <View style={style}>
+      {loading && showLoader ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="small" color={ThemeConfig.colors.textSecondary} />
+        </View>
+      ) : error || !imageUri ? (
+        fallbackSource ? (
+          <Image source={fallbackSource} style={StyleSheet.absoluteFill} {...imageProps} />
+        ) : (
+          <View style={styles.placeholderContainer}>
+            <View style={styles.placeholder} />
+          </View>
+        )
+      ) : (
+        <Image
+          source={{ uri: imageUri }}
+          style={StyleSheet.absoluteFill}
+          {...imageProps}
+          progressiveRenderingEnabled
+          onError={() => setError(true)}
+        />
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   loaderContainer: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: ThemeConfig.colors.backgroundTertiary,
   },
   placeholderContainer: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: ThemeConfig.colors.backgroundTertiary,
