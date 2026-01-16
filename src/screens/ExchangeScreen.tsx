@@ -47,12 +47,8 @@ const ExchangeScreen = () => {
     const availableTags = ['客户', '供应商', '合作伙伴', '朋友', '同事', '潜在客户'];
 
     useEffect(() => {
-        // 延迟生成二维码，让页面先渲染
-        const timer = setTimeout(() => {
-            generateMyQRCode();
-        }, 100);
-        
-        return () => clearTimeout(timer);
+        // 立即生成二维码，避免布局闪烁
+        generateMyQRCode();
     }, []);
 
     // 监听名片数据变化，自动重新生成二维码
@@ -385,7 +381,7 @@ const ExchangeScreen = () => {
                                     />
                                 ) : (
                                     <View style={styles.qrPlaceholder}>
-                                        <ActivityIndicator size="large" color="#4F46E5" />
+                                        <ActivityIndicator size="large" color={ThemeConfig.colors.primary} />
                                         <Text style={styles.placeholderText}>正在生成二维码...</Text>
                                     </View>
                                 )}

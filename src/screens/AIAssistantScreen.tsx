@@ -51,6 +51,7 @@ const AIAssistantScreen: React.FC = () => {
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [showProgressModal, setShowProgressModal] = useState(false);
     const [showPrivacyHelp, setShowPrivacyHelp] = useState(false);
+    const [initializing, setInitializing] = useState(true);
 
     // 构建当前名片信息的通用方法（根据隐私设置过滤）
     const buildCurrentCardInfo = async (data: typeof cardData): Promise<string> => {
@@ -228,6 +229,8 @@ const AIAssistantScreen: React.FC = () => {
                 await ChatPersistenceService.saveMessage(privacyNotice, sessionId);
                 await ChatPersistenceService.saveMessage(welcomeMessage, sessionId);
             }
+            
+            setInitializing(false);
         };
 
         initializeChat();
@@ -515,6 +518,17 @@ const AIAssistantScreen: React.FC = () => {
         );
     };
 
+    if (initializing) {
+        return (
+            <SafeAreaView style={styles.container} edges={['top']}>
+                <View style={styles.initializingContainer}>
+                    <ActivityIndicator size="large" color={ThemeConfig.colors.primary} />
+                    <Text style={styles.loadingText}>加载中...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <ProgressHeader
@@ -610,6 +624,12 @@ const styles = StyleSheet.create({
     loadingText: {
         fontSize: ThemeConfig.fontSize.base,
         color: ThemeConfig.colors.textSecondary,
+    },
+    initializingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: ThemeConfig.spacing.base,
     },
 });
 
