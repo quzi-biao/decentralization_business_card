@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BusinessCardData } from '../store/useCardStore';
+import { FIELD_METADATA, getCategories } from '../constants/fieldNames';
 
 interface ProgressDetailsModalProps {
     visible: boolean;
@@ -20,28 +21,11 @@ const ProgressDetailsModal: React.FC<ProgressDetailsModalProps> = ({
     filledCount,
     totalCount
 }) => {
-    // 定义所有字段及其显示名称
-    const fields = [
-        { key: 'realName', label: '姓名', category: '基础信息' },
-        { key: 'position', label: '职位', category: '基础信息' },
-        { key: 'companyName', label: '公司名称', category: '基础信息' },
-        { key: 'industry', label: '行业领域', category: '基础信息' },
-        { key: 'phone', label: '电话', category: '联系方式' },
-        { key: 'email', label: '邮箱', category: '联系方式' },
-        { key: 'wechat', label: '微信', category: '联系方式' },
-        { key: 'address', label: '地址', category: '联系方式' },
-        { key: 'aboutMe', label: '个人简介', category: '个人信息' },
-        { key: 'hometown', label: '家乡', category: '个人信息' },
-        { key: 'residence', label: '常驻地', category: '个人信息' },
-        { key: 'hobbies', label: '兴趣爱好', category: '个人信息' },
-        { key: 'personality', label: '性格特点', category: '个人信息' },
-        { key: 'focusIndustry', label: '关注行业', category: '个人信息' },
-        { key: 'circles', label: '圈层', category: '个人信息' },
-        { key: 'companyIntro', label: '公司简介', category: '企业信息' },
-    ];
+    // 使用统一的字段元数据，只显示有分类信息的字段
+    const fields = FIELD_METADATA.filter(f => f.category);
 
-    // 按类别分组
-    const categories = ['基础信息', '联系方式', '个人信息', '企业信息'];
+    // 获取所有分类
+    const categories = getCategories();
 
     // 检查字段是否已填写
     const isFieldFilled = (key: string): boolean => {

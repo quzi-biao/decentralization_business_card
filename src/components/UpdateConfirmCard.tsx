@@ -1,33 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
 
 interface UpdateConfirmCardProps {
     formData: any;
     onConfirm: () => void;
     onCancel: () => void;
 }
-
-const FIELD_MAP: Record<string, string> = {
-    realName: '姓名',
-    position: '职位',
-    companyName: '公司',
-    phone: '电话',
-    email: '邮箱',
-    wechat: '微信',
-    address: '地址',
-    industry: '行业',
-    aboutMe: '个人简介',
-    hometown: '家乡',
-    residence: '常驻',
-    hobbies: '兴趣爱好',
-    personality: '性格特点',
-    focusIndustry: '关注行业',
-    circles: '圈层',
-    companyIntro: '公司简介',
-    mainBusiness: '主营业务',
-    serviceNeeds: '服务需求',
-};
 
 /**
  * 更新确认卡片组件
@@ -47,7 +27,7 @@ const UpdateConfirmCard: React.FC<UpdateConfirmCardProps> = ({
             {Object.entries(formData).map(([key, value]) => {
                 if (value === undefined || value === null) return null;
                 
-                const fieldName = FIELD_MAP[key] || key;
+                const fieldName = FIELD_DISPLAY_NAMES[key] || key;
                 
                 // 格式化数组类型的值
                 let displayValue: string;

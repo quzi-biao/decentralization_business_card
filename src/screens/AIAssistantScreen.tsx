@@ -8,7 +8,7 @@ import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
 import { parseAIResponse, hasCompleteFormData, mergeFormData, generateFormSummary } from '../utils/formDataParser';
 import { ChatPersistenceService } from '../services/chatPersistence';
-import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
+import { FIELD_METADATA } from '../constants/fieldNames';
 import ChatMessage from '../components/ChatMessage';
 import UpdateConfirmCard from '../components/UpdateConfirmCard';
 import ProgressHeader from '../components/ProgressHeader';
@@ -60,32 +60,13 @@ const AIAssistantScreen: React.FC = () => {
         const { DataAccessControlService } = await import('../services/dataAccessControl');
         const fields = await DataAccessControlService.loadFieldVisibility();
         
-        // 创建字段映射
-        const fieldMap: Record<string, { name: string; getValue: (d: typeof cardData) => any }> = {
-            avatar: { name: FIELD_DISPLAY_NAMES.avatar, getValue: (d) => d.avatarId || d.avatarUrl },
-            realName: { name: FIELD_DISPLAY_NAMES.realName, getValue: (d) => d.realName },
-            position: { name: FIELD_DISPLAY_NAMES.position, getValue: (d) => d.position },
-            companyName: { name: FIELD_DISPLAY_NAMES.companyName, getValue: (d) => d.companyName },
-            industry: { name: FIELD_DISPLAY_NAMES.industry, getValue: (d) => d.industry },
-            phone: { name: FIELD_DISPLAY_NAMES.phone, getValue: (d) => d.phone },
-            email: { name: FIELD_DISPLAY_NAMES.email, getValue: (d) => d.email },
-            wechat: { name: FIELD_DISPLAY_NAMES.wechat, getValue: (d) => d.wechat },
-            wechatQrCode: { name: FIELD_DISPLAY_NAMES.wechatQrCode, getValue: (d) => d.wechatQrCodeId || d.wechatQrCode },
-            address: { name: FIELD_DISPLAY_NAMES.address, getValue: (d) => d.address },
-            aboutMe: { name: FIELD_DISPLAY_NAMES.aboutMe, getValue: (d) => d.aboutMe },
-            hometown: { name: FIELD_DISPLAY_NAMES.hometown, getValue: (d) => d.hometown },
-            residence: { name: FIELD_DISPLAY_NAMES.residence, getValue: (d) => d.residence },
-            hobbies: { name: FIELD_DISPLAY_NAMES.hobbies, getValue: (d) => d.hobbies },
-            personality: { name: FIELD_DISPLAY_NAMES.personality, getValue: (d) => d.personality },
-            focusIndustry: { name: FIELD_DISPLAY_NAMES.focusIndustry, getValue: (d) => d.focusIndustry },
-            circles: { name: FIELD_DISPLAY_NAMES.circles, getValue: (d) => d.circles },
-            companyIntro: { name: FIELD_DISPLAY_NAMES.companyIntro, getValue: (d) => d.companyIntro },
-            mainBusiness: { name: FIELD_DISPLAY_NAMES.mainBusiness, getValue: (d) => d.mainBusiness && d.mainBusiness.length > 0 ? d.mainBusiness.map((item: any) => item.name).join('、') : null },
-            serviceNeeds: { name: FIELD_DISPLAY_NAMES.serviceNeeds, getValue: (d) => d.serviceNeeds && d.serviceNeeds.length > 0 ? d.serviceNeeds.map((item: any) => item.name).join('、') : null },
-            companyImages: { name: FIELD_DISPLAY_NAMES.companyImages, getValue: (d) => (d.companyImageIds && d.companyImageIds.length > 0) || (d.companyImages && d.companyImages.length > 0) ? '已上传' : null },
-            introVideoUrl: { name: FIELD_DISPLAY_NAMES.introVideoUrl, getValue: (d) => d.introVideoUrl },
-            videoChannelId: { name: FIELD_DISPLAY_NAMES.videoChannelId, getValue: (d) => d.videoChannelId },
-        };
+        // 创建字段映射（从 FIELD_METADATA 构建）
+        const fieldMap = FIELD_METADATA.reduce((acc, field) => {
+            if (field.getValue) {
+                acc[field.key] = { name: field.label, getValue: field.getValue };
+            }
+            return acc;
+        }, {} as Record<string, { name: string; getValue: (d: typeof cardData) => any }>);
         
         // 遍历字段配置
         fields.forEach(field => {

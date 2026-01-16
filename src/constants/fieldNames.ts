@@ -3,44 +3,67 @@
  * 所有涉及字段显示名称的地方都应该使用这个配置
  */
 
-export const FIELD_DISPLAY_NAMES: Record<string, string> = {
-    // 基本信息
-    avatar: '头像',
-    avatarId: '头像',
-    avatarUrl: '头像',
-    realName: '姓名',
-    position: '职位',
-    companyName: '公司名称',
-    industry: '行业领域',
+/**
+ * 字段元数据（包含分类信息）
+ * 这是唯一的数据源，其他配置都从这里派生
+ */
+export interface FieldMetadata {
+    key: string;
+    label: string;
+    category?: string; // 可选，用于需要分组显示的场景（如进度追踪）
+    accessCategory?: string; // 可选，用于访问控制的分类（basic, contact, personal, business, media）
+    getValue?: (data: any) => any; // 可选，用于从卡片数据中提取字段值
+    isVisible?: boolean; // 可选，默认是否可见
+    isPrivate?: boolean; // 可选，默认是否为隐私字段
+}
+
+export const FIELD_METADATA: FieldMetadata[] = [
+    // 基础信息
+    { key: 'avatar', label: '头像', accessCategory: 'basic', getValue: (d) => d.avatarId || d.avatarUrl, isVisible: true, isPrivate: false },
+    { key: 'avatarId', label: '头像', getValue: (d) => d.avatarId },
+    { key: 'avatarUrl', label: '头像', getValue: (d) => d.avatarUrl },
+    { key: 'realName', label: '姓名', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.realName, isVisible: true, isPrivate: true },
+    { key: 'position', label: '职位', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.position, isVisible: true, isPrivate: false },
+    { key: 'companyName', label: '公司名称', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.companyName, isVisible: true, isPrivate: false },
+    { key: 'industry', label: '行业领域', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.industry, isVisible: true, isPrivate: false },
     
     // 联系方式
-    phone: '电话',
-    email: '邮箱',
-    wechat: '微信',
-    wechatQrCode: '微信二维码',
-    wechatQrCodeId: '微信二维码',
-    address: '地址',
+    { key: 'phone', label: '电话', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.phone, isVisible: true, isPrivate: true },
+    { key: 'email', label: '邮箱', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.email, isVisible: true, isPrivate: true },
+    { key: 'wechat', label: '微信', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.wechat, isVisible: true, isPrivate: true },
+    { key: 'wechatQrCode', label: '微信二维码', accessCategory: 'contact', getValue: (d) => d.wechatQrCodeId || d.wechatQrCode, isVisible: true, isPrivate: false },
+    { key: 'wechatQrCodeId', label: '微信二维码', getValue: (d) => d.wechatQrCodeId },
+    { key: 'address', label: '地址', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.address, isVisible: true, isPrivate: true },
     
     // 个人信息
-    aboutMe: '个人简介',
-    hometown: '家乡',
-    residence: '常驻',
-    hobbies: '兴趣爱好',
-    personality: '性格特点',
-    focusIndustry: '关注行业',
-    circles: '加入的圈层',
+    { key: 'aboutMe', label: '个人简介', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.aboutMe, isVisible: true, isPrivate: false },
+    { key: 'hometown', label: '家乡', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.hometown, isVisible: true, isPrivate: false },
+    { key: 'residence', label: '常驻', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.residence, isVisible: true, isPrivate: false },
+    { key: 'hobbies', label: '兴趣爱好', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.hobbies, isVisible: true, isPrivate: false },
+    { key: 'personality', label: '性格特点', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.personality, isVisible: true, isPrivate: false },
+    { key: 'focusIndustry', label: '关注行业', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.focusIndustry, isVisible: true, isPrivate: false },
+    { key: 'circles', label: '加入的圈层', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.circles, isVisible: true, isPrivate: false },
     
     // 企业信息
-    companyIntro: '公司简介',
-    mainBusiness: '主营业务',
-    serviceNeeds: '服务需求',
-    companyImages: '公司图片',
-    companyImageIds: '公司图片',
+    { key: 'companyIntro', label: '公司简介', category: '企业信息', accessCategory: 'business', getValue: (d) => d.companyIntro, isVisible: true, isPrivate: false },
+    { key: 'mainBusiness', label: '主营业务', accessCategory: 'business', getValue: (d) => d.mainBusiness && d.mainBusiness.length > 0 ? d.mainBusiness.map((item: any) => item.name).join('、') : null, isVisible: true, isPrivate: false },
+    { key: 'serviceNeeds', label: '服务需求', accessCategory: 'business', getValue: (d) => d.serviceNeeds && d.serviceNeeds.length > 0 ? d.serviceNeeds.map((item: any) => item.name).join('、') : null, isVisible: true, isPrivate: false },
+    { key: 'companyImages', label: '公司图片', accessCategory: 'business', getValue: (d) => (d.companyImageIds && d.companyImageIds.length > 0) || (d.companyImages && d.companyImages.length > 0) ? '已上传' : null, isVisible: true, isPrivate: false },
+    { key: 'companyImageIds', label: '公司图片', getValue: (d) => d.companyImageIds },
     
     // 多媒体
-    introVideoUrl: '个人介绍视频',
-    videoChannelId: '视频号ID',
-};
+    { key: 'introVideoUrl', label: '个人介绍视频', accessCategory: 'media', getValue: (d) => d.introVideoUrl, isVisible: true, isPrivate: false },
+    { key: 'videoChannelId', label: '视频号ID', accessCategory: 'media', getValue: (d) => d.videoChannelId, isVisible: true, isPrivate: false },
+];
+
+/**
+ * 从 FIELD_METADATA 派生的字段显示名称映射
+ * 用于快速查找字段的显示名称
+ */
+export const FIELD_DISPLAY_NAMES: Record<string, string> = FIELD_METADATA.reduce((acc, field) => {
+    acc[field.key] = field.label;
+    return acc;
+}, {} as Record<string, string>);
 
 /**
  * 获取字段显示名称
@@ -49,4 +72,11 @@ export const FIELD_DISPLAY_NAMES: Record<string, string> = {
  */
 export const getFieldDisplayName = (fieldId: string, defaultName?: string): string => {
     return FIELD_DISPLAY_NAMES[fieldId] || defaultName || fieldId;
+};
+
+/**
+ * 获取所有分类名称
+ */
+export const getCategories = (): string[] => {
+    return Array.from(new Set(FIELD_METADATA.filter(f => f.category).map(f => f.category!)));
 };
