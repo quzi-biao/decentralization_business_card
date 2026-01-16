@@ -2,12 +2,13 @@
 import './src/polyfills/crypto-polyfill';
 
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { ThemeConfig } from './src/constants/theme';
 
 import CardsStack from './src/navigation/CardsStack';
 import ProfileStack from './src/navigation/ProfileStack';
@@ -66,27 +67,28 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={DarkTheme}>
+      <NavigationContainer theme={DefaultTheme}>
         <StatusBar style="dark" />
         <Tab.Navigator
           screenOptions={{
             headerShown: false,
             tabBarStyle: {
-              backgroundColor: '#ffffff',
-              borderTopColor: '#e2e8f0',
-              borderTopWidth: 1,
+              backgroundColor: ThemeConfig.colors.background,
+              borderTopColor: ThemeConfig.colors.border,
+              borderTopWidth: ThemeConfig.borderWidth.thin,
               height: 90,
               paddingBottom: 30,
               paddingTop: 10,
             },
-            tabBarActiveTintColor: '#4F46E5',
-            tabBarInactiveTintColor: '#94a3b8',
+            tabBarActiveTintColor: ThemeConfig.colors.primary,
+            tabBarInactiveTintColor: ThemeConfig.colors.textTertiary,
             tabBarLabelStyle: {
-              fontSize: 11,
-              fontWeight: '600',
+              fontSize: ThemeConfig.fontSize.xs,
+              fontWeight: ThemeConfig.fontWeight.semibold,
               letterSpacing: 0,
               marginTop: 4,
-            }
+            },
+            lazy: true,
           }}
         >
           <Tab.Screen
@@ -118,7 +120,6 @@ export default function App() {
             options={{
               tabBarLabel: '我的',
               tabBarIcon: ({ color }) => <TabIcon name="person" color={color} />,
-              unmountOnBlur: true,
             }}
           >
             {() => <ProfileStack onEditPress={() => setShowEditCard(true)} />}
