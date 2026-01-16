@@ -89,7 +89,6 @@ export default function App() {
               marginTop: 4,
             },
             lazy: false,
-            detachInactiveScreens: false,
           }}
         >
           <Tab.Screen
