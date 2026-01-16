@@ -7,6 +7,7 @@ import { BusinessCardData, useCardStore } from '../store/useCardStore';
 import { useTagStore } from '../store/useTagStore';
 import MyCard from '../components/MyCard';
 import { RichTextRenderer } from '../components/RichTextRenderer';
+import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
 
 const { width } = Dimensions.get('window');
 
@@ -268,12 +269,12 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             <View style={styles.contactItem}>
                                 <MaterialIcons name="phone" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
-                                    <Text style={styles.contactLabel}>电话</Text>
+                                    <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.phone}</Text>
                                     <Text style={styles.contactValue}>{cardData.phone}</Text>
                                 </View>
                                 <TouchableOpacity 
                                     style={styles.copyButton}
-                                    onPress={() => handleCopy(cardData.phone!, '电话')}
+                                    onPress={() => handleCopy(cardData.phone!, FIELD_DISPLAY_NAMES.phone)}
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 >
                                     <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
@@ -285,12 +286,12 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             <View style={styles.contactItem}>
                                 <MaterialIcons name="email" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
-                                    <Text style={styles.contactLabel}>邮箱</Text>
+                                    <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.email}</Text>
                                     <Text style={styles.contactValue}>{cardData.email}</Text>
                                 </View>
                                 <TouchableOpacity 
                                     style={styles.copyButton}
-                                    onPress={() => handleCopy(cardData.email!, '邮箱')}
+                                    onPress={() => handleCopy(cardData.email!, FIELD_DISPLAY_NAMES.email)}
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 >
                                     <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
@@ -302,12 +303,12 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             <View style={styles.contactItem}>
                                 <MaterialIcons name="chat" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
-                                    <Text style={styles.contactLabel}>微信</Text>
+                                    <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.wechat}</Text>
                                     <Text style={styles.contactValue}>{cardData.wechat}</Text>
                                 </View>
                                 <TouchableOpacity 
                                     style={styles.copyButton}
-                                    onPress={() => handleCopy(cardData.wechat!, '微信')}
+                                    onPress={() => handleCopy(cardData.wechat!, FIELD_DISPLAY_NAMES.wechat)}
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 >
                                     <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
@@ -319,12 +320,12 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             <View style={styles.contactItem}>
                                 <MaterialIcons name="location-on" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
-                                    <Text style={styles.contactLabel}>地址</Text>
+                                    <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.address}</Text>
                                     <Text style={styles.contactValue}>{cardData.address}</Text>
                                 </View>
                                 <TouchableOpacity 
                                     style={styles.copyButton}
-                                    onPress={() => handleCopy(cardData.address!, '地址')}
+                                    onPress={() => handleCopy(cardData.address!, FIELD_DISPLAY_NAMES.address)}
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 >
                                     <MaterialIcons name="content-copy" size={18} color="#4F46E5" />
@@ -336,7 +337,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             <View style={styles.contactItem}>
                                 <MaterialIcons name="qr-code" size={18} color="#64748b" style={styles.contactIcon} />
                                 <View style={styles.contactInfo}>
-                                    <Text style={styles.contactLabel}>微信二维码</Text>
+                                    <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.wechatQrCode}</Text>
                                     <Text style={styles.contactValue}>已设置</Text>
                                 </View>
                             </View>

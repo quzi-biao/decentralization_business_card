@@ -5,6 +5,7 @@ import { BusinessCardData } from '../store/useCardStore';
 import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
 import { EvaluationPersistenceService, EvaluationResult, EvaluationScore } from '../services/evaluationPersistence';
+import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
 
 interface CardEvaluationProps {
     cardData: BusinessCardData;
@@ -54,41 +55,41 @@ const CardEvaluation: React.FC<CardEvaluationProps> = ({ cardData, sessionId, on
     const buildCardInfoText = (): string => {
         const info: string[] = [];
         
-        if (cardData.realName) info.push(`姓名：${cardData.realName}`);
-        if (cardData.avatarId || cardData.avatarUrl) info.push(`头像：已上传`);
-        if (cardData.position) info.push(`职位：${cardData.position}`);
-        if (cardData.companyName) info.push(`公司：${cardData.companyName}`);
-        if (cardData.industry) info.push(`行业：${cardData.industry}`);
-        if (cardData.phone) info.push(`电话：${cardData.phone}`);
-        if (cardData.email) info.push(`邮箱：${cardData.email}`);
-        if (cardData.wechat) info.push(`微信：${cardData.wechat}`);
-        if (cardData.wechatQrCodeId || cardData.wechatQrCode) info.push(`微信二维码：已上传`);
-        if (cardData.address) info.push(`地址：${cardData.address}`);
-        if (cardData.aboutMe) info.push(`个人简介：${cardData.aboutMe}`);
-        if (cardData.hometown) info.push(`家乡：${cardData.hometown}`);
-        if (cardData.residence) info.push(`常驻：${cardData.residence}`);
-        if (cardData.hobbies) info.push(`兴趣爱好：${cardData.hobbies}`);
-        if (cardData.personality) info.push(`性格特点：${cardData.personality}`);
-        if (cardData.focusIndustry) info.push(`关注行业：${cardData.focusIndustry}`);
-        if (cardData.circles) info.push(`圈层：${cardData.circles}`);
-        if (cardData.companyIntro) info.push(`公司简介：${cardData.companyIntro}`);
+        if (cardData.realName) info.push(`${FIELD_DISPLAY_NAMES.realName}：${cardData.realName}`);
+        if (cardData.avatarId || cardData.avatarUrl) info.push(`${FIELD_DISPLAY_NAMES.avatar}：已上传`);
+        if (cardData.position) info.push(`${FIELD_DISPLAY_NAMES.position}：${cardData.position}`);
+        if (cardData.companyName) info.push(`${FIELD_DISPLAY_NAMES.companyName}：${cardData.companyName}`);
+        if (cardData.industry) info.push(`${FIELD_DISPLAY_NAMES.industry}：${cardData.industry}`);
+        if (cardData.phone) info.push(`${FIELD_DISPLAY_NAMES.phone}：${cardData.phone}`);
+        if (cardData.email) info.push(`${FIELD_DISPLAY_NAMES.email}：${cardData.email}`);
+        if (cardData.wechat) info.push(`${FIELD_DISPLAY_NAMES.wechat}：${cardData.wechat}`);
+        if (cardData.wechatQrCodeId || cardData.wechatQrCode) info.push(`${FIELD_DISPLAY_NAMES.wechatQrCode}：已上传`);
+        if (cardData.address) info.push(`${FIELD_DISPLAY_NAMES.address}：${cardData.address}`);
+        if (cardData.aboutMe) info.push(`${FIELD_DISPLAY_NAMES.aboutMe}：${cardData.aboutMe}`);
+        if (cardData.hometown) info.push(`${FIELD_DISPLAY_NAMES.hometown}：${cardData.hometown}`);
+        if (cardData.residence) info.push(`${FIELD_DISPLAY_NAMES.residence}：${cardData.residence}`);
+        if (cardData.hobbies) info.push(`${FIELD_DISPLAY_NAMES.hobbies}：${cardData.hobbies}`);
+        if (cardData.personality) info.push(`${FIELD_DISPLAY_NAMES.personality}：${cardData.personality}`);
+        if (cardData.focusIndustry) info.push(`${FIELD_DISPLAY_NAMES.focusIndustry}：${cardData.focusIndustry}`);
+        if (cardData.circles) info.push(`${FIELD_DISPLAY_NAMES.circles}：${cardData.circles}`);
+        if (cardData.companyIntro) info.push(`${FIELD_DISPLAY_NAMES.companyIntro}：${cardData.companyIntro}`);
         
         if (cardData.mainBusiness && cardData.mainBusiness.length > 0) {
             const businessList = cardData.mainBusiness.map(item => item.name).join('、');
-            info.push(`主营业务：${businessList}`);
+            info.push(`${FIELD_DISPLAY_NAMES.mainBusiness}：${businessList}`);
         }
         
         if (cardData.serviceNeeds && cardData.serviceNeeds.length > 0) {
             const needsList = cardData.serviceNeeds.map(item => item.name).join('、');
-            info.push(`服务需求：${needsList}`);
+            info.push(`${FIELD_DISPLAY_NAMES.serviceNeeds}：${needsList}`);
         }
         
         if (cardData.companyImageIds && cardData.companyImageIds.length > 0) {
-            info.push(`公司图片：已上传 ${cardData.companyImageIds.length} 张`);
+            info.push(`${FIELD_DISPLAY_NAMES.companyImages}：已上传 ${cardData.companyImageIds.length} 张`);
         }
         
-        if (cardData.introVideoUrl) info.push(`介绍视频：已上传`);
-        if (cardData.videoChannelId) info.push(`视频号：${cardData.videoChannelId}`);
+        if (cardData.introVideoUrl) info.push(`${FIELD_DISPLAY_NAMES.introVideoUrl}：已上传`);
+        if (cardData.videoChannelId) info.push(`${FIELD_DISPLAY_NAMES.videoChannelId}：${cardData.videoChannelId}`);
         
         return info.join('\n');
     };

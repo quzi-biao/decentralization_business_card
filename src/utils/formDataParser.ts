@@ -91,30 +91,10 @@ export function validateFormData(formData: Partial<BusinessCardData>): string[] 
 /**
  * 字段名称映射（用于显示）
  */
-export const FIELD_NAMES: Record<string, string> = {
-    realName: '姓名',
-    position: '职位',
-    companyName: '公司名称',
-    industry: '行业领域',
-    phone: '电话',
-    email: '邮箱',
-    wechat: '微信',
-    wechatQrCode: '微信二维码',
-    address: '地址',
-    aboutMe: '个人简介',
-    hometown: '家乡',
-    residence: '常驻',
-    hobbies: '兴趣爱好',
-    personality: '性格特点',
-    focusIndustry: '关注行业',
-    circles: '加入的圈层',
-    companyIntro: '公司简介',
-    mainBusiness: '主营业务',
-    serviceNeeds: '服务需求',
-    companyImages: '公司图片',
-    introVideoUrl: '个人介绍视频',
-    videoChannelId: '视频号ID',
-};
+// 导入统一的字段名称配置
+import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
+
+export const FIELD_NAMES = FIELD_DISPLAY_NAMES;
 
 /**
  * 格式化缺失字段列表为可读文本
