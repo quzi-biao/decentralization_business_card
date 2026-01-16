@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getIdentity, getPrivateKey } from './identityService';
 import { encryptAES, decryptAES, generateAESKey, encryptWithPublicKey, signData, hashData } from '../utils/crypto';
-import { getPrivateKey, getIdentity } from './identityService';
 import { uploadToMinio, downloadFromMinio } from './minioService';
+import { DataAccessControlService } from './dataAccessControl';
 
 /**
  * 存储服务
@@ -40,11 +41,15 @@ export async function uploadEncryptedCard(cardData: any): Promise<EncryptedPacka
         throw new Error('Identity not initialized');
     }
     
+    // 根据可见性设置过滤名片数据
+    const filteredCardData = await DataAccessControlService.filterCardDataForExchange(cardData);
+    console.log('Card data filtered for exchange. Original fields:', Object.keys(cardData).length, 'Filtered fields:', Object.keys(filteredCardData).length);
+    
     // 生成 AES 密钥
     const aesKey = generateAESKey();
     
-    // 用 AES 加密名片数据
-    const cardJson = JSON.stringify(cardData);
+    // 用 AES 加密过滤后的名片数据
+    const cardJson = JSON.stringify(filteredCardData);
     const encryptedData = encryptAES(cardJson, aesKey);
     
     // 用自己的公钥加密 AES 密钥
