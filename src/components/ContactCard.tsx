@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tag } from '../store/useTagStore';
 import { LazyImage } from './LazyImage';
+import { ThemeConfig } from '../constants/theme';
 
 interface ContactCardProps {
     avatarId?: string;
@@ -87,7 +88,7 @@ const ContactCard: React.FC<ContactCardProps> = ({
             {/* 备注 */}
             {note && (
                 <View style={styles.noteContainer}>
-                    <MaterialIcons name="note" size={11} color="#94a3b8" />
+                    <MaterialIcons name="note" size={11} color={ThemeConfig.colors.textTertiary} />
                     <Text style={styles.noteText} numberOfLines={1}>
                         {note}
                     </Text>
@@ -100,13 +101,13 @@ const ContactCard: React.FC<ContactCardProps> = ({
 const styles = StyleSheet.create({
     card: {
         width: '48%',
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
         padding: 14,
-        marginBottom: 12,
+        marginBottom: ThemeConfig.spacing.md,
         borderWidth: 1.5,
         borderColor: '#C7D2FE',
-        shadowColor: '#4F46E5',
+        shadowColor: ThemeConfig.colors.primary,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 8,
@@ -115,14 +116,14 @@ const styles = StyleSheet.create({
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        marginBottom: 10,
+        marginBottom: ThemeConfig.spacing.sm + 2,
     },
     avatar: {
         width: 44,
         height: 44,
         borderRadius: 22,
         backgroundColor: '#EEF2FF',
-        borderWidth: 2,
+        borderWidth: ThemeConfig.borderWidth.base,
         borderColor: '#C7D2FE',
         alignItems: 'center',
         justifyContent: 'center',
@@ -133,33 +134,33 @@ const styles = StyleSheet.create({
         borderRadius: 22,
     },
     avatarText: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.xl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.primary,
     },
     info: {
         flex: 1,
-        marginLeft: 10,
+        marginLeft: ThemeConfig.spacing.sm + 2,
     },
     name: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
         marginBottom: 3,
     },
     position: {
-        fontSize: 12,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textSecondary,
         marginBottom: 2,
     },
     company: {
-        fontSize: 11,
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.xs,
+        color: ThemeConfig.colors.textTertiary,
     },
     tagsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 4,
+        gap: ThemeConfig.spacing.xs,
         marginBottom: 6,
     },
     tag: {
@@ -167,27 +168,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 6,
         paddingVertical: 3,
-        borderRadius: 10,
-        borderWidth: 1,
+        borderRadius: ThemeConfig.borderRadius.sm + 2,
+        borderWidth: ThemeConfig.borderWidth.thin,
     },
     tagText: {
         fontSize: 10,
-        fontWeight: '700',
+        fontWeight: ThemeConfig.fontWeight.bold,
     },
     noteContainer: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        backgroundColor: '#F8FAFC',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
         padding: 6,
         borderRadius: 6,
-        gap: 4,
-        borderWidth: 1,
-        borderColor: '#E2E8F0',
+        gap: ThemeConfig.spacing.xs,
+        borderWidth: ThemeConfig.borderWidth.thin,
+        borderColor: ThemeConfig.colors.border,
     },
     noteText: {
         flex: 1,
-        fontSize: 11,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.xs,
+        color: ThemeConfig.colors.textSecondary,
         lineHeight: 14,
     },
 });

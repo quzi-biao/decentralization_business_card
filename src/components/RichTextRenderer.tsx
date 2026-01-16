@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, StyleSheet, TextStyle } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { ThemeConfig } from '../constants/theme';
 
 interface RichTextRendererProps {
   content: string;
@@ -68,85 +69,85 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({ content, sty
 
 const styles = StyleSheet.create({
   text: {
-    fontSize: 15,
+    fontSize: ThemeConfig.fontSize.md,
     color: '#475569',
     lineHeight: 24,
   },
   heading1: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: ThemeConfig.fontSize.xxxl,
+    fontWeight: ThemeConfig.fontWeight.bold,
+    color: ThemeConfig.colors.textPrimary,
+    marginTop: ThemeConfig.spacing.base,
+    marginBottom: ThemeConfig.spacing.sm,
   },
   heading2: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginTop: 12,
+    fontSize: ThemeConfig.fontSize.xxl,
+    fontWeight: ThemeConfig.fontWeight.semibold,
+    color: ThemeConfig.colors.textPrimary,
+    marginTop: ThemeConfig.spacing.md,
     marginBottom: 6,
   },
   heading3: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: ThemeConfig.fontSize.xl,
+    fontWeight: ThemeConfig.fontWeight.semibold,
     color: '#334155',
-    marginTop: 10,
-    marginBottom: 4,
+    marginTop: ThemeConfig.spacing.sm + 2,
+    marginBottom: ThemeConfig.spacing.xs,
   },
   paragraph: {
-    fontSize: 15,
+    fontSize: ThemeConfig.fontSize.md,
     color: '#475569',
     lineHeight: 24,
-    marginBottom: 12,
+    marginBottom: ThemeConfig.spacing.md,
   },
   strong: {
-    fontWeight: '700',
-    color: '#1e293b',
+    fontWeight: ThemeConfig.fontWeight.bold,
+    color: ThemeConfig.colors.textPrimary,
   },
   em: {
     fontStyle: 'italic',
     color: '#475569',
   },
   link: {
-    color: '#4F46E5',
+    color: ThemeConfig.colors.primary,
     textDecorationLine: 'underline',
   },
   listItem: {
-    fontSize: 15,
+    fontSize: ThemeConfig.fontSize.md,
     color: '#475569',
     lineHeight: 24,
-    marginBottom: 4,
+    marginBottom: ThemeConfig.spacing.xs,
   },
   bulletList: {
-    marginBottom: 12,
+    marginBottom: ThemeConfig.spacing.md,
   },
   orderedList: {
-    marginBottom: 12,
+    marginBottom: ThemeConfig.spacing.md,
   },
   codeInline: {
     fontFamily: 'Courier',
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 4,
+    backgroundColor: ThemeConfig.colors.backgroundTertiary,
+    paddingHorizontal: ThemeConfig.spacing.xs,
     paddingVertical: 2,
-    borderRadius: 4,
-    fontSize: 14,
+    borderRadius: ThemeConfig.borderRadius.sm,
+    fontSize: ThemeConfig.fontSize.base,
     color: '#dc2626',
   },
   codeBlock: {
     fontFamily: 'Courier',
-    backgroundColor: '#f1f5f9',
-    padding: 12,
-    borderRadius: 8,
-    fontSize: 14,
-    color: '#1e293b',
-    marginBottom: 12,
+    backgroundColor: ThemeConfig.colors.backgroundTertiary,
+    padding: ThemeConfig.spacing.md,
+    borderRadius: ThemeConfig.borderRadius.base,
+    fontSize: ThemeConfig.fontSize.base,
+    color: ThemeConfig.colors.textPrimary,
+    marginBottom: ThemeConfig.spacing.md,
   },
   blockquote: {
     borderLeftWidth: 4,
-    borderLeftColor: '#cbd5e1',
-    paddingLeft: 12,
-    marginLeft: 8,
+    borderLeftColor: ThemeConfig.colors.textDisabled,
+    paddingLeft: ThemeConfig.spacing.md,
+    marginLeft: ThemeConfig.spacing.sm,
     fontStyle: 'italic',
-    color: '#64748b',
+    color: ThemeConfig.colors.textSecondary,
   },
 });

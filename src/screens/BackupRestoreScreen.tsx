@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { DataManager } from '../services/dataManager';
 import * as Clipboard from 'expo-clipboard';
 import PageHeader from '../components/PageHeader';
+import { ThemeConfig } from '../constants/theme';
 
 interface Props {
     onClose: () => void;
@@ -116,12 +117,12 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
                 <PageHeader 
                     title="备份与恢复"
                     onBack={onClose}
-                    backgroundColor="#f8fafc"
+                    backgroundColor={ThemeConfig.colors.backgroundSecondary}
                 />
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.infoCard}>
-                    <MaterialIcons name="info" size={24} color="#4F46E5" />
+                    <MaterialIcons name="info" size={24} color={ThemeConfig.colors.primary} />
                     <View style={styles.infoContent}>
                         <Text style={styles.infoTitle}>关于备份</Text>
                         <Text style={styles.infoText}>
@@ -138,7 +139,7 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
                         disabled={loading}
                     >
                         <View style={styles.actionIcon}>
-                            <MaterialIcons name="backup" size={32} color="#4F46E5" />
+                            <MaterialIcons name="backup" size={32} color={ThemeConfig.colors.primary} />
                         </View>
                         <View style={styles.actionContent}>
                             <Text style={styles.actionTitle}>立即备份</Text>
@@ -146,7 +147,7 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
                                 导出所有数据到 JSON 文件
                             </Text>
                         </View>
-                        <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
+                        <MaterialIcons name="chevron-right" size={24} color={ThemeConfig.colors.textDisabled} />
                     </TouchableOpacity>
 
                     <TouchableOpacity 
@@ -154,7 +155,7 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
                         onPress={handleAutoBackup}
                     >
                         <View style={styles.actionIcon}>
-                            <MaterialIcons name="schedule" size={32} color="#10b981" />
+                            <MaterialIcons name="schedule" size={32} color={ThemeConfig.colors.success} />
                         </View>
                         <View style={styles.actionContent}>
                             <Text style={styles.actionTitle}>自动备份设置</Text>
@@ -162,7 +163,7 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
                                 设置定期自动备份（开发中）
                             </Text>
                         </View>
-                        <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
+                        <MaterialIcons name="chevron-right" size={24} color={ThemeConfig.colors.textDisabled} />
                     </TouchableOpacity>
                 </View>
 
@@ -173,7 +174,7 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
                         onPress={handleRestore}
                     >
                         <View style={styles.actionIcon}>
-                            <MaterialIcons name="restore" size={32} color="#f59e0b" />
+                            <MaterialIcons name="restore" size={32} color={ThemeConfig.colors.warning} />
                         </View>
                         <View style={styles.actionContent}>
                             <Text style={styles.actionTitle}>从备份恢复</Text>
@@ -181,12 +182,12 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
                                 从备份文件恢复数据
                             </Text>
                         </View>
-                        <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
+                        <MaterialIcons name="chevron-right" size={24} color={ThemeConfig.colors.textDisabled} />
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.warningCard}>
-                    <MaterialIcons name="warning" size={20} color="#f59e0b" />
+                    <MaterialIcons name="warning" size={20} color={ThemeConfig.colors.warning} />
                     <Text style={styles.warningText}>
                         备份文件不包含助记词和私钥，请单独妥善保管助记词。
                     </Text>
@@ -200,61 +201,57 @@ const BackupRestoreScreen: React.FC<Props> = ({ onClose }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     scrollContent: {
-        padding: 16,
+        padding: ThemeConfig.spacing.base,
     },
     infoCard: {
         backgroundColor: '#ede9fe',
-        borderRadius: 12,
-        padding: 16,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         flexDirection: 'row',
-        gap: 12,
-        marginBottom: 24,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
     },
     infoContent: {
         flex: 1,
     },
     infoTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#4F46E5',
-        marginBottom: 4,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     infoText: {
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#6366f1',
         lineHeight: 18,
     },
     section: {
-        marginBottom: 24,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
     },
     sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 12,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.md,
     },
     actionCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.md,
+        ...ThemeConfig.shadow.sm,
     },
     actionIcon: {
         width: 56,
         height: 56,
-        borderRadius: 12,
-        backgroundColor: '#f8fafc',
+        borderRadius: ThemeConfig.borderRadius.md,
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -262,28 +259,28 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     actionTitle: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 4,
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     actionDescription: {
-        fontSize: 13,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.base - 1,
+        color: ThemeConfig.colors.textSecondary,
         lineHeight: 18,
     },
     warningCard: {
         backgroundColor: '#fffbeb',
-        borderRadius: 12,
-        padding: 16,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         flexDirection: 'row',
-        gap: 12,
-        borderWidth: 1,
+        gap: ThemeConfig.spacing.md,
+        borderWidth: ThemeConfig.borderWidth.thin,
         borderColor: '#fef3c7',
     },
     warningText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#78350f',
         lineHeight: 18,
     },

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import PageHeader from '../components/PageHeader';
+import { ThemeConfig } from '../constants/theme';
 
 interface Props {
     onClose: () => void;
@@ -88,7 +89,7 @@ const TutorialScreen: React.FC<Props> = ({ onClose }) => {
                 <PageHeader 
                     title="使用教程"
                     onBack={onClose}
-                    backgroundColor="#f8fafc"
+                    backgroundColor={ThemeConfig.colors.backgroundSecondary}
                 />
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -126,32 +127,32 @@ const TutorialScreen: React.FC<Props> = ({ onClose }) => {
                     <Text style={styles.featuresTitle}>核心功能</Text>
                     
                     <View style={styles.featureItem}>
-                        <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                        <MaterialIcons name="check-circle" size={20} color={ThemeConfig.colors.success} />
                         <Text style={styles.featureText}>AI 智能对话创建名片</Text>
                     </View>
 
                     <View style={styles.featureItem}>
-                        <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                        <MaterialIcons name="check-circle" size={20} color={ThemeConfig.colors.success} />
                         <Text style={styles.featureText}>扫码快速交换名片</Text>
                     </View>
 
                     <View style={styles.featureItem}>
-                        <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                        <MaterialIcons name="check-circle" size={20} color={ThemeConfig.colors.success} />
                         <Text style={styles.featureText}>加密存储保护隐私</Text>
                     </View>
 
                     <View style={styles.featureItem}>
-                        <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                        <MaterialIcons name="check-circle" size={20} color={ThemeConfig.colors.success} />
                         <Text style={styles.featureText}>去中心化身份管理</Text>
                     </View>
 
                     <View style={styles.featureItem}>
-                        <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                        <MaterialIcons name="check-circle" size={20} color={ThemeConfig.colors.success} />
                         <Text style={styles.featureText}>数据备份与恢复</Text>
                     </View>
 
                     <View style={styles.featureItem}>
-                        <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                        <MaterialIcons name="check-circle" size={20} color={ThemeConfig.colors.success} />
                         <Text style={styles.featureText}>自定义名片模板</Text>
                     </View>
                 </View>
@@ -168,7 +169,7 @@ const TutorialScreen: React.FC<Props> = ({ onClose }) => {
                     <MaterialIcons 
                         name="chevron-left" 
                         size={24} 
-                        color={currentStep === 0 ? '#cbd5e1' : '#4F46E5'} 
+                        color={currentStep === 0 ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.primary} 
                     />
                     <Text style={[styles.navButtonText, currentStep === 0 && styles.navButtonTextDisabled]}>
                         上一步
@@ -182,7 +183,7 @@ const TutorialScreen: React.FC<Props> = ({ onClose }) => {
                     <Text style={styles.nextButtonText}>
                         {currentStep === steps.length - 1 ? '开始使用' : '下一步'}
                     </Text>
-                    <MaterialIcons name="chevron-right" size={24} color="#ffffff" />
+                    <MaterialIcons name="chevron-right" size={24} color={ThemeConfig.colors.white} />
                 </TouchableOpacity>
             </View>
             </View>
@@ -193,10 +194,10 @@ const TutorialScreen: React.FC<Props> = ({ onClose }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     scrollContent: {
-        padding: 16,
+        padding: ThemeConfig.spacing.base,
     },
     spacer: {
         height: 100,
@@ -204,29 +205,29 @@ const styles = StyleSheet.create({
     stepIndicator: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 8,
-        marginBottom: 32,
+        gap: ThemeConfig.spacing.sm,
+        marginBottom: ThemeConfig.spacing.xxxl - 8,
     },
     stepDot: {
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#e2e8f0',
+        backgroundColor: ThemeConfig.colors.border,
     },
     stepDotActive: {
         width: 24,
-        backgroundColor: '#4F46E5',
+        backgroundColor: ThemeConfig.colors.primary,
     },
     stepDotCompleted: {
-        backgroundColor: '#10b981',
+        backgroundColor: ThemeConfig.colors.success,
     },
     stepCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 20,
-        padding: 32,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        padding: ThemeConfig.spacing.xxxl - 8,
         alignItems: 'center',
-        marginBottom: 24,
-        shadowColor: '#000',
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
+        shadowColor: ThemeConfig.colors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 12,
@@ -238,95 +239,95 @@ const styles = StyleSheet.create({
         borderRadius: 60,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 24,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
     },
     stepTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1e293b',
-        marginBottom: 12,
+        fontSize: ThemeConfig.fontSize.xxxl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.md,
         textAlign: 'center',
     },
     stepDescription: {
-        fontSize: 15,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.md,
+        color: ThemeConfig.colors.textSecondary,
         lineHeight: 22,
         textAlign: 'center',
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     stepCounter: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.base - 1,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textTertiary,
     },
     featuresList: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 20,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        padding: ThemeConfig.spacing.lg,
     },
     featuresTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 16,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.base,
     },
     featureItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
-        marginBottom: 12,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.md,
     },
     featureText: {
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
         color: '#475569',
     },
     footer: {
-        backgroundColor: '#ffffff',
-        borderTopWidth: 1,
-        borderTopColor: '#e2e8f0',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        paddingBottom: 24,
+        backgroundColor: ThemeConfig.colors.background,
+        borderTopWidth: ThemeConfig.borderWidth.thin,
+        borderTopColor: ThemeConfig.colors.border,
+        paddingHorizontal: ThemeConfig.spacing.base,
+        paddingVertical: ThemeConfig.spacing.md,
+        paddingBottom: ThemeConfig.spacing.xxxl - 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
     },
     navButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: 12,
-        backgroundColor: '#ffffff',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        paddingHorizontal: ThemeConfig.spacing.lg,
+        paddingVertical: ThemeConfig.spacing.md,
+        borderRadius: ThemeConfig.borderRadius.md,
+        backgroundColor: ThemeConfig.colors.background,
+        borderWidth: ThemeConfig.borderWidth.thin,
+        borderColor: ThemeConfig.colors.border,
     },
     navButtonDisabled: {
         opacity: 0.4,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     navButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
     navButtonTextDisabled: {
-        color: '#94a3b8',
+        color: ThemeConfig.colors.textTertiary,
     },
     nextButton: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
-        borderRadius: 12,
-        backgroundColor: '#4F46E5',
+        paddingVertical: ThemeConfig.spacing.md,
+        borderRadius: ThemeConfig.borderRadius.md,
+        backgroundColor: ThemeConfig.colors.primary,
         gap: 4,
     },
     nextButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#ffffff',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.white,
     },
 });
 

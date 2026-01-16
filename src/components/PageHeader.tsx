@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { ThemeConfig } from '../constants/theme';
 
 interface PageHeaderProps {
     title: string;
@@ -25,7 +26,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     title, 
     onBack, 
     rightButton,
-    backgroundColor = '#ffffff'
+    backgroundColor = ThemeConfig.colors.background
 }) => {
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor }]} edges={['top']}>
@@ -36,7 +37,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                     onPress={onBack}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                    <MaterialIcons name="arrow-back" size={24} color="#1e293b" />
+                    <MaterialIcons name="arrow-back" size={24} color={ThemeConfig.colors.textPrimary} />
                 </TouchableOpacity>
 
                 {/* 中间标题 */}
@@ -55,7 +56,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
                             {rightButton.icon ? (
-                                <MaterialIcons name={rightButton.icon as any} size={24} color="#4F46E5" />
+                                <MaterialIcons name={rightButton.icon as any} size={24} color={ThemeConfig.colors.primary} />
                             ) : rightButton.text ? (
                                 <Text style={styles.rightButtonText}>{rightButton.text}</Text>
                             ) : null}
@@ -69,16 +70,16 @@ const PageHeader: React.FC<PageHeaderProps> = ({
 
 const styles = StyleSheet.create({
     safeArea: {
-        backgroundColor: '#ffffff',
+        backgroundColor: ThemeConfig.colors.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         height: 56,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        paddingHorizontal: ThemeConfig.spacing.base,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.borderLight,
     },
     backButton: {
         width: 40,
@@ -90,12 +91,12 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 16,
+        paddingHorizontal: ThemeConfig.spacing.base,
     },
     title: {
-        fontSize: 17,
-        fontWeight: '600',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.lg + 1,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
         textAlign: 'center',
     },
     rightButtonContainer: {
@@ -109,9 +110,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     rightButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
 });
 

@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import CardEvaluation from './CardEvaluation';
 import { BusinessCardData } from '../store/useCardStore';
 import { EvaluationResult } from '../services/evaluationPersistence';
+import { ThemeConfig } from '../constants/theme';
 
 interface ProgressHeaderProps {
     progress: number;
@@ -35,12 +36,12 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
 
     // 获取评分颜色
     const getScoreColor = (score: number): string => {
-        if (score >= 90) return '#10b981'; // 优秀 - 绿色
-        if (score >= 80) return '#3b82f6'; // 良好 - 蓝色
+        if (score >= 90) return ThemeConfig.colors.success; // 优秀 - 绿色
+        if (score >= 80) return ThemeConfig.colors.info; // 良好 - 蓝色
         if (score >= 70) return '#8b5cf6'; // 中等偏上 - 紫色
-        if (score >= 60) return '#f59e0b'; // 中等 - 橙色
+        if (score >= 60) return ThemeConfig.colors.warning; // 中等 - 橙色
         if (score >= 50) return '#f97316'; // 中等偏下 - 深橙色
-        return '#ef4444'; // 不及格 - 红色
+        return ThemeConfig.colors.error; // 不及格 - 红色
     };
 
     // 处理评分加载
@@ -50,7 +51,7 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
     return (
         <View style={styles.header}>
             <View style={styles.headerLeft}>
-                <MaterialIcons name="smart-toy" size={24} color="#4F46E5" />
+                <MaterialIcons name="smart-toy" size={24} color={ThemeConfig.colors.primary} />
                 <Text style={styles.headerTitle}>AI 名片助手</Text>
                 {onHelpPress && (
                     <TouchableOpacity 
@@ -58,7 +59,7 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
                         style={styles.helpButton}
                         activeOpacity={0.7}
                     >
-                        <MaterialIcons name="help-outline" size={20} color="#64748b" />
+                        <MaterialIcons name="help-outline" size={20} color={ThemeConfig.colors.textSecondary} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -116,61 +117,61 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        backgroundColor: '#f8fafc',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
+        paddingHorizontal: ThemeConfig.spacing.lg,
+        paddingVertical: ThemeConfig.spacing.base,
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.border,
     },
     headerLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1e293b',
-        marginLeft: 8,
+        fontSize: ThemeConfig.fontSize.xl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
+        marginLeft: ThemeConfig.spacing.sm,
     },
     helpButton: {
-        padding: 4,
-        marginLeft: 4,
+        padding: ThemeConfig.spacing.xs,
+        marginLeft: ThemeConfig.spacing.xs,
     },
     headerRight: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
     },
     progressContainer: {
         alignItems: 'flex-end',
-        gap: 4,
+        gap: ThemeConfig.spacing.xs,
     },
     progressInfo: {
         flexDirection: 'row',
         alignItems: 'baseline',
-        gap: 4,
+        gap: ThemeConfig.spacing.xs,
     },
     progressText: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.xxl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.primary,
     },
     progressLabel: {
-        fontSize: 11,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.xs,
+        color: ThemeConfig.colors.textSecondary,
     },
     progressBarContainer: {
         width: 80,
         height: 4,
-        backgroundColor: '#e2e8f0',
-        borderRadius: 2,
+        backgroundColor: ThemeConfig.colors.border,
+        borderRadius: ThemeConfig.borderRadius.sm,
         overflow: 'hidden',
     },
     progressBar: {
         height: '100%',
-        backgroundColor: '#4F46E5',
-        borderRadius: 2,
+        backgroundColor: ThemeConfig.colors.primary,
+        borderRadius: ThemeConfig.borderRadius.sm,
     },
     scoreBadge: {
         flexDirection: 'row',
@@ -178,12 +179,12 @@ const styles = StyleSheet.create({
         gap: 2,
         paddingHorizontal: 6,
         paddingVertical: 2,
-        borderRadius: 4,
-        marginTop: 4,
+        borderRadius: ThemeConfig.borderRadius.sm,
+        marginTop: ThemeConfig.spacing.xs,
     },
     scoreText: {
-        fontSize: 11,
-        fontWeight: '600',
+        fontSize: ThemeConfig.fontSize.xs,
+        fontWeight: ThemeConfig.fontWeight.semibold,
     },
 });
 

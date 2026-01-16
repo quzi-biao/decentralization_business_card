@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useExchangeStore } from '../store/useExchangeStore';
+import { ThemeConfig } from '../constants/theme';
 
 interface RevokeListScreenProps {
     onClose: () => void;
@@ -55,18 +56,18 @@ const RevokeListScreen: React.FC<RevokeListScreenProps> = ({ onClose }) => {
             {/* 顶部导航栏 */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onClose} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back" size={24} color="#1e293b" />
+                    <MaterialIcons name="arrow-back" size={24} color={ThemeConfig.colors.textPrimary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>撤销列表</Text>
                 <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-                    <MaterialIcons name="refresh" size={24} color="#4F46E5" />
+                    <MaterialIcons name="refresh" size={24} color={ThemeConfig.colors.primary} />
                 </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.scrollView}>
                 {/* 说明 */}
                 <View style={styles.infoCard}>
-                    <MaterialIcons name="info-outline" size={20} color="#4F46E5" />
+                    <MaterialIcons name="info-outline" size={20} color={ThemeConfig.colors.primary} />
                     <Text style={styles.infoText}>
                         删除名片后，对方将无法再访问您的名片信息，且此操作不可恢复。
                     </Text>
@@ -83,7 +84,7 @@ const RevokeListScreen: React.FC<RevokeListScreenProps> = ({ onClose }) => {
                 {/* 名片列表 */}
                 {activeExchanges.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <MaterialIcons name="inbox" size={64} color="#cbd5e1" />
+                        <MaterialIcons name="inbox" size={64} color={ThemeConfig.colors.textDisabled} />
                         <Text style={styles.emptyTitle}>暂无交换记录</Text>
                         <Text style={styles.emptyHint}>
                             去"交换"页面扫描对方的二维码来交换名片吧
@@ -128,7 +129,7 @@ const RevokeListScreen: React.FC<RevokeListScreenProps> = ({ onClose }) => {
                                             cardData?.realName || '该用户'
                                         )}
                                     >
-                                        <MaterialIcons name="delete-outline" size={24} color="#ef4444" />
+                                        <MaterialIcons name="delete-outline" size={24} color={ThemeConfig.colors.error} />
                                         <Text style={styles.deleteButtonText}>删除</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -146,31 +147,31 @@ const RevokeListScreen: React.FC<RevokeListScreenProps> = ({ onClose }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: '#ffffff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        paddingHorizontal: ThemeConfig.spacing.base,
+        paddingVertical: ThemeConfig.spacing.md,
+        backgroundColor: ThemeConfig.colors.background,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.borderLight,
     },
     backButton: {
-        padding: 8,
+        padding: ThemeConfig.spacing.sm,
         marginLeft: -8,
     },
     headerTitle: {
-        fontSize: 17,
-        fontWeight: '600',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.lg + 1,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
         flex: 1,
         textAlign: 'center',
     },
     refreshButton: {
-        padding: 8,
+        padding: ThemeConfig.spacing.sm,
         marginRight: -8,
     },
     scrollView: {
@@ -180,59 +181,51 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#eff6ff',
-        margin: 16,
-        padding: 16,
-        borderRadius: 12,
-        gap: 12,
+        margin: ThemeConfig.spacing.base,
+        padding: ThemeConfig.spacing.base,
+        borderRadius: ThemeConfig.borderRadius.md,
+        gap: ThemeConfig.spacing.md,
     },
     infoText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#1e40af',
         lineHeight: 20,
     },
     statsCard: {
-        backgroundColor: '#ffffff',
-        marginHorizontal: 16,
-        marginBottom: 16,
-        padding: 20,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        backgroundColor: ThemeConfig.colors.background,
+        marginHorizontal: ThemeConfig.spacing.base,
+        marginBottom: ThemeConfig.spacing.base,
+        padding: ThemeConfig.spacing.lg,
+        borderRadius: ThemeConfig.borderRadius.md,
+        ...ThemeConfig.shadow.sm,
     },
     statItem: {
         alignItems: 'center',
     },
     statValue: {
         fontSize: 32,
-        fontWeight: '700',
-        color: '#4F46E5',
-        marginBottom: 4,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.primary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     statLabel: {
-        fontSize: 13,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.base - 1,
+        color: ThemeConfig.colors.textSecondary,
     },
     listContainer: {
-        paddingHorizontal: 16,
+        paddingHorizontal: ThemeConfig.spacing.base,
     },
     exchangeItem: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
+        marginBottom: ThemeConfig.spacing.md,
+        ...ThemeConfig.shadow.sm,
     },
     exchangeInfo: {
         flexDirection: 'row',
-        marginBottom: 12,
+        marginBottom: ThemeConfig.spacing.md,
     },
     avatar: {
         width: 56,
@@ -241,40 +234,40 @@ const styles = StyleSheet.create({
         backgroundColor: '#e0e7ff',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
+        marginRight: ThemeConfig.spacing.md,
     },
     avatarText: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.xxxl,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
     infoContent: {
         flex: 1,
     },
     name: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 4,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     position: {
-        fontSize: 14,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textSecondary,
         marginBottom: 2,
     },
     company: {
-        fontSize: 13,
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.base - 1,
+        color: ThemeConfig.colors.textTertiary,
         marginBottom: 6,
     },
     exchangeTime: {
-        fontSize: 12,
-        color: '#94a3b8',
-        marginBottom: 4,
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textTertiary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     did: {
-        fontSize: 11,
-        color: '#cbd5e1',
+        fontSize: ThemeConfig.fontSize.xs,
+        color: ThemeConfig.colors.textDisabled,
         fontFamily: 'monospace',
     },
     deleteButton: {
@@ -282,36 +275,36 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#fef2f2',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 8,
+        paddingVertical: ThemeConfig.spacing.sm + 2,
+        paddingHorizontal: ThemeConfig.spacing.base,
+        borderRadius: ThemeConfig.borderRadius.base,
         gap: 6,
     },
     deleteButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#ef4444',
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.error,
     },
     emptyState: {
         alignItems: 'center',
         paddingVertical: 80,
-        paddingHorizontal: 32,
+        paddingHorizontal: ThemeConfig.spacing.xxxl - 8,
     },
     emptyTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#64748b',
-        marginTop: 16,
-        marginBottom: 8,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textSecondary,
+        marginTop: ThemeConfig.spacing.base,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     emptyHint: {
-        fontSize: 14,
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textTertiary,
         textAlign: 'center',
         lineHeight: 20,
     },
     spacer: {
-        height: 24,
+        height: ThemeConfig.spacing.xxxl - 16,
     },
 });
 

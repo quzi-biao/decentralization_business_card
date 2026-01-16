@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Image, ImageProps, ActivityIndicator, View, StyleSheet } from 'react-native';
 import { fileManager } from '../services/fileManager';
 import { imageCache } from '../utils/imageCache';
+import { ThemeConfig } from '../constants/theme';
 
 interface LazyImageProps extends Omit<ImageProps, 'source'> {
   imageId: string | null | undefined;
@@ -77,7 +78,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   if (loading && showLoader) {
     return (
       <View style={[styles.loaderContainer, style]}>
-        <ActivityIndicator size="small" color="#64748b" />
+        <ActivityIndicator size="small" color={ThemeConfig.colors.textSecondary} />
       </View>
     );
   }
@@ -108,17 +109,17 @@ const styles = StyleSheet.create({
   loaderContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: ThemeConfig.colors.backgroundTertiary,
   },
   placeholderContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: ThemeConfig.colors.backgroundTertiary,
   },
   placeholder: {
     width: '60%',
     height: '60%',
-    backgroundColor: '#cbd5e1',
-    borderRadius: 8,
+    backgroundColor: ThemeConfig.colors.textDisabled,
+    borderRadius: ThemeConfig.borderRadius.base,
   },
 });
