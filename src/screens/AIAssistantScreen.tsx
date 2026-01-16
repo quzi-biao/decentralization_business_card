@@ -171,6 +171,7 @@ const AIAssistantScreen: React.FC = () => {
                     setMessages(recentMessages);
                     setLoadedDates(loadedDatesList);
                     setHasMoreHistory(loadedDatesList.length < allDates.length);
+                    setInitializing(false);
                     return;
                 }
             }
