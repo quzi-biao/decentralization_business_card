@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
         borderColor: '#C7D2FE',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden'
     },
     avatarImage: {
         width: '100%',
