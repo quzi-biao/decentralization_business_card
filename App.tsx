@@ -88,7 +88,8 @@ export default function App() {
               letterSpacing: 0,
               marginTop: 4,
             },
-            lazy: true,
+            lazy: false,
+            detachInactiveScreens: false,
           }}
         >
           <Tab.Screen
