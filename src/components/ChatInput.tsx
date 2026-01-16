@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Alert, ActionSheetIOS, Platform, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { fileManager, FileMetadata } from '../services/fileManager';
+import { ThemeConfig } from '../constants/theme';
 
 interface ChatInputProps {
     value: string;
@@ -141,7 +142,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     <MaterialIcons 
                         name="add-circle-outline" 
                         size={28} 
-                        color={disabled || uploading ? '#cbd5e1' : '#4F46E5'} 
+                        color={disabled || uploading ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.primary} 
                     />
                 </TouchableOpacity>
                 <TextInput
@@ -149,7 +150,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     value={value}
                     onChangeText={onChangeText}
                     placeholder={placeholder}
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={ThemeConfig.colors.textTertiary}
                     multiline
                     maxLength={500}
                     editable={!disabled && !uploading}
@@ -165,7 +166,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     <MaterialIcons 
                         name="send" 
                         size={24} 
-                        color={(!value.trim() && !selectedImageMetadata || disabled || uploading) ? '#cbd5e1' : '#ffffff'} 
+                        color={(!value.trim() && !selectedImageMetadata || disabled || uploading) ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.white} 
                     />
                 </TouchableOpacity>
             </View>
@@ -175,36 +176,36 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#ffffff',
-        borderTopWidth: 1,
-        borderTopColor: '#e2e8f0',
+        backgroundColor: ThemeConfig.colors.background,
+        borderTopWidth: ThemeConfig.borderWidth.thin,
+        borderTopColor: ThemeConfig.colors.border,
     },
     imagePreviewContainer: {
-        padding: 12,
+        padding: ThemeConfig.spacing.md,
         paddingBottom: 0,
     },
     imagePreview: {
         width: 100,
         height: 100,
-        borderRadius: 8,
-        backgroundColor: '#f1f5f9',
+        borderRadius: ThemeConfig.borderRadius.base,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
     },
     removeImageButton: {
         position: 'absolute',
-        top: 8,
-        right: 8,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        top: ThemeConfig.spacing.sm,
+        right: ThemeConfig.spacing.sm,
+        width: ThemeConfig.iconSize.lg,
+        height: ThemeConfig.iconSize.lg,
+        borderRadius: ThemeConfig.iconSize.lg / 2,
+        backgroundColor: ThemeConfig.colors.overlay,
         alignItems: 'center',
         justifyContent: 'center',
     },
     inputRow: {
         flexDirection: 'row',
         alignItems: 'flex-end',
-        padding: 16,
-        gap: 12,
+        padding: ThemeConfig.spacing.base,
+        gap: ThemeConfig.spacing.md,
     },
     addButton: {
         width: 44,
@@ -216,23 +217,23 @@ const styles = StyleSheet.create({
         flex: 1,
         minHeight: 40,
         maxHeight: 100,
-        backgroundColor: '#f1f5f9',
-        borderRadius: 20,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        fontSize: 15,
-        color: '#1e293b',
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
+        borderRadius: ThemeConfig.borderRadius.xl,
+        paddingHorizontal: ThemeConfig.spacing.base,
+        paddingVertical: ThemeConfig.spacing.sm + 2,
+        fontSize: ThemeConfig.fontSize.md,
+        color: ThemeConfig.colors.textPrimary,
     },
     sendButton: {
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#4F46E5',
+        backgroundColor: ThemeConfig.colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
     },
     sendButtonDisabled: {
-        backgroundColor: '#e2e8f0',
+        backgroundColor: ThemeConfig.colors.border,
     },
 });
 

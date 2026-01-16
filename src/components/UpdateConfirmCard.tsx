@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
+import { ThemeConfig } from '../constants/theme';
 
 interface UpdateConfirmCardProps {
     formData: any;
@@ -21,7 +22,7 @@ const UpdateConfirmCard: React.FC<UpdateConfirmCardProps> = ({
     return (
         <View style={styles.updateCard}>
             <View style={styles.updateHeader}>
-                <MaterialIcons name="edit" size={18} color="#4F46E5" />
+                <MaterialIcons name="edit" size={18} color={ThemeConfig.colors.primary} />
                 <Text style={styles.updateTitle}>请确认以下信息</Text>
             </View>
             {Object.entries(formData).map(([key, value]) => {
@@ -51,14 +52,14 @@ const UpdateConfirmCard: React.FC<UpdateConfirmCardProps> = ({
                     style={styles.confirmButton}
                     onPress={onConfirm}
                 >
-                    <MaterialIcons name="check" size={18} color="#ffffff" />
+                    <MaterialIcons name="check" size={18} color={ThemeConfig.colors.white} />
                     <Text style={styles.confirmButtonText}>确认更新</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                     style={styles.cancelButton}
                     onPress={onCancel}
                 >
-                    <MaterialIcons name="close" size={18} color="#64748b" />
+                    <MaterialIcons name="close" size={18} color={ThemeConfig.colors.textSecondary} />
                     <Text style={styles.cancelButtonText}>取消</Text>
                 </TouchableOpacity>
             </View>
@@ -68,82 +69,82 @@ const UpdateConfirmCard: React.FC<UpdateConfirmCardProps> = ({
 
 const styles = StyleSheet.create({
     updateCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         width: '100%',
-        shadowColor: '#000',
+        shadowColor: ThemeConfig.colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderWidth: ThemeConfig.borderWidth.thin,
+        borderColor: ThemeConfig.colors.border,
     },
     updateHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        marginBottom: 12,
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        gap: ThemeConfig.spacing.sm,
+        marginBottom: ThemeConfig.spacing.md,
+        paddingBottom: ThemeConfig.spacing.md,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.borderLight,
     },
     updateTitle: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
     fieldItem: {
-        marginBottom: 12,
+        marginBottom: ThemeConfig.spacing.md,
     },
     fieldLabel: {
-        fontSize: 12,
-        color: '#64748b',
-        marginBottom: 4,
-        fontWeight: '500',
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textSecondary,
+        marginBottom: ThemeConfig.spacing.xs,
+        fontWeight: ThemeConfig.fontWeight.medium,
     },
     fieldValue: {
-        fontSize: 15,
-        color: '#1e293b',
-        fontWeight: '500',
+        fontSize: ThemeConfig.fontSize.md,
+        color: ThemeConfig.colors.textPrimary,
+        fontWeight: ThemeConfig.fontWeight.medium,
     },
     confirmButtons: {
         flexDirection: 'row',
-        marginTop: 4,
-        gap: 8,
+        marginTop: ThemeConfig.spacing.xs,
+        gap: ThemeConfig.spacing.sm,
     },
     confirmButton: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#4F46E5',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
+        backgroundColor: ThemeConfig.colors.primary,
+        paddingHorizontal: ThemeConfig.spacing.base,
+        paddingVertical: ThemeConfig.spacing.sm + 2,
+        borderRadius: ThemeConfig.borderRadius.base,
         gap: 6,
     },
     confirmButtonText: {
-        color: '#ffffff',
-        fontSize: 14,
-        fontWeight: '600',
+        color: ThemeConfig.colors.white,
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.semibold,
     },
     cancelButton: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f1f5f9',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
+        paddingHorizontal: ThemeConfig.spacing.base,
+        paddingVertical: ThemeConfig.spacing.sm + 2,
+        borderRadius: ThemeConfig.borderRadius.base,
         gap: 6,
     },
     cancelButtonText: {
-        color: '#64748b',
-        fontSize: 14,
-        fontWeight: '600',
+        color: ThemeConfig.colors.textSecondary,
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.semibold,
     },
 });
 

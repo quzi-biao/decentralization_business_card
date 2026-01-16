@@ -3,6 +3,7 @@ import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView } from 'rea
 import { MaterialIcons } from '@expo/vector-icons';
 import { BusinessCardData } from '../store/useCardStore';
 import { FIELD_METADATA, getCategories } from '../constants/fieldNames';
+import { ThemeConfig } from '../constants/theme';
 
 interface ProgressDetailsModalProps {
     visible: boolean;
@@ -55,11 +56,11 @@ const ProgressDetailsModal: React.FC<ProgressDetailsModalProps> = ({
                 {/* 头部 */}
                 <View style={styles.header}>
                     <View style={styles.titleRow}>
-                        <MaterialIcons name="analytics" size={28} color="#4F46E5" />
+                        <MaterialIcons name="analytics" size={28} color={ThemeConfig.colors.primary} />
                         <Text style={styles.title}>完成度详情</Text>
                     </View>
                     <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                        <MaterialIcons name="close" size={24} color="#64748b" />
+                        <MaterialIcons name="close" size={24} color={ThemeConfig.colors.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -111,7 +112,7 @@ const ProgressDetailsModal: React.FC<ProgressDetailsModalProps> = ({
                                                 <MaterialIcons 
                                                     name={filled ? "check-circle" : "radio-button-unchecked"}
                                                     size={20}
-                                                    color={filled ? "#10b981" : "#cbd5e1"}
+                                                    color={filled ? ThemeConfig.colors.success : ThemeConfig.colors.textDisabled}
                                                 />
                                                 <Text style={[
                                                     styles.fieldLabel,
@@ -134,7 +135,7 @@ const ProgressDetailsModal: React.FC<ProgressDetailsModalProps> = ({
 
                     {/* 提示信息 */}
                     <View style={styles.tipCard}>
-                        <MaterialIcons name="lightbulb" size={20} color="#f59e0b" />
+                        <MaterialIcons name="lightbulb" size={20} color={ThemeConfig.colors.warning} />
                         <Text style={styles.tipText}>
                             完善名片信息可以提高名片质量评分，让您的名片更具吸引力
                         </Text>
@@ -148,42 +149,42 @@ const ProgressDetailsModal: React.FC<ProgressDetailsModalProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8FAFC',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        backgroundColor: '#ffffff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
+        paddingHorizontal: ThemeConfig.spacing.lg,
+        paddingVertical: ThemeConfig.spacing.base,
+        backgroundColor: ThemeConfig.colors.background,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.border,
     },
     titleRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     title: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1e293b',
-        marginLeft: 12,
+        fontSize: ThemeConfig.fontSize.xxl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
+        marginLeft: ThemeConfig.spacing.md,
     },
     closeButton: {
-        padding: 4,
+        padding: ThemeConfig.spacing.xs,
     },
     content: {
         flex: 1,
-        padding: 16,
+        padding: ThemeConfig.spacing.base,
     },
     overallCard: {
         flexDirection: 'row',
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
-        shadowColor: '#4F46E5',
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        padding: ThemeConfig.spacing.lg,
+        marginBottom: ThemeConfig.spacing.base,
+        shadowColor: ThemeConfig.colors.primary,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -195,125 +196,125 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         backgroundColor: '#EEF2FF',
         borderWidth: 4,
-        borderColor: '#4F46E5',
+        borderColor: ThemeConfig.colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 16,
+        marginRight: ThemeConfig.spacing.base,
     },
     progressNumber: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.xxxl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.primary,
     },
     overallInfo: {
         flex: 1,
         justifyContent: 'center',
     },
     overallTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 4,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     overallText: {
-        fontSize: 14,
-        color: '#64748b',
-        marginBottom: 8,
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textSecondary,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     progressBarContainer: {
         height: 8,
-        backgroundColor: '#e2e8f0',
-        borderRadius: 4,
+        backgroundColor: ThemeConfig.colors.border,
+        borderRadius: ThemeConfig.borderRadius.sm,
         overflow: 'hidden',
     },
     progressBar: {
         height: '100%',
-        backgroundColor: '#4F46E5',
-        borderRadius: 4,
+        backgroundColor: ThemeConfig.colors.primary,
+        borderRadius: ThemeConfig.borderRadius.sm,
     },
     categoryCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        padding: ThemeConfig.spacing.base,
+        marginBottom: ThemeConfig.spacing.md,
     },
     categoryHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
+        marginBottom: ThemeConfig.spacing.md,
     },
     categoryTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
     },
     categoryBadge: {
         backgroundColor: '#EEF2FF',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 8,
+        paddingHorizontal: ThemeConfig.spacing.sm,
+        paddingVertical: ThemeConfig.spacing.xs,
+        borderRadius: ThemeConfig.borderRadius.base,
     },
     categoryBadgeText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.sm,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
     categoryProgressBar: {
         height: 6,
-        backgroundColor: '#e2e8f0',
+        backgroundColor: ThemeConfig.colors.border,
         borderRadius: 3,
         overflow: 'hidden',
-        marginBottom: 12,
+        marginBottom: ThemeConfig.spacing.md,
     },
     categoryProgressFill: {
         height: '100%',
-        backgroundColor: '#4F46E5',
+        backgroundColor: ThemeConfig.colors.primary,
         borderRadius: 3,
     },
     fieldsList: {
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     fieldItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
+        paddingVertical: ThemeConfig.spacing.sm,
     },
     fieldLabel: {
         flex: 1,
-        fontSize: 14,
-        color: '#64748b',
-        marginLeft: 8,
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textSecondary,
+        marginLeft: ThemeConfig.spacing.sm,
     },
     fieldLabelFilled: {
-        color: '#1e293b',
-        fontWeight: '500',
+        color: ThemeConfig.colors.textPrimary,
+        fontWeight: ThemeConfig.fontWeight.medium,
     },
     filledBadge: {
         backgroundColor: '#d1fae5',
-        paddingHorizontal: 8,
+        paddingHorizontal: ThemeConfig.spacing.sm,
         paddingVertical: 2,
-        borderRadius: 4,
+        borderRadius: ThemeConfig.borderRadius.sm,
     },
     filledBadgeText: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: '#10b981',
+        fontSize: ThemeConfig.fontSize.xs,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.success,
     },
     tipCard: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fffbeb',
-        borderRadius: 12,
-        padding: 16,
-        marginTop: 8,
-        marginBottom: 24,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
+        marginTop: ThemeConfig.spacing.sm,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
     },
     tipText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#92400e',
-        marginLeft: 12,
+        marginLeft: ThemeConfig.spacing.md,
         lineHeight: 18,
     },
 });

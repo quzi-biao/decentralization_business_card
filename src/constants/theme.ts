@@ -87,6 +87,13 @@ export const ThemeConfig = {
     
     // 阴影
     shadow: {
+        xs: {
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.03,
+            shadowRadius: 1,
+            elevation: 1,
+        },
         sm: {
             shadowColor: '#000000',
             shadowOffset: { width: 0, height: 1 },

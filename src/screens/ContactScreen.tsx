@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import PageHeader from '../components/PageHeader';
+import { ThemeConfig } from '../constants/theme';
 
 interface Props {
     onClose: () => void;
@@ -39,13 +40,13 @@ const ContactScreen: React.FC<Props> = ({ onClose }) => {
                 <PageHeader 
                     title="联系我们"
                     onBack={onClose}
-                    backgroundColor="#f8fafc"
+                    backgroundColor={ThemeConfig.colors.backgroundSecondary}
                 />
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.heroCard}>
                     <View style={styles.iconCircle}>
-                        <MaterialIcons name="email" size={48} color="#4F46E5" />
+                        <MaterialIcons name="email" size={48} color={ThemeConfig.colors.primary} />
                     </View>
                     <Text style={styles.heroTitle}>我们随时为您服务</Text>
                     <Text style={styles.heroDescription}>
@@ -62,20 +63,20 @@ const ContactScreen: React.FC<Props> = ({ onClose }) => {
                         activeOpacity={0.7}
                     >
                         <View style={styles.contactIcon}>
-                            <MaterialIcons name="email" size={24} color="#4F46E5" />
+                            <MaterialIcons name="email" size={24} color={ThemeConfig.colors.primary} />
                         </View>
                         <View style={styles.contactContent}>
                             <Text style={styles.contactLabel}>电子邮箱</Text>
                             <Text style={styles.contactValue}>{email}</Text>
                         </View>
-                        <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
+                        <MaterialIcons name="chevron-right" size={24} color={ThemeConfig.colors.textDisabled} />
                     </TouchableOpacity>
 
                     <TouchableOpacity 
                         style={styles.actionButton}
                         onPress={handleCopyEmail}
                     >
-                        <MaterialIcons name="content-copy" size={20} color="#4F46E5" />
+                        <MaterialIcons name="content-copy" size={20} color={ThemeConfig.colors.primary} />
                         <Text style={styles.actionButtonText}>复制邮箱地址</Text>
                     </TouchableOpacity>
                 </View>
@@ -84,17 +85,17 @@ const ContactScreen: React.FC<Props> = ({ onClose }) => {
                     <Text style={styles.sectionTitle}>常见咨询类型</Text>
                     
                     <View style={styles.typeCard}>
-                        <MaterialIcons name="bug-report" size={20} color="#ef4444" />
+                        <MaterialIcons name="bug-report" size={20} color={ThemeConfig.colors.error} />
                         <Text style={styles.typeText}>问题反馈与 Bug 报告</Text>
                     </View>
 
                     <View style={styles.typeCard}>
-                        <MaterialIcons name="lightbulb" size={20} color="#f59e0b" />
+                        <MaterialIcons name="lightbulb" size={20} color={ThemeConfig.colors.warning} />
                         <Text style={styles.typeText}>功能建议与改进意见</Text>
                     </View>
 
                     <View style={styles.typeCard}>
-                        <MaterialIcons name="help" size={20} color="#10b981" />
+                        <MaterialIcons name="help" size={20} color={ThemeConfig.colors.success} />
                         <Text style={styles.typeText}>使用帮助与技术支持</Text>
                     </View>
 
@@ -108,26 +109,26 @@ const ContactScreen: React.FC<Props> = ({ onClose }) => {
                     <Text style={styles.sectionTitle}>邮件建议</Text>
                     <View style={styles.tipsCard}>
                         <View style={styles.tipItem}>
-                            <MaterialIcons name="check-circle" size={16} color="#10b981" />
+                            <MaterialIcons name="check-circle" size={16} color={ThemeConfig.colors.success} />
                             <Text style={styles.tipText}>请在邮件主题中简要说明问题类型</Text>
                         </View>
                         <View style={styles.tipItem}>
-                            <MaterialIcons name="check-circle" size={16} color="#10b981" />
+                            <MaterialIcons name="check-circle" size={16} color={ThemeConfig.colors.success} />
                             <Text style={styles.tipText}>详细描述您遇到的问题或建议</Text>
                         </View>
                         <View style={styles.tipItem}>
-                            <MaterialIcons name="check-circle" size={16} color="#10b981" />
+                            <MaterialIcons name="check-circle" size={16} color={ThemeConfig.colors.success} />
                             <Text style={styles.tipText}>如有必要，请附上截图或错误信息</Text>
                         </View>
                         <View style={styles.tipItem}>
-                            <MaterialIcons name="check-circle" size={16} color="#10b981" />
+                            <MaterialIcons name="check-circle" size={16} color={ThemeConfig.colors.success} />
                             <Text style={styles.tipText}>留下您的联系方式以便我们回复</Text>
                         </View>
                     </View>
                 </View>
 
                 <View style={styles.infoCard}>
-                    <MaterialIcons name="schedule" size={20} color="#64748b" />
+                    <MaterialIcons name="schedule" size={20} color={ThemeConfig.colors.textSecondary} />
                     <Text style={styles.infoText}>
                         我们通常会在 24-48 小时内回复您的邮件。感谢您的耐心等待。
                     </Text>
@@ -146,22 +147,18 @@ const ContactScreen: React.FC<Props> = ({ onClose }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     scrollContent: {
-        padding: 16,
+        padding: ThemeConfig.spacing.base,
     },
     heroCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 20,
-        padding: 32,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        padding: ThemeConfig.spacing.xxxl - 8,
         alignItems: 'center',
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 4,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
+        ...ThemeConfig.shadow.md,
     },
     iconCircle: {
         width: 96,
@@ -170,47 +167,43 @@ const styles = StyleSheet.create({
         backgroundColor: '#ede9fe',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 20,
+        marginBottom: ThemeConfig.spacing.lg,
     },
     heroTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1e293b',
-        marginBottom: 12,
+        fontSize: ThemeConfig.fontSize.xxxl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.md,
     },
     heroDescription: {
-        fontSize: 15,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.md,
+        color: ThemeConfig.colors.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
     },
     section: {
-        marginBottom: 24,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
     },
     sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 12,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.md,
     },
     contactCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.md,
+        ...ThemeConfig.shadow.sm,
     },
     contactIcon: {
         width: 48,
         height: 48,
-        borderRadius: 12,
+        borderRadius: ThemeConfig.borderRadius.md,
         backgroundColor: '#ede9fe',
         alignItems: 'center',
         justifyContent: 'center',
@@ -219,86 +212,86 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     contactLabel: {
-        fontSize: 13,
-        color: '#64748b',
-        marginBottom: 4,
+        fontSize: ThemeConfig.fontSize.base - 1,
+        color: ThemeConfig.colors.textSecondary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     contactValue: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
     },
     actionButton: {
         backgroundColor: '#ede9fe',
-        borderRadius: 12,
+        borderRadius: ThemeConfig.borderRadius.md,
         padding: 14,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     actionButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
     typeCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.md,
         padding: 14,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
-        marginBottom: 8,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     typeText: {
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
         color: '#475569',
     },
     tipsCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
-        gap: 12,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
+        gap: ThemeConfig.spacing.md,
     },
     tipItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     tipText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#475569',
         lineHeight: 18,
     },
     infoCard: {
-        backgroundColor: '#f1f5f9',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         flexDirection: 'row',
-        gap: 12,
-        marginBottom: 24,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
     },
     infoText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#475569',
         lineHeight: 18,
     },
     footer: {
         alignItems: 'center',
-        paddingVertical: 24,
+        paddingVertical: ThemeConfig.spacing.xxxl - 16,
     },
     footerText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#94a3b8',
-        marginBottom: 4,
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textTertiary,
+        marginBottom: ThemeConfig.spacing.xs,
     },
     footerSubtext: {
-        fontSize: 12,
-        color: '#cbd5e1',
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textDisabled,
     },
 });
 

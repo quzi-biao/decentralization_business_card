@@ -4,6 +4,7 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTagStore, Tag, TAG_COLORS } from '../store/useTagStore';
 import PageHeader from '../components/PageHeader';
+import { ThemeConfig } from '../constants/theme';
 
 interface TagManagementScreenProps {
     onClose: () => void;
@@ -213,13 +214,13 @@ const TagManagementScreen: React.FC<TagManagementScreenProps> = ({ onClose }) =>
                                             style={styles.tagActionButton}
                                             onPress={() => startEdit(tag)}
                                         >
-                                            <MaterialIcons name="edit" size={20} color="#64748b" />
+                                            <MaterialIcons name="edit" size={20} color={ThemeConfig.colors.textSecondary} />
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.tagActionButton}
                                             onPress={() => handleDeleteTag(tag)}
                                         >
-                                            <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
+                                            <MaterialIcons name="delete-outline" size={20} color={ThemeConfig.colors.error} />
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -238,51 +239,47 @@ const TagManagementScreen: React.FC<TagManagementScreenProps> = ({ onClose }) =>
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     scrollView: {
         flex: 1,
     },
     formCard: {
-        backgroundColor: '#ffffff',
-        margin: 16,
-        padding: 20,
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        backgroundColor: ThemeConfig.colors.background,
+        margin: ThemeConfig.spacing.base,
+        padding: ThemeConfig.spacing.lg,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        ...ThemeConfig.shadow.sm,
     },
     formTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 16,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.base,
     },
     inputGroup: {
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     inputLabel: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#64748b',
-        marginBottom: 8,
+        fontSize: ThemeConfig.fontSize.base - 1,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textSecondary,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     input: {
-        backgroundColor: '#f8fafc',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 12,
-        fontSize: 15,
-        color: '#1e293b',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+        borderRadius: ThemeConfig.borderRadius.sm + 2,
+        paddingHorizontal: ThemeConfig.spacing.md,
+        paddingVertical: ThemeConfig.spacing.md,
+        fontSize: ThemeConfig.fontSize.md,
+        color: ThemeConfig.colors.textPrimary,
+        borderWidth: ThemeConfig.borderWidth.thin,
+        borderColor: ThemeConfig.colors.border,
     },
     colorPicker: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
     },
     colorOption: {
         width: 40,
@@ -290,64 +287,60 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 2,
+        borderWidth: ThemeConfig.borderWidth.base,
         borderColor: 'transparent',
     },
     colorOptionSelected: {
-        borderColor: '#1e293b',
+        borderColor: ThemeConfig.colors.textPrimary,
         borderWidth: 3,
     },
     formActions: {
         flexDirection: 'row',
-        gap: 12,
-        marginTop: 8,
+        gap: ThemeConfig.spacing.md,
+        marginTop: ThemeConfig.spacing.sm,
     },
     formButton: {
         flex: 1,
-        paddingVertical: 12,
-        borderRadius: 10,
+        paddingVertical: ThemeConfig.spacing.md,
+        borderRadius: ThemeConfig.borderRadius.sm + 2,
         alignItems: 'center',
     },
     cancelButton: {
-        backgroundColor: '#f1f5f9',
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
     },
     cancelButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textSecondary,
     },
     saveButton: {
-        backgroundColor: '#4F46E5',
+        backgroundColor: ThemeConfig.colors.primary,
     },
     saveButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#ffffff',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.white,
     },
     tagsSection: {
-        marginHorizontal: 16,
+        marginHorizontal: ThemeConfig.spacing.base,
     },
     sectionTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#64748b',
-        marginBottom: 12,
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textSecondary,
+        marginBottom: ThemeConfig.spacing.md,
     },
     tagsList: {
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     tagItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#ffffff',
-        padding: 16,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 1,
+        backgroundColor: ThemeConfig.colors.background,
+        padding: ThemeConfig.spacing.base,
+        borderRadius: ThemeConfig.borderRadius.md,
+        ...ThemeConfig.shadow.xs,
     },
     tagInfo: {
         flexDirection: 'row',
@@ -358,40 +351,40 @@ const styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 6,
-        marginRight: 12,
+        marginRight: ThemeConfig.spacing.md,
     },
     tagName: {
-        fontSize: 15,
-        fontWeight: '500',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.medium,
+        color: ThemeConfig.colors.textPrimary,
     },
     tagActions: {
         flexDirection: 'row',
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     tagActionButton: {
-        padding: 8,
+        padding: ThemeConfig.spacing.sm,
     },
     emptyState: {
         alignItems: 'center',
         paddingVertical: 60,
-        paddingHorizontal: 32,
+        paddingHorizontal: ThemeConfig.spacing.xxxl - 8,
     },
     emptyTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#64748b',
-        marginTop: 16,
-        marginBottom: 8,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textSecondary,
+        marginTop: ThemeConfig.spacing.base,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     emptyHint: {
-        fontSize: 14,
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textTertiary,
         textAlign: 'center',
         lineHeight: 20,
     },
     spacer: {
-        height: 24,
+        height: ThemeConfig.spacing.xxxl - 16,
     },
 });
 

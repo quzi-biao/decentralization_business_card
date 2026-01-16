@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { ThemeConfig } from '../constants/theme';
 
 interface PrivacyHelpModalProps {
     visible: boolean;
@@ -30,13 +31,13 @@ const PrivacyHelpModal: React.FC<PrivacyHelpModalProps> = ({ visible, onClose, o
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
-                        <MaterialIcons name="lock" size={24} color="#4F46E5" />
+                        <MaterialIcons name="lock" size={24} color={ThemeConfig.colors.primary} />
                         <Text style={styles.modalTitle}>隐私保护说明</Text>
                         <TouchableOpacity
                             onPress={onClose}
                             style={styles.closeButton}
                         >
-                            <MaterialIcons name="close" size={24} color="#64748b" />
+                            <MaterialIcons name="close" size={24} color={ThemeConfig.colors.textSecondary} />
                         </TouchableOpacity>
                     </View>
                     
@@ -48,23 +49,23 @@ const PrivacyHelpModal: React.FC<PrivacyHelpModalProps> = ({ visible, onClose, o
                         <Text style={styles.sectionTitle}>默认隐私字段</Text>
                         <View style={styles.fieldList}>
                             <View style={styles.fieldItem}>
-                                <MaterialIcons name="person" size={16} color="#64748b" />
+                                <MaterialIcons name="person" size={16} color={ThemeConfig.colors.textSecondary} />
                                 <Text style={styles.fieldText}>姓名</Text>
                             </View>
                             <View style={styles.fieldItem}>
-                                <MaterialIcons name="phone" size={16} color="#64748b" />
+                                <MaterialIcons name="phone" size={16} color={ThemeConfig.colors.textSecondary} />
                                 <Text style={styles.fieldText}>电话</Text>
                             </View>
                             <View style={styles.fieldItem}>
-                                <MaterialIcons name="email" size={16} color="#64748b" />
+                                <MaterialIcons name="email" size={16} color={ThemeConfig.colors.textSecondary} />
                                 <Text style={styles.fieldText}>邮箱</Text>
                             </View>
                             <View style={styles.fieldItem}>
-                                <MaterialIcons name="chat" size={16} color="#64748b" />
+                                <MaterialIcons name="chat" size={16} color={ThemeConfig.colors.textSecondary} />
                                 <Text style={styles.fieldText}>微信号</Text>
                             </View>
                             <View style={styles.fieldItem}>
-                                <MaterialIcons name="location-on" size={16} color="#64748b" />
+                                <MaterialIcons name="location-on" size={16} color={ThemeConfig.colors.textSecondary} />
                                 <Text style={styles.fieldText}>地址</Text>
                             </View>
                         </View>
@@ -77,7 +78,7 @@ const PrivacyHelpModal: React.FC<PrivacyHelpModalProps> = ({ visible, onClose, o
                         </Text>
                         
                         <View style={styles.instructionBox}>
-                            <MaterialIcons name="info-outline" size={20} color="#4F46E5" />
+                            <MaterialIcons name="info-outline" size={20} color={ThemeConfig.colors.primary} />
                             <Text style={styles.instructionText}>
                                 如需自定义隐私设置，请前往底部导航栏的{' '}
                                 <Text style={styles.boldText}>"我的"</Text> 标签页，点击{' '}
@@ -94,18 +95,18 @@ const PrivacyHelpModal: React.FC<PrivacyHelpModalProps> = ({ visible, onClose, o
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: ThemeConfig.colors.overlay,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: ThemeConfig.spacing.lg,
     },
     modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
         width: '100%',
         maxWidth: 400,
         maxHeight: '80%',
-        shadowColor: '#000',
+        shadowColor: ThemeConfig.colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 8,
@@ -114,73 +115,73 @@ const styles = StyleSheet.create({
     modalHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
-        gap: 12,
+        padding: ThemeConfig.spacing.lg,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.border,
+        gap: ThemeConfig.spacing.md,
     },
     modalTitle: {
         flex: 1,
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.xl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
     },
     closeButton: {
-        padding: 4,
+        padding: ThemeConfig.spacing.xs,
     },
     modalBody: {
-        padding: 20,
+        padding: ThemeConfig.spacing.lg,
     },
     modalText: {
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
         lineHeight: 22,
         color: '#475569',
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginTop: 8,
-        marginBottom: 12,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginTop: ThemeConfig.spacing.sm,
+        marginBottom: ThemeConfig.spacing.md,
     },
     fieldList: {
-        gap: 12,
-        marginBottom: 20,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.lg,
     },
     fieldItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        backgroundColor: '#f8fafc',
-        borderRadius: 8,
+        gap: ThemeConfig.spacing.sm,
+        paddingVertical: ThemeConfig.spacing.sm,
+        paddingHorizontal: ThemeConfig.spacing.md,
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+        borderRadius: ThemeConfig.borderRadius.base,
     },
     fieldText: {
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
         color: '#475569',
     },
     instructionBox: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
         backgroundColor: '#EEF2FF',
-        padding: 16,
-        borderRadius: 8,
+        padding: ThemeConfig.spacing.base,
+        borderRadius: ThemeConfig.borderRadius.base,
         borderLeftWidth: 3,
-        borderLeftColor: '#4F46E5',
-        marginTop: 8,
+        borderLeftColor: ThemeConfig.colors.primary,
+        marginTop: ThemeConfig.spacing.sm,
     },
     instructionText: {
         flex: 1,
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
         lineHeight: 20,
         color: '#475569',
     },
     boldText: {
-        fontWeight: '700',
-        color: '#1e293b',
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
     },
 });
 

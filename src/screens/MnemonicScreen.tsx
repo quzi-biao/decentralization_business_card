@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { getMnemonic } from '../services/identityService';
 import * as Clipboard from 'expo-clipboard';
 import PageHeader from '../components/PageHeader';
+import { ThemeConfig } from '../constants/theme';
 
 interface Props {
     onClose: () => void;
@@ -69,12 +70,12 @@ const MnemonicScreen: React.FC<Props> = ({ onClose }) => {
                 <PageHeader 
                     title="助记词"
                     onBack={onClose}
-                    backgroundColor="#f8fafc"
+                    backgroundColor={ThemeConfig.colors.backgroundSecondary}
                 />
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.warningCard}>
-                    <MaterialIcons name="warning" size={32} color="#f59e0b" />
+                    <MaterialIcons name="warning" size={32} color={ThemeConfig.colors.warning} />
                     <Text style={styles.warningTitle}>重要提示</Text>
                     <Text style={styles.warningText}>
                         助记词是恢复您账户的唯一凭证，一旦丢失将无法找回。请务必：
@@ -93,7 +94,7 @@ const MnemonicScreen: React.FC<Props> = ({ onClose }) => {
                         onPress={handleReveal}
                         disabled={loading}
                     >
-                        <MaterialIcons name="visibility" size={24} color="#ffffff" />
+                        <MaterialIcons name="visibility" size={24} color={ThemeConfig.colors.white} />
                         <Text style={styles.revealButtonText}>
                             {loading ? '加载中...' : '点击查看助记词'}
                         </Text>
@@ -115,12 +116,12 @@ const MnemonicScreen: React.FC<Props> = ({ onClose }) => {
                             style={styles.copyButton}
                             onPress={handleCopy}
                         >
-                            <MaterialIcons name="content-copy" size={20} color="#4F46E5" />
+                            <MaterialIcons name="content-copy" size={20} color={ThemeConfig.colors.primary} />
                             <Text style={styles.copyButtonText}>复制助记词</Text>
                         </TouchableOpacity>
 
                         <View style={styles.infoCard}>
-                            <MaterialIcons name="info" size={20} color="#64748b" />
+                            <MaterialIcons name="info" size={20} color={ThemeConfig.colors.textSecondary} />
                             <Text style={styles.infoText}>
                                 建议将助记词按顺序抄写在纸上，并保存在安全的地方。不要依赖电子设备存储。
                             </Text>
@@ -136,116 +137,116 @@ const MnemonicScreen: React.FC<Props> = ({ onClose }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     scrollContent: {
-        padding: 16,
+        padding: ThemeConfig.spacing.base,
     },
     warningCard: {
         backgroundColor: '#fffbeb',
-        borderRadius: 12,
-        padding: 20,
-        marginBottom: 24,
-        borderWidth: 1,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.lg,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
+        borderWidth: ThemeConfig.borderWidth.thin,
         borderColor: '#fef3c7',
         alignItems: 'center',
     },
     warningTitle: {
-        fontSize: 18,
-        fontWeight: '700',
+        fontSize: ThemeConfig.fontSize.xl,
+        fontWeight: ThemeConfig.fontWeight.bold,
         color: '#92400e',
-        marginTop: 12,
-        marginBottom: 8,
+        marginTop: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     warningText: {
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
         color: '#78350f',
         textAlign: 'center',
-        marginBottom: 12,
+        marginBottom: ThemeConfig.spacing.md,
         lineHeight: 20,
     },
     warningList: {
         alignSelf: 'stretch',
-        marginTop: 8,
+        marginTop: ThemeConfig.spacing.sm,
     },
     warningItem: {
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#78350f',
         marginBottom: 6,
         lineHeight: 18,
     },
     revealButton: {
-        backgroundColor: '#4F46E5',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: ThemeConfig.colors.primary,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     revealButtonText: {
-        color: '#ffffff',
-        fontSize: 16,
-        fontWeight: '600',
+        color: ThemeConfig.colors.white,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
     },
     mnemonicContainer: {
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        borderWidth: 2,
-        borderColor: '#4F46E5',
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
+        marginBottom: ThemeConfig.spacing.base,
+        borderWidth: ThemeConfig.borderWidth.base,
+        borderColor: ThemeConfig.colors.primary,
     },
     mnemonicGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     wordCard: {
         width: '31%',
-        backgroundColor: '#f1f5f9',
-        borderRadius: 8,
-        padding: 12,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
+        borderRadius: ThemeConfig.borderRadius.base,
+        padding: ThemeConfig.spacing.md,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     wordIndex: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.sm,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textSecondary,
     },
     wordText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
         flex: 1,
     },
     copyButton: {
         backgroundColor: '#ede9fe',
-        borderRadius: 12,
+        borderRadius: ThemeConfig.borderRadius.md,
         padding: 14,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        marginBottom: 16,
+        gap: ThemeConfig.spacing.sm,
+        marginBottom: ThemeConfig.spacing.base,
     },
     copyButtonText: {
-        color: '#4F46E5',
-        fontSize: 15,
-        fontWeight: '600',
+        color: ThemeConfig.colors.primary,
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
     },
     infoCard: {
-        backgroundColor: '#f1f5f9',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.base,
         flexDirection: 'row',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
     },
     infoText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: ThemeConfig.fontSize.base - 1,
         color: '#475569',
         lineHeight: 18,
     },

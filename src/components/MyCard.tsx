@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BusinessCardData } from '../store/useCardStore';
 import { LazyImage } from './LazyImage';
+import { ThemeConfig } from '../constants/theme';
 
 interface MyCardProps {
     cardData: BusinessCardData;
@@ -30,7 +31,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
     if (!hasCardData) {
         return (
             <View style={styles.emptyCard}>
-                <MaterialIcons name="badge" size={64} color="#cbd5e1" />
+                <MaterialIcons name="badge" size={64} color={ThemeConfig.colors.textDisabled} />
                 <Text style={styles.emptyTitle}>还没有名片</Text>
                 <Text style={styles.emptyDescription}>
                     让 AI 助手帮您快速创建专属名片
@@ -41,7 +42,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
                         onPress={onAIAssistantPress}
                         activeOpacity={0.8}
                     >
-                        <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                        <MaterialIcons name="smart-toy" size={20} color={ThemeConfig.colors.white} />
                         <Text style={styles.aiButtonText}>AI 帮我填写</Text>
                     </TouchableOpacity>
                 )}
@@ -83,7 +84,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
                         </Text>
                         {cardData.phone && (
                             <View style={styles.phoneContainer}>
-                                <MaterialIcons name="phone" size={14} color="#64748b" />
+                                <MaterialIcons name="phone" size={14} color={ThemeConfig.colors.textSecondary} />
                                 <Text style={styles.phoneInline} numberOfLines={1}>
                                     {cardData.phone}
                                 </Text>
@@ -105,7 +106,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
                     {cardData.mainBusiness && cardData.mainBusiness.length > 0 && (
                         <View style={styles.businessColumn}>
                             <View style={styles.columnTitleRow}>
-                                <MaterialIcons name="work-outline" size={14} color="#4F46E5" />
+                                <MaterialIcons name="work-outline" size={14} color={ThemeConfig.colors.primary} />
                                 <Text style={styles.columnTitle}>主营业务</Text>
                             </View>
                             {cardData.mainBusiness.slice(0, 2).map((item, index) => (
@@ -122,7 +123,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
                     {cardData.serviceNeeds && cardData.serviceNeeds.length > 0 && (
                         <View style={styles.businessColumn}>
                             <View style={styles.columnTitleRow}>
-                                <MaterialIcons name="flag" size={14} color="#4F46E5" />
+                                <MaterialIcons name="flag" size={14} color={ThemeConfig.colors.primary} />
                                 <Text style={styles.columnTitle}>服务需求</Text>
                             </View>
                             {cardData.serviceNeeds.slice(0, 2).map((item, index) => (
@@ -143,12 +144,12 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
 
 const styles = StyleSheet.create({
     myCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 18,
-        padding: 20,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.xl,
+        padding: ThemeConfig.spacing.lg,
         borderWidth: 3,
-        borderColor: '#4F46E5',
-        shadowColor: '#4F46E5',
+        borderColor: ThemeConfig.colors.primary,
+        shadowColor: ThemeConfig.colors.primary,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.18,
         shadowRadius: 16,
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
     // 顶部：基本信息
     topSection: {
         flexDirection: 'row',
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     avatar: {
         width: 60,
@@ -169,12 +170,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginRight: 14,
         borderWidth: 2.5,
-        borderColor: '#4F46E5',
+        borderColor: ThemeConfig.colors.primary,
     },
     avatarText: {
         fontSize: 26,
-        fontWeight: '700',
-        color: '#4F46E5',
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.primary,
     },
     avatarImage: {
         width: '100%',
@@ -199,41 +200,41 @@ const styles = StyleSheet.create({
     nameRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
         marginBottom: 5,
     },
     name: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.xxl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
     },
     phoneContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: ThemeConfig.spacing.xs,
     },
     phoneInline: {
-        fontSize: 13,
-        color: '#64748b',
-        fontWeight: '500',
+        fontSize: ThemeConfig.fontSize.base - 1,
+        color: ThemeConfig.colors.textSecondary,
+        fontWeight: ThemeConfig.fontWeight.medium,
     },
     position: {
-        fontSize: 14,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textSecondary,
         marginBottom: 3,
-        fontWeight: '500',
+        fontWeight: ThemeConfig.fontWeight.medium,
     },
     company: {
-        fontSize: 13,
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.base - 1,
+        color: ThemeConfig.colors.textTertiary,
     },
     // 中部：业务信息
     middleSection: {
         flexDirection: 'row',
-        gap: 12,
+        gap: ThemeConfig.spacing.md,
         paddingVertical: 14,
-        borderTopWidth: 1,
-        borderTopColor: '#e2e8f0'
+        borderTopWidth: ThemeConfig.borderWidth.thin,
+        borderTopColor: ThemeConfig.colors.border
     },
     businessColumn: {
         flex: 1,
@@ -245,63 +246,59 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     columnTitle: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.sm,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
     businessItem: {
-        fontSize: 11,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.xs,
+        color: ThemeConfig.colors.textSecondary,
         marginBottom: 3,
-        paddingLeft: 4,
+        paddingLeft: ThemeConfig.spacing.xs,
     },
     moreText: {
-        fontSize: 11,
-        color: '#94a3b8',
-        marginTop: 4,
+        fontSize: ThemeConfig.fontSize.xs,
+        color: ThemeConfig.colors.textTertiary,
+        marginTop: ThemeConfig.spacing.xs,
     },
     emptyCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 20,
-        padding: 40,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        padding: ThemeConfig.spacing.xxxl,
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#e2e8f0',
+        borderWidth: ThemeConfig.borderWidth.base,
+        borderColor: ThemeConfig.colors.border,
         borderStyle: 'dashed',
         minHeight: 200,
     },
     emptyTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1e293b',
-        marginTop: 16,
-        marginBottom: 8,
+        fontSize: ThemeConfig.fontSize.xl,
+        fontWeight: ThemeConfig.fontWeight.bold,
+        color: ThemeConfig.colors.textPrimary,
+        marginTop: ThemeConfig.spacing.base,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     emptyDescription: {
-        fontSize: 14,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
-        marginBottom: 24,
+        marginBottom: ThemeConfig.spacing.xxxl - 16,
     },
     aiButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#4F46E5',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-        gap: 8,
-        shadowColor: '#4F46E5',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        backgroundColor: ThemeConfig.colors.primary,
+        paddingHorizontal: ThemeConfig.spacing.xxxl - 16,
+        paddingVertical: ThemeConfig.spacing.md,
+        borderRadius: ThemeConfig.borderRadius.md,
+        gap: ThemeConfig.spacing.sm,
+        ...ThemeConfig.shadow.primary,
     },
     aiButtonText: {
-        color: '#ffffff',
-        fontSize: 15,
-        fontWeight: '600',
+        color: ThemeConfig.colors.white,
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
     },
 });
 

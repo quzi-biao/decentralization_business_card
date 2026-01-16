@@ -15,6 +15,7 @@ import ProgressHeader from '../components/ProgressHeader';
 import ChatInput from '../components/ChatInput';
 import ProgressDetailsModal from '../components/ProgressDetailsModal';
 import PrivacyHelpModal from '../components/PrivacyHelpModal';
+import { ThemeConfig } from '../constants/theme';
 
 interface Message {
     id: string;
@@ -585,7 +586,7 @@ const AIAssistantScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     content: {
         flex: 1,
@@ -594,21 +595,21 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     messagesContent: {
-        padding: 16,
-        paddingBottom: 8,
+        padding: ThemeConfig.spacing.base,
+        paddingBottom: ThemeConfig.spacing.sm,
     },
     messageContainer: {
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     loadingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        paddingVertical: 8,
+        gap: ThemeConfig.spacing.sm,
+        paddingVertical: ThemeConfig.spacing.sm,
     },
     loadingText: {
-        fontSize: 14,
-        color: '#64748b',
+        fontSize: ThemeConfig.fontSize.base,
+        color: ThemeConfig.colors.textSecondary,
     },
 });
 

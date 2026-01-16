@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Platform, Image, TouchableOpacity, Alert, Actio
 import { MaterialIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
 import { fileManager } from '../services/fileManager';
+import { ThemeConfig } from '../constants/theme';
 
 interface Message {
     id: string;
@@ -147,7 +148,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }
                     {displayImageUrl && (
                         imageLoadFailed ? (
                             <View style={styles.imageFailedContainer}>
-                                <MaterialIcons name="broken-image" size={48} color="#94a3b8" />
+                                <MaterialIcons name="broken-image" size={48} color={ThemeConfig.colors.textTertiary} />
                                 <Text style={styles.imageFailedText}>图片加载失败</Text>
                             </View>
                         ) : (
@@ -179,7 +180,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }
                     {displayImageUrl && (
                         imageLoadFailed ? (
                             <View style={styles.imageFailedContainer}>
-                                <MaterialIcons name="broken-image" size={48} color="#94a3b8" />
+                                <MaterialIcons name="broken-image" size={48} color={ThemeConfig.colors.textTertiary} />
                                 <Text style={styles.imageFailedText}>图片加载失败</Text>
                             </View>
                         ) : (
@@ -207,42 +208,42 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }
 
 const markdownStyles = {
     body: {
-        color: '#1e293b',
-        fontSize: 15,
+        color: ThemeConfig.colors.textPrimary,
+        fontSize: ThemeConfig.fontSize.md,
         lineHeight: 22,
     },
     paragraph: {
         marginTop: 0,
-        marginBottom: 8,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     strong: {
-        fontWeight: '700' as '700',
+        fontWeight: ThemeConfig.fontWeight.bold,
     },
     em: {
         fontStyle: 'italic' as 'italic',
     },
     code_inline: {
-        backgroundColor: '#f1f5f9',
-        color: '#4F46E5',
-        paddingHorizontal: 4,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
+        color: ThemeConfig.colors.primary,
+        paddingHorizontal: ThemeConfig.spacing.xs,
         paddingVertical: 2,
-        borderRadius: 4,
+        borderRadius: ThemeConfig.borderRadius.sm,
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
     },
     code_block: {
-        backgroundColor: '#f1f5f9',
-        padding: 12,
-        borderRadius: 8,
-        marginVertical: 8,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
+        padding: ThemeConfig.spacing.md,
+        borderRadius: ThemeConfig.borderRadius.base,
+        marginVertical: ThemeConfig.spacing.sm,
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-        fontSize: 14,
+        fontSize: ThemeConfig.fontSize.base,
     },
     bullet_list: {
-        marginVertical: 4,
+        marginVertical: ThemeConfig.spacing.xs,
     },
     ordered_list: {
-        marginVertical: 4,
+        marginVertical: ThemeConfig.spacing.xs,
     },
     list_item: {
         marginVertical: 2,
@@ -251,7 +252,7 @@ const markdownStyles = {
 
 const styles = StyleSheet.create({
     messageContainer: {
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     userMessage: {
         alignItems: 'flex-end',
@@ -260,52 +261,48 @@ const styles = StyleSheet.create({
     },
     messageBubble: {
         maxWidth: '80%',
-        padding: 12,
-        borderRadius: 16,
+        padding: ThemeConfig.spacing.md,
+        borderRadius: ThemeConfig.borderRadius.lg,
     },
     userBubble: {
-        backgroundColor: '#4F46E5',
-        borderBottomRightRadius: 4,
+        backgroundColor: ThemeConfig.colors.primary,
+        borderBottomRightRadius: ThemeConfig.borderRadius.sm,
     },
     aiBubble: {
-        backgroundColor: '#ffffff',
-        borderBottomLeftRadius: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        backgroundColor: ThemeConfig.colors.background,
+        borderBottomLeftRadius: ThemeConfig.borderRadius.sm,
+        ...ThemeConfig.shadow.sm,
     },
     userText: {
-        color: '#ffffff',
-        fontSize: 15,
+        color: ThemeConfig.colors.white,
+        fontSize: ThemeConfig.fontSize.md,
         lineHeight: 22,
     },
     timestamp: {
-        fontSize: 11,
-        color: '#94a3b8',
-        marginTop: 4,
+        fontSize: ThemeConfig.fontSize.xs,
+        color: ThemeConfig.colors.textTertiary,
+        marginTop: ThemeConfig.spacing.xs,
     },
     messageImage: {
         width: 200,
         height: 200,
-        borderRadius: 12,
-        marginBottom: 8,
-        backgroundColor: '#f1f5f9',
+        borderRadius: ThemeConfig.borderRadius.md,
+        marginBottom: ThemeConfig.spacing.sm,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
     },
     imageFailedContainer: {
         width: 200,
         height: 200,
-        borderRadius: 12,
-        marginBottom: 8,
-        backgroundColor: '#f1f5f9',
+        borderRadius: ThemeConfig.borderRadius.md,
+        marginBottom: ThemeConfig.spacing.sm,
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
+        gap: ThemeConfig.spacing.sm,
     },
     imageFailedText: {
-        fontSize: 12,
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textTertiary,
     },
 });
 

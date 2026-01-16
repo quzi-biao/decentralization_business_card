@@ -7,6 +7,7 @@ import { useCardStore, BusinessItem } from '../store/useCardStore';
 import PageHeader from '../components/PageHeader';
 import { LazyImage } from '../components/LazyImage';
 import { fileManager } from '../services/fileManager';
+import { ThemeConfig } from '../constants/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -14,7 +15,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 const SectionHeader = ({ title, iconName }: any) => (
     <View style={styles.sectionHeader}>
-        <MaterialIcons name={iconName} size={20} color="#4F46E5" style={styles.sectionIcon} />
+        <MaterialIcons name={iconName} size={20} color={ThemeConfig.colors.primary} style={styles.sectionIcon} />
         <Text style={styles.sectionHeaderText}>{title}</Text>
     </View>
 );
@@ -26,7 +27,7 @@ const InputField = ({ label, value, onChangeText, placeholder, multiline = false
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={ThemeConfig.colors.textTertiary}
             multiline={multiline}
             style={[styles.input, multiline && styles.multilineInput]}
         />
@@ -39,14 +40,14 @@ const BusinessItemCard = ({ item, onUpdate, onDelete }: any) => (
             value={item.name}
             onChangeText={(text) => onUpdate({ name: text })}
             placeholder="项目名称"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={ThemeConfig.colors.textTertiary}
             style={styles.businessItemName}
         />
         <TextInput
             value={item.description}
             onChangeText={(text) => onUpdate({ description: text })}
             placeholder="描述..."
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={ThemeConfig.colors.textTertiary}
             multiline={true}
             style={styles.businessItemDescription}
         />
@@ -278,117 +279,113 @@ const EditCardScreen = ({ onClose }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
     },
     scrollContent: {
-        padding: 16,
+        padding: ThemeConfig.spacing.base,
     },
     card: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        backgroundColor: ThemeConfig.colors.background,
+        borderRadius: ThemeConfig.borderRadius.lg,
+        padding: ThemeConfig.spacing.lg,
+        marginBottom: ThemeConfig.spacing.base,
+        ...ThemeConfig.shadow.sm,
     },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     sectionIcon: {
-        marginRight: 8,
+        marginRight: ThemeConfig.spacing.sm,
     },
     sectionHeaderText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1e293b',
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
     },
     inputField: {
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
     },
     inputLabel: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#64748b',
-        marginBottom: 8,
+        fontSize: ThemeConfig.fontSize.base - 1,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textSecondary,
+        marginBottom: ThemeConfig.spacing.sm,
     },
     input: {
-        backgroundColor: '#F8FAFC',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 12,
-        fontSize: 15,
-        color: '#1e293b',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+        borderRadius: ThemeConfig.borderRadius.sm + 2,
+        paddingHorizontal: ThemeConfig.spacing.md,
+        paddingVertical: ThemeConfig.spacing.md,
+        fontSize: ThemeConfig.fontSize.md,
+        color: ThemeConfig.colors.textPrimary,
+        borderWidth: ThemeConfig.borderWidth.thin,
+        borderColor: ThemeConfig.colors.border,
     },
     multilineInput: {
         height: 80,
         textAlignVertical: 'top',
     },
     businessItemCard: {
-        backgroundColor: '#F8FAFC',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+        borderRadius: ThemeConfig.borderRadius.md,
+        padding: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.md,
+        borderWidth: ThemeConfig.borderWidth.thin,
+        borderColor: ThemeConfig.colors.border,
     },
     businessItemName: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginBottom: 8,
-        paddingVertical: 4,
+        fontSize: ThemeConfig.fontSize.md,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.textPrimary,
+        marginBottom: ThemeConfig.spacing.sm,
+        paddingVertical: ThemeConfig.spacing.xs,
     },
     businessItemDescription: {
-        color: '#64748b',
-        fontSize: 13,
+        color: ThemeConfig.colors.textSecondary,
+        fontSize: ThemeConfig.fontSize.base - 1,
         height: 48,
         lineHeight: 20,
-        paddingTop: 8,
+        paddingTop: ThemeConfig.spacing.sm,
     },
     deleteButton: {
         alignSelf: 'flex-end',
-        paddingVertical: 4,
-        paddingHorizontal: 12,
-        marginTop: 4,
+        paddingVertical: ThemeConfig.spacing.xs,
+        paddingHorizontal: ThemeConfig.spacing.md,
+        marginTop: ThemeConfig.spacing.xs,
     },
     deleteButtonText: {
-        color: '#ef4444',
-        fontSize: 13,
-        fontWeight: '600',
+        color: ThemeConfig.colors.error,
+        fontSize: ThemeConfig.fontSize.base - 1,
+        fontWeight: ThemeConfig.fontWeight.semibold,
     },
     addButton: {
-        paddingVertical: 12,
-        borderRadius: 10,
-        backgroundColor: '#F8FAFC',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        paddingVertical: ThemeConfig.spacing.md,
+        borderRadius: ThemeConfig.borderRadius.sm + 2,
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+        borderWidth: ThemeConfig.borderWidth.thin,
+        borderColor: ThemeConfig.colors.border,
         borderStyle: 'dashed',
         alignItems: 'center',
     },
     addButtonText: {
-        color: '#4F46E5',
-        fontWeight: '600',
-        fontSize: 14,
+        color: ThemeConfig.colors.primary,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        fontSize: ThemeConfig.fontSize.base,
     },
     spacer: {
-        height: 20,
+        height: ThemeConfig.spacing.lg,
     },
     avatarSection: {
         alignItems: 'center',
-        paddingVertical: 10,
+        paddingVertical: ThemeConfig.spacing.sm + 2,
     },
     avatarContainer: {
         width: 120,
         height: 120,
         borderRadius: 60,
-        marginBottom: 16,
+        marginBottom: ThemeConfig.spacing.base,
         position: 'relative',
         overflow: 'hidden',
     },
@@ -400,12 +397,12 @@ const styles = StyleSheet.create({
     avatarPlaceholder: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#f1f5f9',
+        backgroundColor: ThemeConfig.colors.backgroundTertiary,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 60,
-        borderWidth: 2,
-        borderColor: '#e2e8f0',
+        borderWidth: ThemeConfig.borderWidth.base,
+        borderColor: ThemeConfig.colors.border,
         borderStyle: 'dashed',
     },
     avatarOverlay: {
@@ -414,38 +411,38 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        paddingVertical: 8,
+        paddingVertical: ThemeConfig.spacing.sm,
         alignItems: 'center',
         justifyContent: 'center',
     },
     avatarActions: {
         flexDirection: 'row',
-        gap: 12,
-        marginBottom: 12,
+        gap: ThemeConfig.spacing.md,
+        marginBottom: ThemeConfig.spacing.md,
     },
     avatarButton: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        paddingVertical: 10,
-        paddingHorizontal: 16,
+        paddingVertical: ThemeConfig.spacing.sm + 2,
+        paddingHorizontal: ThemeConfig.spacing.base,
         backgroundColor: '#ede9fe',
-        borderRadius: 8,
+        borderRadius: ThemeConfig.borderRadius.base,
     },
     removeButton: {
         backgroundColor: '#fee2e2',
     },
     avatarButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#4F46E5',
+        fontSize: ThemeConfig.fontSize.base,
+        fontWeight: ThemeConfig.fontWeight.semibold,
+        color: ThemeConfig.colors.primary,
     },
     removeButtonText: {
-        color: '#ef4444',
+        color: ThemeConfig.colors.error,
     },
     avatarHint: {
-        fontSize: 12,
-        color: '#94a3b8',
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textTertiary,
         textAlign: 'center',
         lineHeight: 16,
     },
