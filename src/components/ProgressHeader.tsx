@@ -13,6 +13,7 @@ interface ProgressHeaderProps {
     cardData: BusinessCardData;
     sessionId: string;
     autoEvaluate?: boolean;
+    onHelpPress?: () => void;
 }
 
 /**
@@ -26,7 +27,8 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
     onPress,
     cardData,
     sessionId,
-    autoEvaluate = false
+    autoEvaluate = false,
+    onHelpPress
 }) => {
     const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
     const [showEvaluationModal, setShowEvaluationModal] = useState(false);
@@ -50,6 +52,15 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
             <View style={styles.headerLeft}>
                 <MaterialIcons name="smart-toy" size={24} color="#4F46E5" />
                 <Text style={styles.headerTitle}>AI 名片助手</Text>
+                {onHelpPress && (
+                    <TouchableOpacity 
+                        onPress={onHelpPress}
+                        style={styles.helpButton}
+                        activeOpacity={0.7}
+                    >
+                        <MaterialIcons name="help-outline" size={20} color="#64748b" />
+                    </TouchableOpacity>
+                )}
             </View>
             <View style={styles.headerRight}>
                 <View style={styles.progressContainer}>
@@ -121,6 +132,10 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#1e293b',
         marginLeft: 8,
+    },
+    helpButton: {
+        padding: 4,
+        marginLeft: 4,
     },
     headerRight: {
         flexDirection: 'row',

@@ -81,7 +81,7 @@ type Props = StackScreenProps<ProfileStackParamList, 'ProfileMain'> & {
     onEditPress: () => void;
 };
 
-const ProfileScreen = ({ navigation, onEditPress }: Props) => {
+const ProfileScreen = ({ navigation, route, onEditPress }: Props) => {
     const { cardData, updateCardData, clearAllData } = useCardStore();
     const [showMnemonic, setShowMnemonic] = useState(false);
     const [showBackupRestore, setShowBackupRestore] = useState(false);
@@ -105,6 +105,22 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
         loadDataStats();
         loadIdentity();
     }, []);
+    
+    // Handle navigation parameter to open access control
+    useEffect(() => {
+        if (route?.params?.openAccessControl === true) {
+            // Use setTimeout to ensure the screen is fully mounted
+            setTimeout(() => {
+                setShowAccessControl(true);
+            }, 100);
+            // Clear the parameter after opening
+            try {
+                navigation.setParams({ openAccessControl: undefined } as any);
+            } catch (error) {
+                console.log('Failed to clear navigation params:', error);
+            }
+        }
+    }, [route?.params?.openAccessControl]);
     
     const loadIdentity = async () => {
         try {
@@ -263,7 +279,7 @@ const ProfileScreen = ({ navigation, onEditPress }: Props) => {
                         onPress={() => setShowAccessControl(true)}
                     >
                         <MaterialIcons name="security" size={20} color="#64748b" style={styles.menuIcon} />
-                        <Text style={styles.menuText}>访问权限管理</Text>
+                        <Text style={styles.menuText}>数据访问控制</Text>
                         <Text style={styles.menuArrow}>›</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 

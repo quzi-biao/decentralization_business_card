@@ -5,7 +5,7 @@ import CardDetailScreen from '../screens/CardDetailScreen';
 import { BusinessCardData } from '../store/useCardStore';
 
 export type ProfileStackParamList = {
-    ProfileMain: undefined;
+    ProfileMain: { openAccessControl?: boolean } | undefined;
     CardDetail: { cardData: BusinessCardData };
 };
 

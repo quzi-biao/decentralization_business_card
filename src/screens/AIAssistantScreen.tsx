@@ -13,6 +13,7 @@ import UpdateConfirmCard from '../components/UpdateConfirmCard';
 import ProgressHeader from '../components/ProgressHeader';
 import ChatInput from '../components/ChatInput';
 import ProgressDetailsModal from '../components/ProgressDetailsModal';
+import PrivacyHelpModal from '../components/PrivacyHelpModal';
 
 interface Message {
     id: string;
@@ -47,38 +48,76 @@ const AIAssistantScreen: React.FC = () => {
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [showProgressModal, setShowProgressModal] = useState(false);
+    const [showPrivacyHelp, setShowPrivacyHelp] = useState(false);
 
-    // 构建当前名片信息的通用方法
-    const buildCurrentCardInfo = (data: typeof cardData): string => {
+    // 构建当前名片信息的通用方法（根据隐私设置过滤）
+    const buildCurrentCardInfo = async (data: typeof cardData): Promise<string> => {
         const currentCardInfo: string[] = [];
-        if (data.realName) currentCardInfo.push(`姓名：${data.realName}`);
-        if (data.avatarId || data.avatarUrl) currentCardInfo.push(`头像已上传`);
-        if (data.position) currentCardInfo.push(`职位：${data.position}`);
-        if (data.companyName) currentCardInfo.push(`公司：${data.companyName}`);
-        if (data.industry) currentCardInfo.push(`行业：${data.industry}`);
-        if (data.phone) currentCardInfo.push(`电话：${data.phone}`);
-        if (data.email) currentCardInfo.push(`邮箱：${data.email}`);
-        if (data.wechat) currentCardInfo.push(`微信：${data.wechat}`);
-        if (data.address) currentCardInfo.push(`地址：${data.address}`);
-        if (data.aboutMe) currentCardInfo.push(`个人简介：${data.aboutMe}`);
-        if (data.hometown) currentCardInfo.push(`家乡：${data.hometown}`);
-        if (data.residence) currentCardInfo.push(`常驻：${data.residence}`);
-        if (data.hobbies) currentCardInfo.push(`兴趣爱好：${data.hobbies}`);
-        if (data.personality) currentCardInfo.push(`性格特点：${data.personality}`);
-        if (data.focusIndustry) currentCardInfo.push(`关注行业：${data.focusIndustry}`);
-        if (data.circles) currentCardInfo.push(`圈层：${data.circles}`);
-        if (data.companyIntro) currentCardInfo.push(`公司简介：${data.companyIntro}`);
-        if (data.mainBusiness && data.mainBusiness.length > 0) {
-            const businessList = data.mainBusiness.map(item => item.name).join('、');
-            currentCardInfo.push(`主营业务：${businessList}`);
-        }
-        if (data.serviceNeeds && data.serviceNeeds.length > 0) {
-            const needsList = data.serviceNeeds.map(item => item.name).join('、');
-            currentCardInfo.push(`服务需求：${needsList}`);
-        }
+        const privateFieldsStatus: string[] = [];
         
-        return currentCardInfo.length > 0 
-            ? `\n\n当前已填写的名片信息：\n${currentCardInfo.join('\n')}` 
+        // 加载字段隐私配置
+        const { DataAccessControlService } = await import('../services/dataAccessControl');
+        const fields = await DataAccessControlService.loadFieldVisibility();
+        
+        // 创建字段映射
+        const fieldMap: Record<string, { name: string; getValue: (d: typeof cardData) => any }> = {
+            avatar: { name: '头像', getValue: (d) => d.avatarId || d.avatarUrl },
+            realName: { name: '姓名', getValue: (d) => d.realName },
+            position: { name: '职位', getValue: (d) => d.position },
+            companyName: { name: '公司', getValue: (d) => d.companyName },
+            industry: { name: '行业', getValue: (d) => d.industry },
+            phone: { name: '电话', getValue: (d) => d.phone },
+            email: { name: '邮箱', getValue: (d) => d.email },
+            wechat: { name: '微信', getValue: (d) => d.wechat },
+            wechatQrCode: { name: '微信二维码', getValue: (d) => d.wechatQrCodeId || d.wechatQrCode },
+            address: { name: '地址', getValue: (d) => d.address },
+            aboutMe: { name: '个人简介', getValue: (d) => d.aboutMe },
+            hometown: { name: '家乡', getValue: (d) => d.hometown },
+            residence: { name: '常驻', getValue: (d) => d.residence },
+            hobbies: { name: '兴趣爱好', getValue: (d) => d.hobbies },
+            personality: { name: '性格特点', getValue: (d) => d.personality },
+            focusIndustry: { name: '关注行业', getValue: (d) => d.focusIndustry },
+            circles: { name: '圈层', getValue: (d) => d.circles },
+            companyIntro: { name: '公司简介', getValue: (d) => d.companyIntro },
+            mainBusiness: { name: '主营业务', getValue: (d) => d.mainBusiness && d.mainBusiness.length > 0 ? d.mainBusiness.map((item: any) => item.name).join('、') : null },
+            serviceNeeds: { name: '服务需求', getValue: (d) => d.serviceNeeds && d.serviceNeeds.length > 0 ? d.serviceNeeds.map((item: any) => item.name).join('、') : null },
+            companyImages: { name: '公司图片', getValue: (d) => (d.companyImageIds && d.companyImageIds.length > 0) || (d.companyImages && d.companyImages.length > 0) ? '已上传' : null },
+            introVideoUrl: { name: '个人介绍视频', getValue: (d) => d.introVideoUrl },
+            videoChannelId: { name: '视频号ID', getValue: (d) => d.videoChannelId },
+        };
+        
+        // 遍历字段配置
+        fields.forEach(field => {
+            const fieldInfo = fieldMap[field.id];
+            if (!fieldInfo) return;
+            
+            const value = fieldInfo.getValue(data);
+            const isFilled = value && value.toString().trim() !== '';
+            
+            if (isFilled) {
+                if (field.isPrivate) {
+                    // 隐私字段：只告知已填写，不显示具体内容
+                    privateFieldsStatus.push(`${fieldInfo.name}：[已填写，隐私内容]`);
+                } else {
+                    // 非隐私字段：显示具体内容
+                    if (field.id === 'avatar') {
+                        currentCardInfo.push(`头像已上传`);
+                    } else if (field.id === 'wechatQrCode') {
+                        currentCardInfo.push(`微信二维码已上传`);
+                    } else if (field.id === 'companyImages' && value === '已上传') {
+                        currentCardInfo.push(`公司图片已上传`);
+                    } else {
+                        currentCardInfo.push(`${fieldInfo.name}：${value}`);
+                    }
+                }
+            }
+        });
+        
+        // 合并信息
+        const allInfo = [...currentCardInfo, ...privateFieldsStatus];
+        
+        return allInfo.length > 0 
+            ? `\n\n当前已填写的名片信息：\n${allInfo.join('\n')}` 
             : '';
     };
 
@@ -153,6 +192,14 @@ const AIAssistantScreen: React.FC = () => {
             }
             
             // 如果没有任何聊天记录，初始化新对话
+            // 先显示隐私说明
+            const privacyNotice: Message = {
+                id: `privacy-${Date.now()}`,
+                text: '🔒 **隐私保护说明**\n\n为了保护您的隐私，以下字段默认设置为隐私内容，AI 助手将无法看到具体内容：\n\n• 姓名\n• 电话\n• 邮箱\n• 微信号\n• 地址\n\n您可以在"访问控制"页面自定义隐私设置。AI 助手仍然知道这些字段是否已填写，但看不到具体内容。',
+                isUser: false,
+                timestamp: new Date(),
+            };
+            
             const filledFields: string[] = [];
             if (cardData.realName) filledFields.push(`姓名：${cardData.realName}`);
             if (cardData.position) filledFields.push(`职位：${cardData.position}`);
@@ -177,23 +224,25 @@ const AIAssistantScreen: React.FC = () => {
                 const parsedResponse = parseAIResponse(rawResponse);
 
                 const welcomeMessage: Message = {
-                    id: `welcome-${Date.now()}`,
+                    id: `welcome-${Date.now() + 1}`,
                     text: parsedResponse.output,
                     isUser: false,
                     timestamp: new Date(),
                 };
                 
-                setMessages([welcomeMessage]);
+                setMessages([privacyNotice, welcomeMessage]);
+                await ChatPersistenceService.saveMessage(privacyNotice, sessionId);
                 await ChatPersistenceService.saveMessage(welcomeMessage, sessionId);
             } catch (error) {
                 console.error('Failed to initialize chat:', error);
                 const welcomeMessage: Message = {
-                    id: `welcome-${Date.now()}`,
+                    id: `welcome-${Date.now() + 1}`,
                     text: '您好！我是您的名片信息收集助手 😊\n\n我会通过简单的对话，帮您一步步创建一张专业、完整的商务名片。整个过程大约需要5-10分钟，所有信息仅用于生成您的个人名片。\n\n您现在方便开始吗？如果准备好了，我们可以先从基本信息入手！',
                     isUser: false,
                     timestamp: new Date(),
                 };
-                setMessages([welcomeMessage]);
+                setMessages([privacyNotice, welcomeMessage]);
+                await ChatPersistenceService.saveMessage(privacyNotice, sessionId);
                 await ChatPersistenceService.saveMessage(welcomeMessage, sessionId);
             }
         };
@@ -259,7 +308,7 @@ const AIAssistantScreen: React.FC = () => {
             }
             
             // 附加当前名片信息，帮助 AI 更好地理解上下文
-            const cardInfoContext = buildCurrentCardInfo(cardData);
+            const cardInfoContext = await buildCurrentCardInfo(cardData);
             messageContent += cardInfoContext;
 
             // 调用 n8n AI Agent，传递图片 URL
@@ -384,7 +433,7 @@ const AIAssistantScreen: React.FC = () => {
         setLoading(true);
         try {
             // 使用通用方法构建当前名片信息
-            const cardInfoContext = buildCurrentCardInfo(mergedData);
+            const cardInfoContext = await buildCurrentCardInfo(mergedData);
             const confirmationMessage = `已确认更新：${fieldNames}。${cardInfoContext}\n\n请根据已有信息，引导我填写下一个缺失的内容。`;
             
             const rawResponse = await callN8NAgent(
@@ -493,6 +542,7 @@ const AIAssistantScreen: React.FC = () => {
                 cardData={cardData}
                 sessionId={sessionId}
                 autoEvaluate={true}
+                onHelpPress={() => setShowPrivacyHelp(true)}
             />
 
             <KeyboardAvoidingView 
@@ -532,6 +582,11 @@ const AIAssistantScreen: React.FC = () => {
                     placeholder="输入消息..."
                 />
             </KeyboardAvoidingView>
+            
+            <PrivacyHelpModal
+                visible={showPrivacyHelp}
+                onClose={() => setShowPrivacyHelp(false)}
+            />
             
             <ProgressDetailsModal
                 visible={showProgressModal}
