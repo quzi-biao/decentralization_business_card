@@ -9,6 +9,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import ViewShot from 'react-native-view-shot';
+import NetInfo from '@react-native-community/netinfo';
 import { useCardStore, BusinessCardData } from '../store/useCardStore';
 import { useExchangeStore } from '../store/useExchangeStore';
 import { useTagStore, TAG_COLORS } from '../store/useTagStore';
@@ -47,8 +48,35 @@ const ExchangeScreen = () => {
     const availableTags = ['客户', '供应商', '合作伙伴', '朋友', '同事', '潜在客户'];
 
     useEffect(() => {
-        // 立即生成二维码，避免布局闪烁
-        generateMyQRCode();
+        const checkNetworkAndGenerateQR = async () => {
+            try {
+                const netState = await NetInfo.fetch();
+                console.log('Network state:', netState);
+                
+                if (netState.isConnected && netState.isInternetReachable !== false) {
+                    // 网络已连接，生成二维码
+                    console.log('Network available, generating QR code...');
+                    generateMyQRCode();
+                } else {
+                    console.log('Network not available, waiting for connection...');
+                    // 监听网络状态变化
+                    const unsubscribe = NetInfo.addEventListener(state => {
+                        console.log('Network state changed:', state);
+                        if (state.isConnected && state.isInternetReachable !== false && !qrData) {
+                            console.log('Network connected, generating QR code...');
+                            generateMyQRCode();
+                            unsubscribe();
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to check network state:', error);
+                // 网络检查失败，延迟1秒后尝试生成
+                setTimeout(() => generateMyQRCode(), 1000);
+            }
+        };
+        
+        checkNetworkAndGenerateQR();
     }, []);
 
     // 监听名片数据变化，自动重新生成二维码

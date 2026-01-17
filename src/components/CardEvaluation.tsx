@@ -38,11 +38,10 @@ const CardEvaluation: React.FC<CardEvaluationProps> = ({ cardData, sessionId, on
                 setEvaluation(savedEvaluation);
                 onEvaluationLoaded?.(savedEvaluation);
                 console.log('✓ 已加载保存的评分数据');
-            } else if (autoEvaluate) {
-                // 如果没有评分数据且设置了自动评分，则自动获取评分
-                console.log('未找到评分数据，自动获取评分...');
-                await fetchEvaluation();
             } else {
+                // 不再自动评分，避免在网络授权前调用接口
+                // 用户需要手动点击刷新按钮获取评分
+                console.log('未找到评分数据，等待用户手动获取评分');
                 onEvaluationLoaded?.(null);
             }
             setHasLoadedFromStorage(true);
@@ -246,12 +245,13 @@ const CardEvaluation: React.FC<CardEvaluationProps> = ({ cardData, sessionId, on
         }
     };
 
-    // 当弹窗打开时，如果没有评分数据则自动获取
-    useEffect(() => {
-        if (visible && !evaluation && !loading && hasLoadedFromStorage) {
-            fetchEvaluation();
-        }
-    }, [visible]);
+    // 移除弹窗打开时的自动评分，避免在网络授权前调用接口
+    // 用户需要手动点击刷新按钮获取评分
+    // useEffect(() => {
+    //     if (visible && !evaluation && !loading && hasLoadedFromStorage) {
+    //         fetchEvaluation();
+    //     }
+    // }, [visible]);
 
     // 刷新评分
     const handleRefresh = async () => {

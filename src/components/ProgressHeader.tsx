@@ -76,28 +76,26 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
                     <View style={styles.progressBarContainer}>
                         <View style={[styles.progressBar, { width: `${progress}%` }]} />
                     </View>
-                    {evaluation && (
-                        <TouchableOpacity
-                            style={[
-                                styles.scoreBadge,
-                                { backgroundColor: getScoreColor(evaluation.totalScore) + '20' }
-                            ]}
-                            onPress={() => setShowEvaluationModal(true)}
-                            activeOpacity={0.7}
-                        >
-                            <MaterialIcons 
-                                name="star" 
-                                size={14} 
-                                color={getScoreColor(evaluation.totalScore)} 
-                            />
-                            <Text style={[
-                                styles.scoreText,
-                                { color: getScoreColor(evaluation.totalScore) }
-                            ]}>
-                                {evaluation.totalScore}分
-                            </Text>
-                        </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                        style={[
+                            styles.scoreBadge,
+                            { backgroundColor: getScoreColor(evaluation?.totalScore || 0) + '20' }
+                        ]}
+                        onPress={() => setShowEvaluationModal(true)}
+                        activeOpacity={0.7}
+                    >
+                        <MaterialIcons 
+                            name="star" 
+                            size={14} 
+                            color={getScoreColor(evaluation?.totalScore || 0)} 
+                        />
+                        <Text style={[
+                            styles.scoreText,
+                            { color: getScoreColor(evaluation?.totalScore || 0) }
+                        ]}>
+                            {evaluation?.totalScore || 0}分
+                        </Text>
+                    </TouchableOpacity>
                 </View>
                 <CardEvaluation 
                     cardData={cardData} 
