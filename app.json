@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
     "statusBar": {
       "style": "dark"
     },
@@ -19,7 +18,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.quzi.businesscard",
       "buildNumber": "1",
-      "deploymentTarget": "15.0",
+      "deploymentTarget": "15.1",
       "infoPlist": {
         "NSCameraUsageDescription": "需要使用相机扫描二维码和拍摄照片",
         "NSPhotoLibraryUsageDescription": "需要访问相册以选择和保存图片",
