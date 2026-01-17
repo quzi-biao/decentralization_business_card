@@ -22,18 +22,18 @@ export const FIELD_METADATA: FieldMetadata[] = [
     { key: 'avatar', label: '头像', accessCategory: 'basic', getValue: (d) => d.avatarId || d.avatarUrl, isVisible: true, isPrivate: false },
     { key: 'avatarId', label: '头像', getValue: (d) => d.avatarId },
     { key: 'avatarUrl', label: '头像', getValue: (d) => d.avatarUrl },
-    { key: 'realName', label: '姓名', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.realName, isVisible: true, isPrivate: true },
+    { key: 'realName', label: '姓名', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.realName, isVisible: true, isPrivate: false },
     { key: 'position', label: '职位', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.position, isVisible: true, isPrivate: false },
     { key: 'companyName', label: '公司名称', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.companyName, isVisible: true, isPrivate: false },
     { key: 'industry', label: '行业领域', category: '基础信息', accessCategory: 'basic', getValue: (d) => d.industry, isVisible: true, isPrivate: false },
     
     // 联系方式
-    { key: 'phone', label: '电话', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.phone, isVisible: true, isPrivate: true },
-    { key: 'email', label: '邮箱', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.email, isVisible: true, isPrivate: true },
-    { key: 'wechat', label: '微信', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.wechat, isVisible: true, isPrivate: true },
+    { key: 'phone', label: '电话', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.phone, isVisible: true, isPrivate: false },
+    { key: 'email', label: '邮箱', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.email, isVisible: true, isPrivate: false },
+    { key: 'wechat', label: '微信', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.wechat, isVisible: true, isPrivate: false },
     { key: 'wechatQrCode', label: '微信二维码', accessCategory: 'contact', getValue: (d) => d.wechatQrCodeId || d.wechatQrCode, isVisible: true, isPrivate: false },
     { key: 'wechatQrCodeId', label: '微信二维码', getValue: (d) => d.wechatQrCodeId },
-    { key: 'address', label: '地址', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.address, isVisible: true, isPrivate: true },
+    { key: 'address', label: '地址', category: '联系方式', accessCategory: 'contact', getValue: (d) => d.address, isVisible: true, isPrivate: false },
     
     // 个人信息
     { key: 'aboutMe', label: '个人简介', category: '个人信息', accessCategory: 'personal', getValue: (d) => d.aboutMe, isVisible: true, isPrivate: false },
