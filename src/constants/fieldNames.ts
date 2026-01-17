@@ -54,6 +54,9 @@ export const FIELD_METADATA: FieldMetadata[] = [
     // 多媒体
     { key: 'introVideoUrl', label: '个人介绍视频', accessCategory: 'media', getValue: (d) => d.introVideoUrl, isVisible: true, isPrivate: false },
     { key: 'videoChannelId', label: '视频号ID', accessCategory: 'media', getValue: (d) => d.videoChannelId, isVisible: true, isPrivate: false },
+    
+    // 社交媒体
+    { key: 'socialMedia', label: '社交媒体账号', accessCategory: 'media', getValue: (d) => d.socialMedia && d.socialMedia.length > 0 ? `${d.socialMedia.length}个账号` : null, isVisible: true, isPrivate: false },
 ];
 
 /**

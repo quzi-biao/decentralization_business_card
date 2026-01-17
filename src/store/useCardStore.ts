@@ -7,6 +7,14 @@ export interface BusinessItem {
     description: string;
 }
 
+export interface SocialMediaAccount {
+    id: string;
+    platform: 'weibo' | 'wechatChannel' | 'douyin' | 'xiaohongshu' | 'wechatOfficialAccount' | 'yuque' | 'twitter' | 'telegram' | 'discord' | 'facebook' | 'linkedin' | 'instagram' | 'youtube';
+    accountId: string;  // 账号ID/用户名
+    displayName?: string;  // 显示名称（可选）
+    url?: string;  // 自定义链接（可选）
+}
+
 export interface BusinessCardData {
     // 基本信息
     avatarId?: string;         // 头像图片ID
@@ -43,6 +51,9 @@ export interface BusinessCardData {
     // 多媒体
     introVideoUrl?: string;    // 个人介绍视频URL
     videoChannelId?: string;   // 视频号ID
+    
+    // 社交媒体
+    socialMedia: SocialMediaAccount[];  // 社交媒体账号列表
     
     // 其他
     tags: string[];
@@ -88,6 +99,9 @@ const defaultCardData: BusinessCardData = {
     serviceNeeds: [],
     companyImageIds: [],
     companyImages: [],
+    
+    // 社交媒体
+    socialMedia: [],
     
     tags: [],
     themeColor: "#4F46E5"
