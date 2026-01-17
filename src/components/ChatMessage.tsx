@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
 import { fileManager } from '../services/fileManager';
 import { ThemeConfig } from '../constants/theme';
+import ImageViewer from './ImageViewer';
 
 interface Message {
     id: string;
@@ -28,6 +29,7 @@ interface ChatMessageProps {
  */
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }) => {
     const [imageLoadFailed, setImageLoadFailed] = useState(false);
+    const [showImageViewer, setShowImageViewer] = useState(false);
     
     // 优先使用本地路径，其次使用 imageUrl（向后兼容），最后使用 MinIO 链接
     const displayImageUrl = message.imageLocalPath || message.imageUrl || message.imageMinioUrl;
@@ -133,12 +135,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }
     };
 
     return (
-        <View 
-            style={[
-                styles.messageContainer,
-                message.isUser ? styles.userMessage : styles.aiMessage
-            ]}
-        >
+        <>
+            <View 
+                style={[
+                    styles.messageContainer,
+                    message.isUser ? styles.userMessage : styles.aiMessage
+                ]}
+            >
             {message.isUser ? (
                 <TouchableOpacity 
                     onLongPress={handleLongPress}
@@ -152,14 +155,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }
                                 <Text style={styles.imageFailedText}>图片加载失败</Text>
                             </View>
                         ) : (
-                            <Image 
-                                source={{ uri: displayImageUrl }} 
-                                style={styles.messageImage}
-                                resizeMode="cover"
-                                onError={() => {
-                                    setImageLoadFailed(true);
-                                }}
-                            />
+                            <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.8}>
+                                <Image 
+                                    source={{ uri: displayImageUrl }} 
+                                    style={styles.messageImage}
+                                    resizeMode="cover"
+                                    onError={() => {
+                                        setImageLoadFailed(true);
+                                    }}
+                                />
+                            </TouchableOpacity>
                         )
                     )}
                     {message.text && (
@@ -184,14 +189,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }
                                 <Text style={styles.imageFailedText}>图片加载失败</Text>
                             </View>
                         ) : (
-                            <Image 
-                                source={{ uri: displayImageUrl }} 
-                                style={styles.messageImage}
-                                resizeMode="cover"
-                                onError={() => {
-                                    setImageLoadFailed(true);
-                                }}
-                            />
+                            <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.8}>
+                                <Image 
+                                    source={{ uri: displayImageUrl }} 
+                                    style={styles.messageImage}
+                                    resizeMode="cover"
+                                    onError={() => {
+                                        setImageLoadFailed(true);
+                                    }}
+                                />
+                            </TouchableOpacity>
                         )
                     )}
                     <Markdown style={markdownStyles}>
@@ -202,7 +209,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDelete, onResend }
                     </Text>
                 </TouchableOpacity>
             )}
-        </View>
+            </View>
+            
+            {displayImageUrl && !imageLoadFailed && (
+                <ImageViewer
+                    visible={showImageViewer}
+                    imageUrl={displayImageUrl}
+                    onClose={() => setShowImageViewer(false)}
+                />
+            )}
+        </>
     );
 };
 

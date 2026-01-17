@@ -11,6 +11,7 @@ import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
 import { ThemeConfig } from '../constants/theme';
 import { LazyImage } from '../components/LazyImage';
 import { getPlatformIcon, getPlatformColor, getPlatformName, generateSocialMediaUrl } from '../utils/socialMediaLinks';
+import ImageViewer from '../components/ImageViewer';
 
 const { width } = Dimensions.get('window');
 
@@ -32,6 +33,7 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
     const [noteText, setNoteText] = useState('');
     const [importanceValue, setImportanceValue] = useState(20);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [viewingImage, setViewingImage] = useState<string | null>(null);
     
     useEffect(() => {
         loadTags();
@@ -340,17 +342,21 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             <View style={styles.qrCodeSection}>
                                 <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.wechatQrCode}</Text>
                                 {cardData.wechatQrCodeId ? (
-                                    <LazyImage 
-                                        imageId={cardData.wechatQrCodeId}
-                                        style={styles.qrCodeImage}
-                                        useThumbnail={false}
-                                    />
+                                    <TouchableOpacity onPress={() => setViewingImage(cardData.wechatQrCodeId!)} activeOpacity={0.8}>
+                                        <LazyImage 
+                                            imageId={cardData.wechatQrCodeId}
+                                            style={styles.qrCodeImage}
+                                            useThumbnail={false}
+                                        />
+                                    </TouchableOpacity>
                                 ) : cardData.wechatQrCode ? (
-                                    <Image 
-                                        source={{ uri: cardData.wechatQrCode }}
-                                        style={styles.qrCodeImage}
-                                        resizeMode="contain"
-                                    />
+                                    <TouchableOpacity onPress={() => setViewingImage(cardData.wechatQrCode!)} activeOpacity={0.8}>
+                                        <Image 
+                                            source={{ uri: cardData.wechatQrCode }}
+                                            style={styles.qrCodeImage}
+                                            resizeMode="contain"
+                                        />
+                                    </TouchableOpacity>
                                 ) : null}
                             </View>
                         )}
@@ -521,23 +527,23 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             >
                                 {cardData.companyImageIds && cardData.companyImageIds.length > 0 ? (
                                     cardData.companyImageIds.map((imageId, index) => (
-                                        <View key={imageId || index} style={styles.companyImageItem}>
+                                        <TouchableOpacity key={imageId || index} style={styles.companyImageItem} onPress={() => setViewingImage(imageId)} activeOpacity={0.8}>
                                             <LazyImage 
                                                 imageId={imageId}
                                                 style={styles.companyImage}
                                                 useThumbnail={true}
                                             />
-                                        </View>
+                                        </TouchableOpacity>
                                     ))
                                 ) : cardData.companyImages && cardData.companyImages.length > 0 ? (
                                     cardData.companyImages.map((imageUrl, index) => (
-                                        <View key={index} style={styles.companyImageItem}>
+                                        <TouchableOpacity key={index} style={styles.companyImageItem} onPress={() => setViewingImage(imageUrl)} activeOpacity={0.8}>
                                             <Image 
                                                 source={{ uri: imageUrl }}
                                                 style={styles.companyImage}
                                                 resizeMode="cover"
                                             />
-                                        </View>
+                                        </TouchableOpacity>
                                     ))
                                 ) : null}
                             </ScrollView>
@@ -714,6 +720,15 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                         </View>
                     </SafeAreaView>
                 </Modal>
+                
+                {/* 图片查看器 */}
+                {viewingImage && (
+                    <ImageViewer
+                        visible={!!viewingImage}
+                        imageUrl={viewingImage}
+                        onClose={() => setViewingImage(null)}
+                    />
+                )}
         </SafeAreaView>
     );
 };

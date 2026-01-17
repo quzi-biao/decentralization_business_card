@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BusinessCardData } from '../store/useCardStore';
 import { LazyImage } from './LazyImage';
 import { ThemeConfig } from '../constants/theme';
+import ImageViewer from './ImageViewer';
 
 interface MyCardProps {
     cardData: BusinessCardData;
@@ -13,6 +14,7 @@ interface MyCardProps {
 
 const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }) => {
     const CardWrapper = onPress ? TouchableOpacity : View;
+    const [viewingAvatar, setViewingAvatar] = useState<string | null>(null);
     
     // 检查是否有任何名片内容（排除系统默认字段）
     const hasCardData = Boolean(
@@ -58,7 +60,18 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
         >
             {/* 顶部：基本信息 */}
             <View style={styles.topSection}>
-                <View style={styles.avatar}>
+                <TouchableOpacity 
+                    style={styles.avatar}
+                    onPress={() => {
+                        if (cardData.avatarId) {
+                            setViewingAvatar(cardData.avatarId);
+                        } else if (cardData.avatarUrl && cardData.avatarUrl.length < 150000) {
+                            setViewingAvatar(cardData.avatarUrl);
+                        }
+                    }}
+                    activeOpacity={cardData.avatarId || cardData.avatarUrl ? 0.8 : 1}
+                    disabled={!cardData.avatarId && !cardData.avatarUrl}
+                >
                     {cardData.avatarId ? (
                         <LazyImage 
                             imageId={cardData.avatarId}
@@ -76,7 +89,7 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
                             {cardData.realName?.charAt(0) || '👤'}
                         </Text>
                     )}
-                </View>
+                </TouchableOpacity>
                 <View style={styles.basicInfo}>
                     <View style={styles.nameRow}>
                         <Text style={styles.name} numberOfLines={1}>
@@ -137,6 +150,15 @@ const MyCard: React.FC<MyCardProps> = ({ cardData, onPress, onAIAssistantPress }
                         </View>
                     )}
                 </View>
+            )}
+            
+            {/* 图片查看器 */}
+            {viewingAvatar && (
+                <ImageViewer
+                    visible={!!viewingAvatar}
+                    imageUrl={viewingAvatar}
+                    onClose={() => setViewingAvatar(null)}
+                />
             )}
         </CardWrapper>
     );
