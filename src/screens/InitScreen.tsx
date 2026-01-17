@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
         gap: ThemeConfig.spacing.base,
         width: '100%',
         maxWidth: 320,
-        marginLeft: 24,
+        marginLeft: 64,
         alignSelf: 'center',
     },
     featureText: {
