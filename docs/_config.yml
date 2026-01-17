@@ -1,0 +1,52 @@
+# Jekyll configuration for GitHub Pages
+# AI Business Card - Decentralized Smart Digital Business Card
+
+# Site settings
+title: AI Business Card
+description: Decentralized Smart Digital Business Card - Take control of your data
+baseurl: "/decentralization_business_card"
+url: "https://quzi-biao.github.io"
+
+# Build settings
+markdown: kramdown
+theme: minima
+
+# Exclude files from processing
+exclude:
+  - node_modules/
+  - package.json
+  - package-lock.json
+  - .git/
+  - .gitignore
+  - README.md
+  - src/
+  - android/
+  - ios/
+  - .expo/
+  - .expo-shared/
+  - babel.config.js
+  - tsconfig.json
+  - app.json
+  - eas.json
+  - index.ts
+  - App.tsx
+
+# Include files
+include:
+  - docs/
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# SEO settings
+lang: en
+author: AI Business Card Team
+twitter:
+  username: 
+  card: summary
+
+# Social links
+github_username: quzi-biao
+email: 0xnomeans@gmail.com
