@@ -24,7 +24,7 @@
 ### 联系方式
 - **phone** (string, 必填): 电话 - 格式：138-0000-0000 或 13800000000
 - **email** (string, 必填): 邮箱 - 有效的电子邮箱地址
-- **wechat** (string, 必填): 微信号
+- **wechat** (string, 可选): 微信号
 - **wechatQrCode** (string, 可选): 微信二维码URL
 - **address** (string, 必填): 地址 - 详细的办公地址
 
