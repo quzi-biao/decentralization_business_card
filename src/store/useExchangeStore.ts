@@ -47,6 +47,7 @@ interface ExchangeStore {
     saveExchanges: () => Promise<void>;
     saveExchangedCards: () => Promise<void>;
     loadExchangedCards: () => Promise<void>;
+    clearAllData: () => Promise<void>;
 }
 
 const EXCHANGES_KEY = 'card_exchanges';
@@ -192,6 +193,21 @@ export const useExchangeStore = create<ExchangeStore>((set, get) => ({
             }
         } catch (error) {
             console.error('Failed to load exchanged cards:', error);
+        }
+    },
+    
+    clearAllData: async () => {
+        try {
+            await AsyncStorage.removeItem(EXCHANGES_KEY);
+            await AsyncStorage.removeItem(EXCHANGED_CARDS_KEY);
+            set({
+                exchanges: [],
+                exchangedCards: new Map()
+            });
+            console.log('Exchange store data cleared');
+        } catch (error) {
+            console.error('Failed to clear exchange data:', error);
+            throw error;
         }
     }
 }));

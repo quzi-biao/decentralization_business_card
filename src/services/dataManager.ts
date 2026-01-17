@@ -2,6 +2,7 @@ import { EncryptedStorageService } from './encryptedStorage';
 import { ChatPersistenceService } from './chatPersistence';
 import { CardPersistenceService } from './cardPersistence';
 import { fileManager } from './fileManager';
+import { useExchangeStore } from '../store/useExchangeStore';
 
 /**
  * 数据管理服务
@@ -19,6 +20,9 @@ export class DataManager {
             
             // 清除名片数据
             await CardPersistenceService.clearAllCards();
+            
+            // 清除交换记录和交换的名片
+            await useExchangeStore.getState().clearAllData();
             
             // 清除所有文件（头像、图片）
             await fileManager.clearAllFiles();
