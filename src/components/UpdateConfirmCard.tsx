@@ -30,7 +30,38 @@ const UpdateConfirmCard: React.FC<UpdateConfirmCardProps> = ({
                 
                 const fieldName = FIELD_DISPLAY_NAMES[key] || key;
                 
-                // 格式化数组类型的值
+                // 特殊处理不同类型的字段
+                if (key === 'socialMedia' && Array.isArray(value)) {
+                    return (
+                        <View key={key} style={styles.fieldItem}>
+                            <Text style={styles.fieldLabel}>{fieldName}</Text>
+                            {value.map((account: any, index: number) => (
+                                <Text key={index} style={styles.fieldValue}>
+                                    • {account.platform}: {account.displayName || account.accountId}
+                                    {account.url ? ` (${account.url})` : ''}
+                                </Text>
+                            ))}
+                        </View>
+                    );
+                }
+                
+                if ((key === 'mainBusiness' || key === 'serviceNeeds') && Array.isArray(value)) {
+                    return (
+                        <View key={key} style={styles.fieldItem}>
+                            <Text style={styles.fieldLabel}>{fieldName}</Text>
+                            {value.map((item: any, index: number) => (
+                                <View key={index} style={styles.businessItem}>
+                                    <Text style={styles.fieldValue}>• {item.name}</Text>
+                                    {item.description && (
+                                        <Text style={styles.fieldDescription}>  {item.description}</Text>
+                                    )}
+                                </View>
+                            ))}
+                        </View>
+                    );
+                }
+                
+                // 其他数组类型
                 let displayValue: string;
                 if (Array.isArray(value)) {
                     displayValue = value.map(item => 
@@ -108,6 +139,15 @@ const styles = StyleSheet.create({
         fontSize: ThemeConfig.fontSize.md,
         color: ThemeConfig.colors.textPrimary,
         fontWeight: ThemeConfig.fontWeight.medium,
+    },
+    businessItem: {
+        marginBottom: ThemeConfig.spacing.xs,
+    },
+    fieldDescription: {
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textSecondary,
+        marginTop: 2,
+        lineHeight: 18,
     },
     confirmButtons: {
         flexDirection: 'row',
