@@ -18,12 +18,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.quzi.businesscard",
+      "deploymentTarget": "15.0",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "需要使用麦克风进行语音输入",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
+      "icon": "./assets/app-icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
