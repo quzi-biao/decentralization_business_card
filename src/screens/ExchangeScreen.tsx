@@ -61,6 +61,136 @@ const ExchangeScreen = () => {
     }, [cardData]);
 
 
+    // 验证并上传所有图片文件到 MinIO
+    const validateAndUploadImages = async (): Promise<{
+        avatarUrl?: string;
+        wechatQrCodeUrl?: string;
+        companyImageUrls?: string[];
+        missingFiles: string[];
+    }> => {
+        const missingFiles: string[] = [];
+        let avatarUrl: string | undefined;
+        let wechatQrCodeUrl: string | undefined;
+        const companyImageUrls: string[] = [];
+
+        // 1. 检查并上传头像
+        if (cardData.avatarId) {
+            console.log('Checking avatar in MinIO...', 'avatarId:', cardData.avatarId);
+            try {
+                const avatarFile = await fileManager.getFileMetadata(cardData.avatarId);
+                console.log('Avatar file metadata:', avatarFile);
+                if (avatarFile) {
+                    if (avatarFile.minioUrl) {
+                        console.log('Checking if avatar exists at:', avatarFile.minioUrl);
+                        const exists = await checkMinioFileExists(avatarFile.minioUrl);
+                        if (exists) {
+                            avatarUrl = avatarFile.minioUrl;
+                            console.log('✓ Avatar exists in MinIO:', avatarUrl);
+                        } else {
+                            console.log('⚠ Avatar URL exists in metadata but file not found in MinIO');
+                        }
+                    }
+                    
+                    if (!avatarUrl) {
+                        console.log('Uploading avatar to MinIO...');
+                        const updatedFile = await fileManager.ensureFileUploaded(cardData.avatarId);
+                        console.log('Upload result:', updatedFile);
+                        if (updatedFile?.minioUrl) {
+                            avatarUrl = updatedFile.minioUrl;
+                            console.log('✓ Avatar uploaded to MinIO:', avatarUrl);
+                        } else {
+                            console.error('❌ Avatar upload failed - no minioUrl returned');
+                            missingFiles.push('头像');
+                        }
+                    }
+                } else {
+                    console.error('❌ Avatar file metadata not found for id:', cardData.avatarId);
+                    missingFiles.push('头像');
+                }
+            } catch (error) {
+                console.error('Failed to process avatar:', error);
+                missingFiles.push('头像');
+            }
+        }
+
+        // 2. 检查并上传微信二维码
+        if (cardData.wechatQrCodeId) {
+            console.log('Checking WeChat QR code in MinIO...');
+            try {
+                const qrFile = await fileManager.getFileMetadata(cardData.wechatQrCodeId);
+                if (qrFile) {
+                    if (qrFile.minioUrl) {
+                        const exists = await checkMinioFileExists(qrFile.minioUrl);
+                        if (exists) {
+                            wechatQrCodeUrl = qrFile.minioUrl;
+                            console.log('✓ WeChat QR code exists in MinIO');
+                        }
+                    }
+                    
+                    if (!wechatQrCodeUrl) {
+                        console.log('Uploading WeChat QR code to MinIO...');
+                        const updatedFile = await fileManager.ensureFileUploaded(cardData.wechatQrCodeId);
+                        if (updatedFile?.minioUrl) {
+                            wechatQrCodeUrl = updatedFile.minioUrl;
+                            console.log('✓ WeChat QR code uploaded to MinIO');
+                        } else {
+                            missingFiles.push('微信二维码');
+                        }
+                    }
+                } else {
+                    missingFiles.push('微信二维码');
+                }
+            } catch (error) {
+                console.error('Failed to process WeChat QR code:', error);
+                missingFiles.push('微信二维码');
+            }
+        }
+
+        // 3. 检查并上传公司图片
+        if (cardData.companyImageIds && cardData.companyImageIds.length > 0) {
+            console.log(`Checking ${cardData.companyImageIds.length} company images in MinIO...`);
+            for (let i = 0; i < cardData.companyImageIds.length; i++) {
+                const imageId = cardData.companyImageIds[i];
+                try {
+                    const imageFile = await fileManager.getFileMetadata(imageId);
+                    if (imageFile) {
+                        let imageUrl: string | undefined;
+                        
+                        if (imageFile.minioUrl) {
+                            const exists = await checkMinioFileExists(imageFile.minioUrl);
+                            if (exists) {
+                                imageUrl = imageFile.minioUrl;
+                                console.log(`✓ Company image ${i + 1} exists in MinIO`);
+                            }
+                        }
+                        
+                        if (!imageUrl) {
+                            console.log(`Uploading company image ${i + 1} to MinIO...`);
+                            const updatedFile = await fileManager.ensureFileUploaded(imageId);
+                            if (updatedFile?.minioUrl) {
+                                imageUrl = updatedFile.minioUrl;
+                                console.log(`✓ Company image ${i + 1} uploaded to MinIO`);
+                            } else {
+                                missingFiles.push(`公司图片 ${i + 1}`);
+                            }
+                        }
+                        
+                        if (imageUrl) {
+                            companyImageUrls.push(imageUrl);
+                        }
+                    } else {
+                        missingFiles.push(`公司图片 ${i + 1}`);
+                    }
+                } catch (error) {
+                    console.error(`Failed to process company image ${i + 1}:`, error);
+                    missingFiles.push(`公司图片 ${i + 1}`);
+                }
+            }
+        }
+
+        return { avatarUrl, wechatQrCodeUrl, companyImageUrls, missingFiles };
+    };
+
     // 生成我的二维码
     const generateMyQRCode = async () => {
         setIsGeneratingQR(true);
@@ -74,10 +204,26 @@ const ExchangeScreen = () => {
             }
             console.log('Step 2: Identity obtained:', identity.did);
 
-            // 每次都重新上传加密的名片数据，确保使用最新的名片信息
-            console.log('Step 3: Uploading latest encrypted card...');
+            // Step 3: 验证并上传所有图片文件
+            console.log('Step 3: Validating and uploading all images...');
+            const { avatarUrl, wechatQrCodeUrl, companyImageUrls, missingFiles } = await validateAndUploadImages();
+            
+            // 如果有文件上传失败，显示警告但继续
+            if (missingFiles.length > 0) {
+                console.warn('Some files failed to upload:', missingFiles);
+                Alert.alert(
+                    '部分文件上传失败',
+                    `以下文件未能上传到云端：\n${missingFiles.join('、')}\n\n交换名片时对方可能无法看到这些内容。建议检查网络连接后重新生成二维码。`,
+                    [
+                        { text: '知道了', style: 'default' }
+                    ]
+                );
+            }
+
+            // Step 4: 上传加密的名片数据
+            console.log('Step 4: Uploading latest encrypted card...');
             const encryptedPackage = await uploadEncryptedCard(cardData);
-            console.log('Step 4: Card uploaded successfully to:', encryptedPackage.storageUrl);
+            console.log('Step 5: Card uploaded successfully to:', encryptedPackage.storageUrl);
 
             // 获取新生成的 AES 密钥（用于二维码中）
             const aesKey = await AsyncStorage.getItem(`encrypted_card_${identity.did}_key`);
@@ -85,54 +231,26 @@ const ExchangeScreen = () => {
                 throw new Error('AES key not found');
             }
 
-            // Step 5: 检查并上传头像到 MinIO
-            let avatarMinioUrl: string | undefined;
-            if (cardData.avatarId) {
-                console.log('Step 5: Checking avatar in MinIO...');
-                try {
-                    const avatarFile = await fileManager.getFileMetadata(cardData.avatarId);
-                    if (avatarFile) {
-                        // 检查 MinIO URL 是否存在且有效
-                        if (avatarFile.minioUrl) {
-                            const exists = await checkMinioFileExists(avatarFile.minioUrl);
-                            if (exists) {
-                                console.log('✓ Avatar already exists in MinIO:', avatarFile.minioUrl);
-                                avatarMinioUrl = avatarFile.minioUrl;
-                            } else {
-                                console.log('⚠ Avatar URL exists but file not found, re-uploading...');
-                            }
-                        }
-                        
-                        // 如果 MinIO 中不存在，重新上传
-                        if (!avatarMinioUrl) {
-                            console.log('Uploading avatar to MinIO...');
-                            const updatedFile = await fileManager.ensureFileUploaded(cardData.avatarId);
-                            if (updatedFile?.minioUrl) {
-                                avatarMinioUrl = updatedFile.minioUrl;
-                                console.log('✓ Avatar uploaded to MinIO:', avatarMinioUrl);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('Failed to upload avatar:', error);
-                    // 头像上传失败不影响整体流程
-                }
-            }
-
-            // 生成二维码数据（包含 AES 密钥和头像 URL）
+            // 生成二维码数据（包含所有图片 URL）
             const qrPayload = {
                 did: identity.did,
                 publicKey: identity.publicKey,
                 storageUrl: encryptedPackage.storageUrl,
-                aesKey: aesKey, // 直接包含 AES 密钥
+                aesKey: aesKey,
                 signature: encryptedPackage.signature,
-                avatarUrl: avatarMinioUrl, // 添加头像 URL
+                avatarUrl: avatarUrl,
+                wechatQrCodeUrl: wechatQrCodeUrl,
+                companyImageUrls: (companyImageUrls?.length ?? 0) > 0 ? companyImageUrls : undefined,
                 timestamp: Date.now()
             };
 
-            console.log('Step 6: Setting QR data...');
+            console.log('Step 6: QR Payload Image URLs:');
+            console.log('  - avatarUrl:', avatarUrl || 'NOT SET');
+            console.log('  - wechatQrCodeUrl:', wechatQrCodeUrl || 'NOT SET');
+            console.log('  - companyImageUrls:', (companyImageUrls?.length ?? 0) > 0 ? companyImageUrls : 'NOT SET');
+            
             setQrData(JSON.stringify(qrPayload));
-            console.log('Step 7: QR code generated successfully with latest card data and avatar');
+            console.log('Step 7: QR code generated successfully');
         } catch (error: any) {
             console.error('Failed to generate QR code:', error);
             console.error('Error stack:', error.stack);
@@ -291,6 +409,52 @@ const ExchangeScreen = () => {
                     } catch (error) {
                         console.error('Failed to download avatar:', error);
                         // 头像下载失败不影响整体流程
+                    }
+                }
+                
+                // 下载微信二维码（如果二维码中包含微信二维码 URL）
+                if (qrPayload.wechatQrCodeUrl && peerCardData) {
+                    try {
+                        console.log('Downloading WeChat QR code from:', qrPayload.wechatQrCodeUrl);
+                        const qrFile = await fileManager.downloadFromUrl(qrPayload.wechatQrCodeUrl);
+                        if (qrFile) {
+                            peerCardData.wechatQrCodeId = qrFile.id;
+                            console.log('✓ WeChat QR code downloaded and saved:', qrFile.id);
+                        }
+                    } catch (error) {
+                        console.error('Failed to download WeChat QR code:', error);
+                        // 微信二维码下载失败不影响整体流程
+                    }
+                }
+                
+                // 下载公司图片（如果二维码中包含公司图片 URLs）
+                if (qrPayload.companyImageUrls && Array.isArray(qrPayload.companyImageUrls) && peerCardData) {
+                    try {
+                        console.log(`Downloading ${qrPayload.companyImageUrls.length} company images...`);
+                        const downloadedImageIds: string[] = [];
+                        
+                        for (let i = 0; i < qrPayload.companyImageUrls.length; i++) {
+                            const imageUrl = qrPayload.companyImageUrls[i];
+                            try {
+                                console.log(`Downloading company image ${i + 1} from:`, imageUrl);
+                                const imageFile = await fileManager.downloadFromUrl(imageUrl);
+                                if (imageFile) {
+                                    downloadedImageIds.push(imageFile.id);
+                                    console.log(`✓ Company image ${i + 1} downloaded and saved:`, imageFile.id);
+                                }
+                            } catch (error) {
+                                console.error(`Failed to download company image ${i + 1}:`, error);
+                                // 单个图片下载失败不影响其他图片
+                            }
+                        }
+                        
+                        if (downloadedImageIds.length > 0) {
+                            peerCardData.companyImageIds = downloadedImageIds;
+                            console.log(`✓ Total ${downloadedImageIds.length} company images downloaded`);
+                        }
+                    } catch (error) {
+                        console.error('Failed to download company images:', error);
+                        // 公司图片下载失败不影响整体流程
                     }
                 }
                 

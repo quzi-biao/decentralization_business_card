@@ -5,6 +5,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CryptoJS from 'crypto-js';
 import { MINIO_CONFIG } from '../config/minio.config';
+import { checkMinioFileExists } from './minioService';
 
 const FILES_DIR = `${documentDirectory}files/`;
 const FILE_INDEX_KEY = '@file_index';
@@ -694,7 +695,7 @@ class FileManagerService {
 
   /**
    * 确保文件已上传到 MinIO
-   * 如果文件已有 minioUrl 则直接返回，否则上传并更新元数据
+   * 如果文件已有 minioUrl 则验证其存在性，否则上传并更新元数据
    */
   async ensureFileUploaded(fileId: string): Promise<FileMetadata | null> {
     try {
@@ -704,9 +705,16 @@ class FileManagerService {
         return null;
       }
 
-      // 如果已有 MinIO URL，直接返回
+      // 如果已有 MinIO URL，验证文件是否真实存在
       if (metadata.minioUrl) {
-        return metadata;
+        const exists = await checkMinioFileExists(metadata.minioUrl);
+        if (exists) {
+          console.log('✓ File already exists in MinIO:', metadata.minioUrl);
+          return metadata;
+        }
+        console.warn('⚠ MinIO URL exists in metadata but file not found, will re-upload');
+        // 清除无效的 URL，准备重新上传
+        metadata.minioUrl = undefined;
       }
 
       // 检查本地文件是否存在
@@ -724,6 +732,14 @@ class FileManagerService {
         metadata.fileName
       );
       console.log('✓ File uploaded to MinIO:', metadata.minioUrl);
+
+      // 验证上传是否成功
+      const uploadSuccess = await checkMinioFileExists(metadata.minioUrl);
+      if (!uploadSuccess) {
+        console.error('❌ File upload verification failed, file not accessible at:', metadata.minioUrl);
+        metadata.minioUrl = undefined;
+        return null;
+      }
 
       // 更新元数据索引
       await this.saveFileIndex(fileId, metadata);

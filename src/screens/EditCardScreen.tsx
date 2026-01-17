@@ -350,7 +350,7 @@ const EditCardScreen = ({ onClose }: any) => {
                     <SectionHeader title="主营业务" iconName="work" />
                     {cardData.mainBusiness.map(item => (
                         <BusinessItemCard
-                            key={`main-${item.id}-${Math.random().toString(36).substr(2, 9)}`}
+                            key={item.id}
                             item={item}
                             onUpdate={(data: any) => handleUpdateItem('mainBusiness', item.id, data)}
                             onDelete={() => handleDeleteItem('mainBusiness', item.id)}
@@ -366,7 +366,7 @@ const EditCardScreen = ({ onClose }: any) => {
                     <SectionHeader title="服务需求" iconName="flag" />
                     {cardData.serviceNeeds.map(item => (
                         <BusinessItemCard
-                            key={`need-${item.id}-${Math.random().toString(36).substr(2, 9)}`}
+                            key={item.id}
                             item={item}
                             onUpdate={(data: any) => handleUpdateItem('serviceNeeds', item.id, data)}
                             onDelete={() => handleDeleteItem('serviceNeeds', item.id)}
@@ -525,13 +525,11 @@ const styles = StyleSheet.create({
     },
     avatarActions: {
         flexDirection: 'row',
-        gap: ThemeConfig.spacing.md,
         marginBottom: ThemeConfig.spacing.md,
     },
     avatarButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
         paddingVertical: ThemeConfig.spacing.sm + 2,
         paddingHorizontal: ThemeConfig.spacing.base,
         backgroundColor: '#ede9fe',
@@ -539,11 +537,13 @@ const styles = StyleSheet.create({
     },
     removeButton: {
         backgroundColor: '#fee2e2',
+        marginLeft: ThemeConfig.spacing.md,
     },
     avatarButtonText: {
         fontSize: ThemeConfig.fontSize.base,
         fontWeight: ThemeConfig.fontWeight.semibold,
         color: ThemeConfig.colors.primary,
+        marginLeft: 6,
     },
     removeButtonText: {
         color: ThemeConfig.colors.error,
