@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "statusBar": {
       "style": "dark"
     },
@@ -19,7 +19,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.quzi.businesscard",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "需要使用麦克风进行语音输入"
+        "NSMicrophoneUsageDescription": "需要使用麦克风进行语音输入",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -31,7 +32,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "package": "com.quzi.businesscard"
     },
@@ -47,6 +49,11 @@
           "microphonePermission": "允许使用麦克风进行语音输入"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2cd447d0-ee7a-4493-a5bd-fd7fe119784f"
+      }
+    }
   }
 }
