@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert, ActionSheetIOS, Platform, Image } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, ActionSheetIOS, Platform, Image, Text, ActivityIndicator, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system/legacy';
 import { fileManager, FileMetadata } from '../services/fileManager';
+import { SpeechToTextService } from '../services/speechToText';
 import { ThemeConfig } from '../constants/theme';
 
 interface ChatInputProps {
@@ -25,6 +28,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
     const [uploading, setUploading] = useState(false);
     const [selectedImageMetadata, setSelectedImageMetadata] = useState<FileMetadata | null>(null);
+    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+    const [voiceMode, setVoiceMode] = useState(false);
 
     const handleSend = () => {
         if (!value.trim() && !selectedImageMetadata) return;
@@ -120,6 +127,102 @@ const ChatInput: React.FC<ChatInputProps> = ({
         setSelectedImageMetadata(null);
     };
 
+    const startRecording = async () => {
+        try {
+            console.log('请求录音权限...');
+            const permission = await Audio.requestPermissionsAsync();
+            
+            if (permission.status !== 'granted') {
+                Alert.alert('权限不足', '需要麦克风权限才能使用语音输入功能');
+                return;
+            }
+
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
+
+            console.log('开始录音...');
+            const { recording } = await Audio.Recording.createAsync(
+                Audio.RecordingOptionsPresets.HIGH_QUALITY
+            );
+            
+            setRecording(recording);
+            setIsRecording(true);
+        } catch (error) {
+            console.error('开始录音失败:', error);
+            Alert.alert('错误', '无法开始录音，请稍后再试');
+        }
+    };
+
+    const stopRecording = async () => {
+        if (!recording) return;
+
+        try {
+            console.log('停止录音...');
+            setIsRecording(false);
+            await recording.stopAndUnloadAsync();
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+            });
+            
+            const uri = recording.getURI();
+            setRecording(null);
+
+            if (uri) {
+                console.log('录音文件:', uri);
+                await processVoiceInput(uri);
+            }
+        } catch (error) {
+            console.error('停止录音失败:', error);
+            Alert.alert('错误', '录音处理失败');
+            setRecording(null);
+        }
+    };
+
+    const processVoiceInput = async (audioUri: string) => {
+        try {
+            setIsProcessingVoice(true);
+            
+            // 验证音频文件
+            await SpeechToTextService.validateAudioFile(audioUri);
+            
+            // 调用语音识别服务
+            const text = await SpeechToTextService.convertAudioToText(audioUri, 'm4a', 16000);
+            
+            // 识别成功后直接发送
+            if (text && text.trim()) {
+                // 合并已有文本和识别结果
+                const messageText = value ? `${value} ${text}` : text;
+                // 清空输入框
+                onChangeText('');
+                // 发送消息
+                onSend(messageText);
+                // 退出语音模式
+                setVoiceMode(false);
+            }
+            
+            // 删除临时音频文件
+            await FileSystem.deleteAsync(audioUri, { idempotent: true });
+        } catch (error) {
+            console.error('语音识别失败:', error);
+        } finally {
+            setIsProcessingVoice(false);
+        }
+    };
+
+    const toggleVoiceMode = () => {
+        setVoiceMode(!voiceMode);
+    };
+
+    const handleVoicePressIn = async () => {
+        await startRecording();
+    };
+
+    const handleVoicePressOut = async () => {
+        await stopRecording();
+    };
+
     return (
         <View style={styles.container}>
             {selectedImageMetadata && (
@@ -133,42 +236,101 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     </TouchableOpacity>
                 </View>
             )}
+            {isProcessingVoice && (
+                <View style={styles.processingContainer}>
+                    <ActivityIndicator size="small" color={ThemeConfig.colors.primary} />
+                    <Text style={styles.processingText}>正在识别语音...</Text>
+                </View>
+            )}
+            {!isProcessingVoice && isRecording && (
+                <View style={styles.processingContainer}>
+                    <View style={styles.recordingIndicator} />
+                    <Text style={styles.processingText}>正在录音...</Text>
+                </View>
+            )}
             <View style={styles.inputRow}>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={handleImageAction}
-                    disabled={disabled || uploading}
-                >
-                    <MaterialIcons 
-                        name="add-circle-outline" 
-                        size={28} 
-                        color={disabled || uploading ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.primary} 
-                    />
-                </TouchableOpacity>
-                <TextInput
-                    style={styles.input}
-                    value={value}
-                    onChangeText={onChangeText}
-                    placeholder={placeholder}
-                    placeholderTextColor={ThemeConfig.colors.textTertiary}
-                    multiline
-                    maxLength={500}
-                    editable={!disabled && !uploading}
-                />
-                <TouchableOpacity
-                    style={[
-                        styles.sendButton,
-                        (!value.trim() && !selectedImageMetadata || disabled || uploading) && styles.sendButtonDisabled
-                    ]}
-                    onPress={handleSend}
-                    disabled={!value.trim() && !selectedImageMetadata || disabled || uploading}
-                >
-                    <MaterialIcons 
-                        name="send" 
-                        size={24} 
-                        color={(!value.trim() && !selectedImageMetadata || disabled || uploading) ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.white} 
-                    />
-                </TouchableOpacity>
+                {!voiceMode ? (
+                    <>
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={handleImageAction}
+                            disabled={disabled || uploading || isRecording || isProcessingVoice}
+                        >
+                            <MaterialIcons 
+                                name="add-circle-outline" 
+                                size={28} 
+                                color={disabled || uploading || isRecording || isProcessingVoice ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.primary} 
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={toggleVoiceMode}
+                            disabled={disabled || uploading || isProcessingVoice}
+                        >
+                            <MaterialIcons 
+                                name="mic"
+                                size={28} 
+                                color={disabled || uploading || isProcessingVoice ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.primary} 
+                            />
+                        </TouchableOpacity>
+                        <TextInput
+                            style={styles.input}
+                            value={value}
+                            onChangeText={onChangeText}
+                            placeholder={placeholder}
+                            placeholderTextColor={ThemeConfig.colors.textTertiary}
+                            multiline
+                            maxLength={500}
+                            editable={!disabled && !uploading && !isRecording && !isProcessingVoice}
+                        />
+                        <TouchableOpacity
+                            style={[
+                                styles.sendButton,
+                                (!value.trim() && !selectedImageMetadata || disabled || uploading || isRecording || isProcessingVoice) && styles.sendButtonDisabled
+                            ]}
+                            onPress={handleSend}
+                            disabled={!value.trim() && !selectedImageMetadata || disabled || uploading || isRecording || isProcessingVoice}
+                        >
+                            <MaterialIcons 
+                                name="send" 
+                                size={24} 
+                                color={(!value.trim() && !selectedImageMetadata || disabled || uploading || isRecording || isProcessingVoice) ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.white} 
+                            />
+                        </TouchableOpacity>
+                    </>
+                ) : (
+                    <>
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={toggleVoiceMode}
+                            disabled={disabled || isRecording || isProcessingVoice}
+                        >
+                            <MaterialIcons 
+                                name="keyboard"
+                                size={28} 
+                                color={disabled || isRecording || isProcessingVoice ? ThemeConfig.colors.textDisabled : ThemeConfig.colors.primary} 
+                            />
+                        </TouchableOpacity>
+                        <Pressable
+                            style={[
+                                styles.voiceLargeButton,
+                                isRecording && styles.voiceLargeButtonRecording
+                            ]}
+                            onPressIn={handleVoicePressIn}
+                            onPressOut={handleVoicePressOut}
+                            disabled={disabled || isProcessingVoice}
+                        >
+                            <MaterialIcons 
+                                name="mic"
+                                size={24} 
+                                color={ThemeConfig.colors.white} 
+                            />
+                            <Text style={styles.voiceLargeButtonText}>
+                                {isRecording ? '松开结束' : '按住说话'}
+                            </Text>
+                        </Pressable>
+                    </>
+                )}
             </View>
         </View>
     );
@@ -207,7 +369,7 @@ const styles = StyleSheet.create({
         padding: ThemeConfig.spacing.base,
         gap: ThemeConfig.spacing.md,
     },
-    addButton: {
+    iconButton: {
         width: 44,
         height: 44,
         alignItems: 'center',
@@ -234,6 +396,41 @@ const styles = StyleSheet.create({
     },
     sendButtonDisabled: {
         backgroundColor: ThemeConfig.colors.border,
+    },
+    voiceLargeButton: {
+        flex: 1,
+        minHeight: 40,
+        backgroundColor: ThemeConfig.colors.primary,
+        borderRadius: ThemeConfig.borderRadius.xl,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: ThemeConfig.spacing.sm,
+    },
+    voiceLargeButtonRecording: {
+        backgroundColor: ThemeConfig.colors.error,
+    },
+    voiceLargeButtonText: {
+        color: ThemeConfig.colors.white,
+        fontSize: ThemeConfig.fontSize.lg,
+        fontWeight: ThemeConfig.fontWeight.medium,
+    },
+    processingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: ThemeConfig.spacing.sm,
+        gap: ThemeConfig.spacing.sm,
+    },
+    processingText: {
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textSecondary,
+    },
+    recordingIndicator: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: ThemeConfig.colors.error,
     },
 });
 

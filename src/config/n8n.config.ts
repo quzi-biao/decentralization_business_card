@@ -35,6 +35,12 @@ export const N8N_CONFIG = {
     // 获取 AI API Key 的 Webhook 路径（如果使用 webhook 方式）
     apiKeyWebhookPath: '8fc0755e-9e3f-476d-a222-e90e33fb3f28',
     
+    // 语音识别 Workflow ID
+    speechToTextWorkflowId: 'vMshNKu_8EM85rLGB8ByS',
+    
+    // 语音识别 Webhook 路径
+    speechToTextWebhookPath: 'speech-to-text',
+    
     // 健康检查超时时间（毫秒）
     healthCheckTimeout: 3000,
 };

@@ -1,0 +1,155 @@
+{
+  "name": "腾讯云语音识别 - 一句话识别",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "speech-to-text",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "speech-to-text"
+    },
+    {
+      "parameters": {
+        "functionCode": "// 腾讯云 API 配置\nconst SecretId = 'YOUR_SECRET_ID'; // 替换为你的 SecretId\nconst SecretKey = 'YOUR_SECRET_KEY'; // 替换为你的 SecretKey\nconst Region = 'ap-guangzhou'; // 地域，可选：ap-beijing, ap-shanghai, ap-guangzhou\n\n// 获取输入数据\nconst audioData = $input.item.json.body.audio || $input.item.json.audio;\nconst format = $input.item.json.body.format || $input.item.json.format || 'wav';\nconst sampleRate = $input.item.json.body.sampleRate || $input.item.json.sampleRate || 16000;\n\nif (!audioData) {\n  throw new Error('缺少音频数据');\n}\n\n// 腾讯云签名算法\nconst crypto = require('crypto');\n\nfunction sha256(message, secret = '') {\n  return crypto.createHmac('sha256', secret).update(message, 'utf8').digest();\n}\n\nfunction getHash(message) {\n  return crypto.createHash('sha256').update(message, 'utf8').digest('hex');\n}\n\n// API 参数\nconst Service = 'asr';\nconst Version = '2019-06-14';\nconst Action = 'SentenceRecognition';\nconst timestamp = Math.floor(Date.now() / 1000);\nconst date = new Date(timestamp * 1000).toISOString().split('T')[0];\n\n// 计算音频数据长度\nlet dataLen;\ntry {\n  dataLen = Buffer.from(audioData, 'base64').length;\n} catch (e) {\n  throw new Error('音频数据格式错误，需要 Base64 编码');\n}\n\n// 请求体\nconst payload = {\n  ProjectId: 0,\n  SubServiceType: 2,\n  EngSerViceType: '16k_zh', // 16k 中文识别\n  SourceType: 1, // 1: 音频数据\n  VoiceFormat: format,\n  Data: audioData,\n  DataLen: dataLen\n};\n\nconst payloadString = JSON.stringify(payload);\nconst hashedRequestPayload = getHash(payloadString);\n\n// 构建规范请求\nconst httpRequestMethod = 'POST';\nconst canonicalUri = '/';\nconst canonicalQueryString = '';\nconst canonicalHeaders = 'content-type:application/json; charset=utf-8\\nhost:asr.tencentcloudapi.com\\n';\nconst signedHeaders = 'content-type;host';\n\nconst canonicalRequest = `${httpRequestMethod}\\n${canonicalUri}\\n${canonicalQueryString}\\n${canonicalHeaders}\\n${signedHeaders}\\n${hashedRequestPayload}`;\n\n// 构建待签名字符串\nconst algorithm = 'TC3-HMAC-SHA256';\nconst credentialScope = `${date}/${Service}/tc3_request`;\nconst hashedCanonicalRequest = getHash(canonicalRequest);\nconst stringToSign = `${algorithm}\\n${timestamp}\\n${credentialScope}\\n${hashedCanonicalRequest}`;\n\n// 计算签名\nconst secretDate = sha256(date, `TC3${SecretKey}`);\nconst secretService = sha256(Service, secretDate);\nconst secretSigning = sha256('tc3_request', secretService);\nconst signature = sha256(stringToSign, secretSigning).toString('hex');\n\n// 构建 Authorization\nconst authorization = `${algorithm} Credential=${SecretId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;\n\nreturn {\n  json: {\n    url: 'https://asr.tencentcloudapi.com',\n    headers: {\n      'Authorization': authorization,\n      'Content-Type': 'application/json; charset=utf-8',\n      'Host': 'asr.tencentcloudapi.com',\n      'X-TC-Action': Action,\n      'X-TC-Timestamp': timestamp.toString(),\n      'X-TC-Version': Version,\n      'X-TC-Region': Region\n    },\n    body: payload\n  }\n};"
+      },
+      "id": "function-sign",
+      "name": "生成签名",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.Authorization }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "={{ $json.headers['Content-Type'] }}"
+            },
+            {
+              "name": "Host",
+              "value": "={{ $json.headers.Host }}"
+            },
+            {
+              "name": "X-TC-Action",
+              "value": "={{ $json.headers['X-TC-Action'] }}"
+            },
+            {
+              "name": "X-TC-Timestamp",
+              "value": "={{ $json.headers['X-TC-Timestamp'] }}"
+            },
+            {
+              "name": "X-TC-Version",
+              "value": "={{ $json.headers['X-TC-Version'] }}"
+            },
+            {
+              "name": "X-TC-Region",
+              "value": "={{ $json.headers['X-TC-Region'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "id": "http-request",
+      "name": "调用腾讯云API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 解析腾讯云响应\nconst response = $input.item.json;\n\n// 检查是否有错误\nif (response.Response && response.Response.Error) {\n  return {\n    json: {\n      success: false,\n      error: response.Response.Error.Message,\n      code: response.Response.Error.Code,\n      requestId: response.Response.RequestId\n    }\n  };\n}\n\n// 成功响应\nif (response.Response && response.Response.Result) {\n  return {\n    json: {\n      success: true,\n      text: response.Response.Result,\n      requestId: response.Response.RequestId,\n      audioTime: response.Response.AudioTime || 0\n    }\n  };\n}\n\n// 未知响应格式\nreturn {\n  json: {\n    success: false,\n    error: '未知的响应格式',\n    rawResponse: response\n  }\n};"
+      },
+      "id": "function-parse",
+      "name": "解析响应",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "生成签名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成签名": {
+      "main": [
+        [
+          {
+            "node": "调用腾讯云API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用腾讯云API": {
+      "main": [
+        [
+          {
+            "node": "解析响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析响应": {
+      "main": [
+        [
+          {
+            "node": "返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-17T00:29:00.000Z",
+  "versionId": "1"
+}
