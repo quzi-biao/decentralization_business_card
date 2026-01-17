@@ -37,15 +37,21 @@ export default function App() {
   }, []);
 
   const checkInitialization = async () => {
-    const init = await isInitialized();
-    setInitialized(init);
-    
-    // 如果已初始化，加载持久化数据
-    if (init) {
-      await loadData();
+    try {
+      const init = await isInitialized();
+      setInitialized(init);
+      
+      // 如果已初始化，加载持久化数据
+      if (init) {
+        await loadData();
+      }
+    } catch (error) {
+      console.error('Initialization error:', error);
+      // 即使出错也要继续，显示初始化界面
+      setInitialized(false);
+    } finally {
+      setIsChecking(false);
     }
-    
-    setIsChecking(false);
   };
 
   const handleInitComplete = () => {
@@ -53,7 +59,15 @@ export default function App() {
   };
 
   if (isChecking) {
-    return null;
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#667eea' }}>AI名片</Text>
+          <Text style={{ marginTop: 10, color: '#999' }}>加载中...</Text>
+        </View>
+      </SafeAreaProvider>
+    );
   }
 
   if (!initialized) {
