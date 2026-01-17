@@ -222,7 +222,7 @@ const AIAssistantScreen: React.FC = () => {
                 console.error('Failed to initialize chat:', error);
                 const welcomeMessage: Message = {
                     id: `welcome-${Date.now() + 1}`,
-                    text: '您好！我是您的名片信息收集助手 😊\n\n我会通过简单的对话，帮您一步步创建一张专业、完整的商务名片。整个过程大约需要5-10分钟，所有信息仅用于生成您的个人名片。\n\n您现在方便开始吗？如果准备好了，我们可以先从基本信息入手！',
+                    text: 'AI 助手当前正在休息，请稍后再试 😴',
                     isUser: false,
                     timestamp: new Date(),
                 };
@@ -339,7 +339,7 @@ const AIAssistantScreen: React.FC = () => {
             
             const errorMessage: Message = {
                 id: (Date.now() + 1).toString(),
-                text: '抱歉，AI 助手暂时无法响应。请稍后再试。',
+                text: 'AI 助手当前正在休息，请稍后再试 😴',
                 isUser: false,
                 timestamp: new Date(),
             };
@@ -457,6 +457,16 @@ const AIAssistantScreen: React.FC = () => {
             }
         } catch (error) {
             console.error('Error getting next guidance:', error);
+            
+            const errorMessage: Message = {
+                id: (Date.now() + 4).toString(),
+                text: 'AI 助手当前正在休息，请稍后再试 😴',
+                isUser: false,
+                timestamp: new Date(),
+            };
+            
+            setMessages(prev => [...prev, errorMessage]);
+            await ChatPersistenceService.saveMessage(errorMessage, sessionId);
         } finally {
             setLoading(false);
         }
