@@ -180,7 +180,7 @@ const InitScreen: React.FC<InitScreenProps> = ({ onComplete }) => {
                 </TouchableOpacity>
 
                 <Text style={styles.hint}>
-                    首次使用需要生成密钥对，请稍候...
+                    点击按钮后将生成您的身份密钥
                 </Text>
             </View>
         </SafeAreaView>
@@ -252,7 +252,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: ThemeConfig.spacing.base,
+        width: '100%',
         maxWidth: 320,
+        marginLeft: 24,
+        alignSelf: 'center',
     },
     featureText: {
         fontSize: ThemeConfig.fontSize.lg,
@@ -312,9 +315,11 @@ const styles = StyleSheet.create({
     },
     initButton: {
         backgroundColor: ThemeConfig.colors.primary,
-        paddingVertical: ThemeConfig.spacing.lg + 2,
+        paddingVertical: ThemeConfig.spacing.md,
+        paddingHorizontal: ThemeConfig.spacing.xl,
         borderRadius: ThemeConfig.borderRadius.md,
         alignItems: 'center',
+        alignSelf: 'center',
         ...ThemeConfig.shadow.primary,
     },
     initButtonText: {
@@ -325,9 +330,11 @@ const styles = StyleSheet.create({
     },
     completeButton: {
         backgroundColor: ThemeConfig.colors.primary,
-        paddingVertical: ThemeConfig.spacing.lg + 2,
+        paddingVertical: ThemeConfig.spacing.md,
+        paddingHorizontal: ThemeConfig.spacing.xl,
         borderRadius: ThemeConfig.borderRadius.md,
         alignItems: 'center',
+        alignSelf: 'center',
         ...ThemeConfig.shadow.primary,
     },
     completeButtonText: {

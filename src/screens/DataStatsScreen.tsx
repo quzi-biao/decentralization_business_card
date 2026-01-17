@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import PageHeader from '../components/PageHeader';
 import { DataManager } from '../services/dataManager';
 import { useCardStore } from '../store/useCardStore';
+import { useExchangeStore } from '../store/useExchangeStore';
 import { ThemeConfig } from '../constants/theme';
 
 interface Props {
@@ -62,34 +63,59 @@ const DataStatsScreen: React.FC<Props> = ({ onClose }) => {
     };
 
     const showDeleteConfirmation = () => {
-        Alert.prompt(
-            '确认删除所有数据',
-            '删除将导致数据不可还原。\n\n请输入「我确定删除数据」以确认删除：',
+        Alert.alert(
+            '⚠️ 危险操作',
+            '您即将删除所有本地数据，包括：\n\n• 我的名片信息\n• 所有交换的名片\n• 聊天记录\n• 所有图片文件\n\n此操作不可撤销！',
             [
                 {
                     text: '取消',
                     style: 'cancel',
                 },
                 {
-                    text: '删除',
+                    text: '我确定要删除',
                     style: 'destructive',
-                    onPress: async (inputText) => {
-                        if (inputText === '我确定删除数据') {
-                            try {
-                                await DataManager.clearAllData();
-                                await clearAllData();
-                                await loadDataStats();
-                                Alert.alert('成功', '所有数据已清除');
-                            } catch (error) {
-                                Alert.alert('错误', '清除数据失败，请重试');
-                            }
-                        } else {
-                            Alert.alert('错误', '输入的确认文字不正确，删除已取消');
-                        }
+                    onPress: () => {
+                        // 二次确认
+                        Alert.alert(
+                            '最后确认',
+                            '请再次确认您要删除所有数据？',
+                            [
+                                {
+                                    text: '取消',
+                                    style: 'cancel',
+                                },
+                                {
+                                    text: '确定删除',
+                                    style: 'destructive',
+                                    onPress: async () => {
+                                        try {
+                                            // 先清除所有数据（包括持久化存储）
+                                            await DataManager.clearAllData();
+                                            // 然后重置 store 状态
+                                            await clearAllData();
+                                            // 重新加载统计数据
+                                            await loadDataStats();
+                                            // 显示成功提示
+                                            Alert.alert('成功', '所有数据已清除', [
+                                                {
+                                                    text: '确定',
+                                                    onPress: () => {
+                                                        // 关闭当前页面，返回主界面
+                                                        onClose();
+                                                    }
+                                                }
+                                            ]);
+                                        } catch (error) {
+                                            console.error('Clear data error:', error);
+                                            Alert.alert('错误', '清除数据失败，请重试');
+                                        }
+                                    },
+                                },
+                            ]
+                        );
                     },
                 },
-            ],
-            'plain-text'
+            ]
         );
     };
 
