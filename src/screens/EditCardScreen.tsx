@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, LayoutAnimation, Platform, UIManager, StyleSheet, Image, Alert, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -155,7 +155,11 @@ const EditCardScreen = ({ onClose }: any) => {
 
     return (
         <SafeAreaProvider>
-            <View style={styles.container}>
+            <KeyboardAvoidingView 
+                style={styles.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={0}
+            >
                 <PageHeader 
                     title="编辑名片"
                     onBack={onClose}
@@ -166,7 +170,10 @@ const EditCardScreen = ({ onClose }: any) => {
                     backgroundColor="#f8fafc"
                 />
 
-                <ScrollView contentContainerStyle={styles.scrollContent}>
+                <ScrollView 
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                >
                 {/* 头像设置 */}
                 <View style={styles.card}>
                     <SectionHeader title="头像" iconName="account-circle" />
@@ -372,7 +379,7 @@ const EditCardScreen = ({ onClose }: any) => {
 
                 <View style={styles.spacer} />
             </ScrollView>
-        </View>
+            </KeyboardAvoidingView>
         </SafeAreaProvider>
     );
 };
