@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Business Card - Technical Support & Help Center">
+    <title>AI Business Card - Technical Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.3em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .section p, .section li {
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .section ul, .section ol {
+            margin-left: 25px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .faq-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .faq-item h4 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 1.15em;
+        }
+
+        .contact-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .contact-box h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .contact-box a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s;
+            border: 2px solid white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background: white;
+            color: #667eea;
+        }
+
+        .footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎴 AI Business Card</h1>
+            <p>Technical Support & Help Center</p>
+        </div>
+
+        <div class="content">
+            <!-- Introduction -->
+            <div class="section">
+                <h2>📱 About the App</h2>
+                <p><strong>AI Business Card</strong> is a decentralized smart digital business card application that gives you complete control over your data, enabling secure and efficient management of your professional network.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🔐 Data Ownership</h4>
+                        <p>Decentralized architecture ensures your data is completely under your control, no third-party dependency.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🤖 AI Assistant</h4>
+                        <p>Built-in intelligent assistant with voice interaction, automatically organizing your contact information.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔒 Privacy Protection</h4>
+                        <p>End-to-end encryption with customizable privacy settings to protect your sensitive information.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📲 Quick Exchange</h4>
+                        <p>Exchange business cards by scanning QR codes, supports offline mode, connect anytime, anywhere.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Start -->
+            <div class="section">
+                <h2>🚀 Quick Start</h2>
+                
+                <h3>1. Create Your Digital Identity</h3>
+                <ol>
+                    <li>Open the app for the first time and tap "Create My Identity"</li>
+                    <li>The system will automatically generate encryption key pairs and mnemonic phrase</li>
+                    <li><strong>Important:</strong> Please save your mnemonic phrase securely - it's the only way to recover your identity</li>
+                    <li>After backup, tap "I've Backed Up, Start Using"</li>
+                </ol>
+
+                <h3>2. Edit Your Business Card</h3>
+                <ol>
+                    <li>Go to "My Card" page</li>
+                    <li>Fill in basic information: name, position, company, etc.</li>
+                    <li>Upload avatar and company images</li>
+                    <li>Add contact information and social media accounts</li>
+                    <li>Set privacy permissions to control information visibility</li>
+                </ol>
+
+                <h3>3. Exchange Business Cards</h3>
+                <ol>
+                    <li>Tap "Exchange Cards" to enter the scanning page</li>
+                    <li>Generate your QR code for others to scan</li>
+                    <li>Or scan someone else's QR code to get their card</li>
+                    <li>After successful exchange, cards are automatically saved to contacts</li>
+                </ol>
+            </div>
+
+            <!-- Core Features -->
+            <div class="section">
+                <h2>⚙️ Core Features</h2>
+
+                <h3>Card Management</h3>
+                <ul>
+                    <li><strong>Multimedia Support:</strong> Upload avatars, company images, video introductions</li>
+                    <li><strong>Tag Classification:</strong> Add tags to contacts for quick filtering</li>
+                    <li><strong>Privacy Control:</strong> Customize visibility for each field</li>
+                    <li><strong>Batch Operations:</strong> Batch export and delete cards</li>
+                </ul>
+
+                <h3>AI Smart Assistant</h3>
+                <ul>
+                    <li><strong>Intelligent Q&A:</strong> Ask questions about business card information</li>
+                    <li><strong>Voice Input:</strong> Support voice-to-text conversion</li>
+                    <li><strong>Network Analysis:</strong> Automatically analyze relationship networks</li>
+                    <li><strong>Smart Recommendations:</strong> Recommend potential business opportunities</li>
+                </ul>
+
+                <h3>Data Security</h3>
+                <ul>
+                    <li><strong>End-to-End Encryption:</strong> All data transmission is encrypted</li>
+                    <li><strong>Local Storage:</strong> Data is primarily stored on local devices</li>
+                    <li><strong>Decentralization:</strong> No dependency on centralized servers</li>
+                    <li><strong>Data Export:</strong> Export or clear all data at any time</li>
+                </ul>
+            </div>
+
+            <!-- FAQ -->
+            <div class="section">
+                <h2>❓ Frequently Asked Questions</h2>
+
+                <div class="faq-item">
+                    <h4>Q: What if I forget my mnemonic phrase?</h4>
+                    <p>A: The mnemonic phrase is the only way to recover your identity. If lost, it cannot be recovered. We recommend:</p>
+                    <ul>
+                        <li>Write down the mnemonic phrase on paper and store it in a safe place</li>
+                        <li>Do not take screenshots or save it electronically</li>
+                        <li>Regularly check that your backup is intact</li>
+                    </ul>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Q: How do I switch devices?</h4>
+                    <p>A: On your new device:</p>
+                    <ol>
+                        <li>Install the AI Business Card app</li>
+                        <li>Select "Restore Identity"</li>
+                        <li>Enter your mnemonic phrase</li>
+                        <li>The system will automatically restore your identity and data</li>
+                    </ol>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Q: Where is my data stored?</h4>
+                    <p>A: Your data uses decentralized storage:</p>
+                    <ul>
+                        <li>Core data is encrypted and stored on local devices</li>
+                        <li>Large files like images are stored on decentralized storage networks</li>
+                        <li>You can export or delete all data at any time</li>
+                    </ul>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Q: How do I set privacy permissions?</h4>
+                    <p>A: On the "Access Control" page:</p>
+                    <ul>
+                        <li>Select the field you want to set (e.g., phone, email)</li>
+                        <li>Toggle the "Privacy" switch</li>
+                        <li>Fields set as private will not be shared when exchanging cards</li>
+                    </ul>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Q: How do I use the AI assistant?</h4>
+                    <p>A: Go to the "AI Assistant" page:</p>
+                    <ul>
+                        <li>Type or voice ask questions</li>
+                        <li>AI will answer based on your business card data</li>
+                        <li>Supports querying contacts, analyzing networks, and more</li>
+                    </ul>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Q: Is the app free?</h4>
+                    <p>A: Core features are completely free, including:</p>
+                    <ul>
+                        <li>Unlimited card creation and exchange</li>
+                        <li>Basic AI assistant features</li>
+                        <li>Data storage and backup</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Technical Specifications -->
+            <div class="section">
+                <h2>🔧 Technical Specifications</h2>
+                
+                <h3>System Requirements</h3>
+                <ul>
+                    <li><strong>iOS:</strong> iOS 15.0 or later</li>
+                    <li><strong>Android:</strong> Android 9.0 or later</li>
+                    <li><strong>Network:</strong> Supports offline mode, more features available when online</li>
+                </ul>
+
+                <h3>Technical Features</h3>
+                <ul>
+                    <li><span class="badge">Decentralized</span>Complete data ownership</li>
+                    <li><span class="badge">End-to-End Encryption</span>AES-256 encryption</li>
+                    <li><span class="badge">DID</span>Decentralized Identity</li>
+                    <li><span class="badge">AI-Powered</span>Intelligent voice interaction</li>
+                </ul>
+
+                <h3>Permissions Explained</h3>
+                <ul>
+                    <li><strong>Camera:</strong> For scanning QR codes and taking photos</li>
+                    <li><strong>Photo Library:</strong> For selecting and saving images</li>
+                    <li><strong>Microphone:</strong> For voice input features</li>
+                    <li><strong>Storage:</strong> For saving business card data</li>
+                </ul>
+            </div>
+
+            <!-- Contact Us -->
+            <div class="contact-box">
+                <h3>📞 Need Help?</h3>
+                <p>If you have any questions or suggestions, please contact us:</p>
+                <p><a href="mailto:0xnomeans@gmail.com">0xnomeans@gmail.com</a></p>
+                <a href="https://github.com/quzi-biao/decentralization_business_card" class="btn">Visit GitHub Repository</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 AI Business Card | Decentralized Smart Business Card System</p>
+            <p>Version 1.0.0 | Last Updated: January 2026</p>
+        </div>
+    </div>
+</body>
+</html>
