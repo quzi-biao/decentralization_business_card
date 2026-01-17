@@ -8,7 +8,7 @@ import { callN8NAgent } from '../services/n8nService';
 import { N8N_CONFIG } from '../config/n8n.config';
 import { parseAIResponse, hasCompleteFormData, mergeFormData, generateFormSummary } from '../utils/formDataParser';
 import { ChatPersistenceService } from '../services/chatPersistence';
-import { FIELD_METADATA } from '../constants/fieldNames';
+import { FIELD_METADATA, FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
 import ChatMessage from '../components/ChatMessage';
 import UpdateConfirmCard from '../components/UpdateConfirmCard';
 import ProgressHeader from '../components/ProgressHeader';
@@ -52,6 +52,28 @@ const AIAssistantScreen: React.FC = () => {
     const [showProgressModal, setShowProgressModal] = useState(false);
     const [showPrivacyHelp, setShowPrivacyHelp] = useState(false);
     const [initializing, setInitializing] = useState(true);
+
+    // 过滤隐私字段的辅助函数
+    const filterPrivateFields = (formData: any): { filtered: any; blockedFields: string[] } => {
+        const filtered: any = {};
+        const blockedFields: string[] = [];
+        const privateFieldsMap = FIELD_METADATA
+            .filter(field => field.isPrivate === true)
+            .reduce((acc, field) => {
+                acc[field.key] = field.label;
+                return acc;
+            }, {} as Record<string, string>);
+        
+        Object.keys(formData).forEach(key => {
+            if (privateFieldsMap[key]) {
+                blockedFields.push(privateFieldsMap[key]);
+            } else {
+                filtered[key] = formData[key];
+            }
+        });
+        
+        return { filtered, blockedFields };
+    };
 
     // 构建当前名片信息的通用方法（根据隐私设置过滤）
     const buildCurrentCardInfo = async (data: typeof cardData): Promise<string> => {
@@ -322,16 +344,33 @@ const AIAssistantScreen: React.FC = () => {
             // 保存 AI 消息
             await ChatPersistenceService.saveMessage(aiMessage, sessionId);
 
-            // 如果有表单数据，存储为待确认更新
+            // 如果有表单数据，过滤隐私字段后存储为待确认更新
             if (parsedResponse.formData) {
-                setPendingUpdate({
-                    formData: parsedResponse.formData,
-                    messageId: aiMessage.id,
-                });
+                const { filtered: filteredFormData, blockedFields } = filterPrivateFields(parsedResponse.formData);
                 
-                // 如果标记为完成，显示完成状态
-                if (parsedResponse.completed) {
-                    setFormCompleted(true);
+                // 如果有隐私字段被过滤，添加提示消息
+                if (blockedFields.length > 0) {
+                    const privacyNotice: Message = {
+                        id: (Date.now() + 2).toString(),
+                        text: `⚠️ AI 助手无法帮助更新以下隐私字段：${blockedFields.join('、')}。这些字段需要您手动在编辑页面中填写。`,
+                        isUser: false,
+                        timestamp: new Date(),
+                    };
+                    setMessages(prev => [...prev, privacyNotice]);
+                    await ChatPersistenceService.saveMessage(privacyNotice, sessionId);
+                }
+                
+                // 只有在过滤后还有数据时才设置待确认更新
+                if (Object.keys(filteredFormData).length > 0) {
+                    setPendingUpdate({
+                        formData: filteredFormData,
+                        messageId: aiMessage.id,
+                    });
+                    
+                    // 如果标记为完成，显示完成状态
+                    if (parsedResponse.completed) {
+                        setFormCompleted(true);
+                    }
                 }
             }
         } catch (error) {
@@ -374,27 +413,7 @@ const AIAssistantScreen: React.FC = () => {
         
         // 显示字段更新提示
         const fieldNames = newlyUpdatedFields.map(field => {
-            const fieldMap: Record<string, string> = {
-                realName: '姓名',
-                position: '职位',
-                companyName: '公司',
-                phone: '电话',
-                email: '邮箱',
-                wechat: '微信',
-                address: '地址',
-                industry: '行业',
-                aboutMe: '个人简介',
-                hometown: '家乡',
-                residence: '常驻',
-                hobbies: '兴趣爱好',
-                personality: '性格特点',
-                focusIndustry: '关注行业',
-                circles: '圈层',
-                companyIntro: '公司简介',
-                mainBusiness: '主营业务',
-                serviceNeeds: '服务需求',
-            };
-            return fieldMap[field] || field;
+            return FIELD_DISPLAY_NAMES[field] || field;
         }).join('、');
         
         const updateMessage: Message = {
@@ -444,15 +463,32 @@ const AIAssistantScreen: React.FC = () => {
             // 保存 AI 响应
             await ChatPersistenceService.saveMessage(aiMessage, sessionId);
             
-            // 如果 AI 又返回了新的表单数据，继续存储为待确认
+            // 如果 AI 又返回了新的表单数据，过滤隐私字段后继续存储为待确认
             if (parsedResponse.formData) {
-                setPendingUpdate({
-                    formData: parsedResponse.formData,
-                    messageId: aiMessage.id,
-                });
+                const { filtered: filteredFormData, blockedFields } = filterPrivateFields(parsedResponse.formData);
                 
-                if (parsedResponse.completed) {
-                    setFormCompleted(true);
+                // 如果有隐私字段被过滤，添加提示消息
+                if (blockedFields.length > 0) {
+                    const privacyNotice: Message = {
+                        id: (Date.now() + 4).toString(),
+                        text: `⚠️ AI 助手无法帮助更新以下隐私字段：${blockedFields.join('、')}。这些字段需要您手动在编辑页面中填写。`,
+                        isUser: false,
+                        timestamp: new Date(),
+                    };
+                    setMessages(prev => [...prev, privacyNotice]);
+                    await ChatPersistenceService.saveMessage(privacyNotice, sessionId);
+                }
+                
+                // 只有在过滤后还有数据时才设置待确认更新
+                if (Object.keys(filteredFormData).length > 0) {
+                    setPendingUpdate({
+                        formData: filteredFormData,
+                        messageId: aiMessage.id,
+                    });
+                    
+                    if (parsedResponse.completed) {
+                        setFormCompleted(true);
+                    }
                 }
             }
         } catch (error) {
