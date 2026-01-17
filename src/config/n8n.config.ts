@@ -10,13 +10,13 @@
 export const N8N_CONFIG = {
     // n8n 服务器地址列表（按优先级排序）
     baseUrls: [
-        'http://101.34.87.172:5678',      // 优先使用 IP 地址
-        'https://n8n.waters-ai.work',     // 备用域名 1
+        'https://n8n.waters-ai.work',     // 优先使用域名
+        'http://101.34.87.172:5678',      // 备用 IP 地址
         'https://n8n.quzi-tech.xyz',      // 备用域名 2
     ],
     
     // 当前使用的服务器地址（运行时自动选择）
-    baseUrl: 'http://101.34.87.172:5678',
+    baseUrl: 'https://n8n.waters-ai.work',
     
     // API Key - 请在 n8n 设置中生成
     // 路径：Settings > API > Create API Key

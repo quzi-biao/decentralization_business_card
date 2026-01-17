@@ -2,7 +2,7 @@
  * MinIO 配置
  */
 export const MINIO_CONFIG = {
-  endpoint: 'http://101.34.87.172:9000', // S3 API 端口
+  endpoint: 'https://n8n.waters-ai.work:9343', // S3 API 端口 (9443 是浏览器端口，9000 是 API 端口)
   bucket: 'business-card',
   region: 'us-east-1',
 };
