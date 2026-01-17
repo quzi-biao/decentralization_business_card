@@ -8,6 +8,8 @@ import PageHeader from '../components/PageHeader';
 import { LazyImage } from '../components/LazyImage';
 import { fileManager } from '../services/fileManager';
 import { ThemeConfig } from '../constants/theme';
+import { SocialMediaEditor } from '../components/SocialMediaEditor';
+import { ImageUploadGrid } from '../components/ImageUploadGrid';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -60,6 +62,7 @@ const BusinessItemCard = ({ item, onUpdate, onDelete }: any) => (
 const EditCardScreen = ({ onClose }: any) => {
     const { cardData, updateCardData } = useCardStore();
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [uploadingQrCode, setUploadingQrCode] = useState(false);
 
     const handleUpdateItem = (field: 'mainBusiness' | 'serviceNeeds', id: string, data: Partial<BusinessItem>) => {
         const newList = cardData[field].map(item => item.id === id ? { ...item, ...data } : item);
@@ -235,6 +238,104 @@ const EditCardScreen = ({ onClose }: any) => {
                     <InputField label="电话" value={cardData.phone} onChangeText={(v: any) => updateCardData({ phone: v })} placeholder="请输入电话" />
                     <InputField label="邮箱" value={cardData.email} onChangeText={(v: any) => updateCardData({ email: v })} placeholder="请输入邮箱" />
                     <InputField label="微信" value={cardData.wechat} onChangeText={(v: any) => updateCardData({ wechat: v })} placeholder="请输入微信号" />
+                    <InputField label="地址" value={cardData.address} onChangeText={(v: any) => updateCardData({ address: v })} placeholder="请输入地址" />
+                    
+                    {/* 微信二维码 */}
+                    <View style={styles.qrCodeSection}>
+                        <Text style={styles.inputLabel}>微信二维码</Text>
+                        {cardData.wechatQrCodeId ? (
+                            <View style={styles.qrCodeContainer}>
+                                <LazyImage 
+                                    imageId={cardData.wechatQrCodeId}
+                                    useThumbnail={false}
+                                    style={styles.qrCodeImage}
+                                />
+                                <TouchableOpacity 
+                                    style={styles.removeQrButton}
+                                    onPress={async () => {
+                                        if (cardData.wechatQrCodeId) {
+                                            await fileManager.deleteFile(cardData.wechatQrCodeId);
+                                        }
+                                        updateCardData({ wechatQrCodeId: undefined, wechatQrCode: undefined });
+                                    }}
+                                >
+                                    <MaterialIcons name="close" size={16} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <TouchableOpacity 
+                                style={styles.uploadQrButton}
+                                onPress={async () => {
+                                    try {
+                                        setUploadingQrCode(true);
+                                        const metadata = await fileManager.pickImage({
+                                            context: 'card',
+                                            allowsEditing: true,
+                                            aspect: [1, 1],
+                                            quality: 0.9,
+                                        });
+                                        if (metadata) {
+                                            updateCardData({ wechatQrCodeId: metadata.id });
+                                        }
+                                    } catch (error) {
+                                        Alert.alert('错误', '上传二维码失败');
+                                    } finally {
+                                        setUploadingQrCode(false);
+                                    }
+                                }}
+                                disabled={uploadingQrCode}
+                            >
+                                <MaterialIcons name="qr-code" size={32} color={ThemeConfig.colors.textTertiary} />
+                                <Text style={styles.uploadQrText}>
+                                    {uploadingQrCode ? '上传中...' : '上传微信二维码'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
+
+                {/* 个人背景 */}
+                <View style={styles.card}>
+                    <SectionHeader title="个人背景" iconName="person-outline" />
+                    <InputField label="家乡" value={cardData.hometown} onChangeText={(v: any) => updateCardData({ hometown: v })} placeholder="如：浙江杭州" />
+                    <InputField label="常驻" value={cardData.residence} onChangeText={(v: any) => updateCardData({ residence: v })} placeholder="如：北京朝阳" />
+                    <InputField label="兴趣爱好" value={cardData.hobbies} onChangeText={(v: any) => updateCardData({ hobbies: v })} placeholder="如：阅读、跑步、摄影" />
+                    <InputField label="性格特点" value={cardData.personality} onChangeText={(v: any) => updateCardData({ personality: v })} placeholder="如：务实、创新、善于沟通" />
+                    <InputField label="关注行业" value={cardData.focusIndustry} onChangeText={(v: any) => updateCardData({ focusIndustry: v })} placeholder="如：人工智能、金融科技" />
+                    <InputField label="加入的圈层" value={cardData.circles} onChangeText={(v: any) => updateCardData({ circles: v })} placeholder="如：清华校友会、AI产品经理社群" />
+                </View>
+
+                {/* 企业信息 */}
+                <View style={styles.card}>
+                    <SectionHeader title="企业信息" iconName="business" />
+                    <InputField label="公司简介" value={cardData.companyIntro} onChangeText={(v: any) => updateCardData({ companyIntro: v })} placeholder="请输入公司简介" multiline={true} />
+                    
+                    {/* 企业图片 */}
+                    <View style={styles.companyImagesSection}>
+                        <Text style={styles.inputLabel}>公司图片</Text>
+                        <ImageUploadGrid 
+                            imageIds={cardData.companyImageIds || []}
+                            onUpdate={(ids) => updateCardData({ companyImageIds: ids })}
+                            maxImages={9}
+                            title="公司图片"
+                        />
+                    </View>
+                </View>
+
+                {/* 社交媒体 */}
+                <View style={styles.card}>
+                    <SectionHeader title="社交媒体" iconName="share" />
+                    <SocialMediaEditor 
+                        accounts={cardData.socialMedia || []}
+                        onUpdate={(accounts) => updateCardData({ socialMedia: accounts })}
+                    />
+                </View>
+
+                {/* 多媒体 */}
+                <View style={styles.card}>
+                    <SectionHeader title="多媒体" iconName="video-library" />
+                    <InputField label="个人介绍视频URL" value={cardData.introVideoUrl || ''} onChangeText={(v: any) => updateCardData({ introVideoUrl: v })} placeholder="https://..." />
+                    <InputField label="视频号ID" value={cardData.videoChannelId || ''} onChangeText={(v: any) => updateCardData({ videoChannelId: v })} placeholder="请输入视频号ID" />
                 </View>
 
                 {/* 主营业务 */}
@@ -445,6 +546,50 @@ const styles = StyleSheet.create({
         color: ThemeConfig.colors.textTertiary,
         textAlign: 'center',
         lineHeight: 16,
+    },
+    qrCodeSection: {
+        marginTop: ThemeConfig.spacing.md,
+    },
+    qrCodeContainer: {
+        width: 150,
+        height: 150,
+        borderRadius: ThemeConfig.borderRadius.md,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    qrCodeImage: {
+        width: '100%',
+        height: '100%',
+    },
+    removeQrButton: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    uploadQrButton: {
+        width: 150,
+        height: 150,
+        borderRadius: ThemeConfig.borderRadius.md,
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+        borderWidth: 2,
+        borderColor: ThemeConfig.colors.border,
+        borderStyle: 'dashed',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    uploadQrText: {
+        fontSize: ThemeConfig.fontSize.sm,
+        color: ThemeConfig.colors.textTertiary,
+        marginTop: 8,
+    },
+    companyImagesSection: {
+        marginTop: ThemeConfig.spacing.md,
     },
 });
 

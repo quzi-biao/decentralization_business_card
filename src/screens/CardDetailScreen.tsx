@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert, TextInput, Modal, Image, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -9,6 +9,8 @@ import MyCard from '../components/MyCard';
 import { RichTextRenderer } from '../components/RichTextRenderer';
 import { FIELD_DISPLAY_NAMES } from '../constants/fieldNames';
 import { ThemeConfig } from '../constants/theme';
+import { LazyImage } from '../components/LazyImage';
+import { getPlatformIcon, getPlatformColor, getPlatformName, generateSocialMediaUrl } from '../utils/socialMediaLinks';
 
 const { width } = Dimensions.get('window');
 
@@ -334,15 +336,93 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                             </View>
                         )}
 
-                        {cardData.wechatQrCode && (
-                            <View style={styles.contactItem}>
-                                <MaterialIcons name="qr-code" size={18} color="#64748b" style={styles.contactIcon} />
-                                <View style={styles.contactInfo}>
-                                    <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.wechatQrCode}</Text>
-                                    <Text style={styles.contactValue}>已设置</Text>
-                                </View>
+                        {(cardData.wechatQrCodeId || cardData.wechatQrCode) && (
+                            <View style={styles.qrCodeSection}>
+                                <Text style={styles.contactLabel}>{FIELD_DISPLAY_NAMES.wechatQrCode}</Text>
+                                {cardData.wechatQrCodeId ? (
+                                    <LazyImage 
+                                        imageId={cardData.wechatQrCodeId}
+                                        style={styles.qrCodeImage}
+                                        useThumbnail={false}
+                                    />
+                                ) : cardData.wechatQrCode ? (
+                                    <Image 
+                                        source={{ uri: cardData.wechatQrCode }}
+                                        style={styles.qrCodeImage}
+                                        resizeMode="contain"
+                                    />
+                                ) : null}
                             </View>
                         )}
+                    </View>
+                )}
+
+                {/* 社交媒体 */}
+                {cardData.socialMedia && cardData.socialMedia.length > 0 && (
+                    <View style={styles.card}>
+                        <View style={styles.cardTitle}>
+                            <MaterialIcons key="icon" name="share" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                            <Text key="text" style={styles.cardTitleText}>社交媒体</Text>
+                        </View>
+                        {cardData.socialMedia.map((account, index) => {
+                            const url = generateSocialMediaUrl(account.platform, account.accountId, account.url);
+                            return (
+                                <TouchableOpacity
+                                    key={account.id || index}
+                                    style={styles.socialMediaItem}
+                                    onPress={() => {
+                                        const accountInfo = account.displayName || account.accountId;
+                                        const buttons: any[] = [];
+                                        
+                                        if (url) {
+                                            buttons.push({
+                                                text: '打开链接',
+                                                onPress: async () => {
+                                                    try {
+                                                        await Linking.openURL(url);
+                                                    } catch (error) {
+                                                        Alert.alert('错误', '打开链接失败');
+                                                    }
+                                                }
+                                            });
+                                            buttons.push({
+                                                text: '复制链接',
+                                                onPress: () => handleCopy(url, getPlatformName(account.platform))
+                                            });
+                                        }
+                                        
+                                        buttons.push({
+                                            text: '复制账号',
+                                            onPress: () => handleCopy(accountInfo, `${getPlatformName(account.platform)}账号`)
+                                        });
+                                        
+                                        buttons.push({ text: '取消', style: 'cancel' });
+                                        
+                                        Alert.alert(
+                                            getPlatformName(account.platform),
+                                            accountInfo,
+                                            buttons
+                                        );
+                                    }}
+                                >
+                                    <View style={styles.socialMediaLeft}>
+                                        <MaterialIcons 
+                                            name={getPlatformIcon(account.platform) as any} 
+                                            size={20} 
+                                            color={getPlatformColor(account.platform)} 
+                                            style={styles.contactIcon} 
+                                        />
+                                        <View style={styles.contactInfo}>
+                                            <Text style={styles.contactLabel}>{getPlatformName(account.platform)}</Text>
+                                            <Text style={styles.contactValue}>
+                                                {account.displayName || account.accountId}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    <MaterialIcons name="open-in-new" size={18} color="#94a3b8" />
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
                 )}
 
@@ -427,6 +507,43 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                         </View>
                     )}
 
+                    {/* 公司图片 */}
+                    {((cardData.companyImageIds && cardData.companyImageIds.length > 0) || (cardData.companyImages && cardData.companyImages.length > 0)) && (
+                        <View style={styles.card}>
+                            <View style={styles.cardTitle}>
+                                <MaterialIcons key="icon" name="photo-library" size={20} color="#1e293b" style={styles.cardTitleIcon} />
+                                <Text key="text" style={styles.cardTitleText}>公司图片</Text>
+                            </View>
+                            <ScrollView 
+                                horizontal 
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.imageGallery}
+                            >
+                                {cardData.companyImageIds && cardData.companyImageIds.length > 0 ? (
+                                    cardData.companyImageIds.map((imageId, index) => (
+                                        <View key={imageId || index} style={styles.companyImageItem}>
+                                            <LazyImage 
+                                                imageId={imageId}
+                                                style={styles.companyImage}
+                                                useThumbnail={true}
+                                            />
+                                        </View>
+                                    ))
+                                ) : cardData.companyImages && cardData.companyImages.length > 0 ? (
+                                    cardData.companyImages.map((imageUrl, index) => (
+                                        <View key={index} style={styles.companyImageItem}>
+                                            <Image 
+                                                source={{ uri: imageUrl }}
+                                                style={styles.companyImage}
+                                                resizeMode="cover"
+                                            />
+                                        </View>
+                                    ))
+                                ) : null}
+                            </ScrollView>
+                        </View>
+                    )}
+
                     {/* 公司简介 */}
                     {cardData.companyIntro && (
                         <View style={styles.card}>
@@ -478,17 +595,6 @@ const CardDetailScreen: React.FC<CardDetailScreenProps> = ({ cardData, onClose, 
                                     )}
                                 </View>
                             ))}
-                        </View>
-                    )}
-
-                    {/* 公司图片 */}
-                    {cardData.companyImages && cardData.companyImages.length > 0 && (
-                        <View style={styles.card}>
-                            <View style={styles.cardTitle}>
-                                <MaterialIcons key="icon" name="photo-library" size={20} color="#1e293b" style={styles.cardTitleIcon} />
-                                <Text key="text" style={styles.cardTitleText}>公司图片</Text>
-                            </View>
-                            <Text style={styles.sectionContent}>共 {cardData.companyImages.length} 张图片</Text>
                         </View>
                     )}
 
@@ -962,6 +1068,50 @@ const styles = StyleSheet.create({
     importanceHint: {
         fontSize: ThemeConfig.fontSize.sm,
         color: ThemeConfig.colors.textTertiary,
+    },
+    // 微信二维码样式
+    qrCodeSection: {
+        paddingVertical: ThemeConfig.spacing.base,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.backgroundTertiary,
+        alignItems: 'center',
+        gap: ThemeConfig.spacing.md,
+    },
+    qrCodeImage: {
+        width: 200,
+        height: 200,
+        borderRadius: ThemeConfig.borderRadius.md,
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+    },
+    // 公司图片样式
+    imageGallery: {
+        paddingVertical: ThemeConfig.spacing.sm,
+        gap: ThemeConfig.spacing.md,
+    },
+    companyImageItem: {
+        width: 120,
+        height: 120,
+        borderRadius: ThemeConfig.borderRadius.md,
+        overflow: 'hidden',
+        backgroundColor: ThemeConfig.colors.backgroundSecondary,
+    },
+    companyImage: {
+        width: '100%',
+        height: '100%',
+    },
+    // 社交媒体样式
+    socialMediaItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 14,
+        borderBottomWidth: ThemeConfig.borderWidth.thin,
+        borderBottomColor: ThemeConfig.colors.backgroundTertiary,
+    },
+    socialMediaLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
     },
 });
 

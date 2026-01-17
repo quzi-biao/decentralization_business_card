@@ -51,6 +51,46 @@
 - **introVideoUrl** (string, 可选): 个人介绍视频URL
 - **videoChannelId** (string, 可选): 视频号ID
 
+### 社交媒体
+- **socialMedia** (array, 可选): 社交媒体账号列表 - 数组格式，每项包含：
+  - **platform** (string): 平台类型，可选值：
+    - `weibo` - 微博
+    - `wechatChannel` - 视频号
+    - `douyin` - 抖音
+    - `xiaohongshu` - 小红书
+    - `wechatOfficialAccount` - 公众号
+    - `yuque` - 语雀
+    - `twitter` - Twitter/X
+    - `telegram` - Telegram
+    - `discord` - Discord
+    - `facebook` - Facebook
+    - `linkedin` - LinkedIn
+    - `instagram` - Instagram
+    - `youtube` - YouTube
+  - **accountId** (string): 账号ID或用户名
+  - **displayName** (string, 可选): 显示名称
+  - **url** (string, 可选): 自定义链接（如果平台链接规则特殊）
+
+示例：
+```json
+{
+  "socialMedia": [
+    {
+      "id": "1",
+      "platform": "weibo",
+      "accountId": "zhangsan",
+      "displayName": "张三的微博"
+    },
+    {
+      "id": "2",
+      "platform": "linkedin",
+      "accountId": "zhang-san",
+      "displayName": "Zhang San"
+    }
+  ]
+}
+```
+
 ## 隐私内容处理
 
 用户可以将某些字段设置为"隐私内容"。当你收到的上下文信息中包含 `[已填写，隐私内容]` 标记时，说明该字段已经填写但内容被隐藏。
