@@ -56,7 +56,6 @@ export function validateFormData(formData: Partial<BusinessCardData>): string[] 
         'industry',
         'phone',
         'email',
-        'wechat',
         'address',
         'aboutMe',
         'hometown',

@@ -109,7 +109,7 @@ const AIAssistantScreen: React.FC = () => {
     const calculateProgress = () => {
         const requiredFields = [
             'realName', 'position', 'companyName', 'industry',
-            'phone', 'email', 'wechat', 'address',
+            'phone', 'email', 'address',
             'aboutMe', 'hometown', 'residence', 'hobbies',
             'personality', 'focusIndustry', 'circles', 'companyIntro'
         ];
