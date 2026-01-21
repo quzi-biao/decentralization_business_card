@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "AI名片",
+    "name": "AI数字名片",
     "slug": "business-card",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
@@ -17,12 +17,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.quzi.businesscard",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "deploymentTarget": "15.1",
       "infoPlist": {
         "NSCameraUsageDescription": "需要使用相机扫描二维码和拍摄照片",
         "NSPhotoLibraryUsageDescription": "需要访问相册以选择和保存图片",
-        "NSMicrophoneUsageDescription": "需要使用麦克风进行语音输入",
+        "NSMicrophoneUsageDescription": "AI名片需要使用麦克风来录制语音消息，以便与AI助手进行语音交互。例如：您可以通过语音告诉AI助手您的职位、公司信息等，AI会自动帮您填写名片内容。",
         "ITSAppUsesNonExemptEncryption": false
       },
       "appleTeamId": "C84A4MNWFM"
@@ -51,7 +51,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "允许使用麦克风进行语音输入"
+          "microphonePermission": "AI名片需要使用麦克风来录制语音消息，以便与AI助手进行语音交互。例如：您可以通过语音告诉AI助手您的职位、公司信息等，AI会自动帮您填写名片内容。"
         }
       ]
     ],
