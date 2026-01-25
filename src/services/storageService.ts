@@ -107,7 +107,7 @@ export async function downloadEncryptedCard(storageUrl: string): Promise<Encrypt
         if (!packageJson) return null;
         return JSON.parse(packageJson);
     } catch (error) {
-        console.error('Failed to download encrypted card:', error);
+        // 静默处理下载失败，由上层处理
         return null;
     }
 }

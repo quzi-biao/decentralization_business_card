@@ -79,7 +79,7 @@ export async function downloadFromMinio(url: string): Promise<string> {
     const data = await response.text();
     return data;
   } catch (error) {
-    console.error('MinIO download error:', error);
+    // 静默抛出错误，由上层处理
     throw error;
   }
 }

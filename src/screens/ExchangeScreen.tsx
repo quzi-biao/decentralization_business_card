@@ -37,6 +37,8 @@ const ExchangeScreen = () => {
     const [isGeneratingQR, setIsGeneratingQR] = useState(false);
     const [lastScannedData, setLastScannedData] = useState<string>('');
     const [lastScanTime, setLastScanTime] = useState<number>(0);
+    const [scanFailed, setScanFailed] = useState(false);
+    const scanFailedRef = useRef(false); // 同步标志，立即阻止后续扫描
     const [scannedCard, setScannedCard] = useState<BusinessCardData | null>(null);
     const [scannedPeerDid, setScannedPeerDid] = useState<string>('');
     const [isSaving, setIsSaving] = useState(false);
@@ -276,7 +278,7 @@ const ExchangeScreen = () => {
         } catch (error: any) {
             console.error('Failed to generate QR code:', error);
             console.error('Error stack:', error.stack);
-            Alert.alert('错误', `生成二维码失败: ${error.message}`);
+            Alert.alert('提示', '二维码生成失败，请检查网络连接后重试。');
         } finally {
             setIsGeneratingQR(false);
         }
@@ -361,15 +363,18 @@ const ExchangeScreen = () => {
 
     // 处理扫描结果
     const handleBarCodeScanned = async ({ data }: any) => {
+        // 如果扫描已失败，阻止所有扫描（使用 ref 实现同步检查）
+        if (scanFailedRef.current) return;
+        
         // 防止重复扫描：检查是否正在处理
         if (isProcessing) return;
         
         // 防止重复扫描：检查是否是相同的二维码
         if (data === lastScannedData) return;
         
-        // 防止重复扫描：添加冷却时间（2秒内不处理相同或新的扫描）
+        // 防止重复扫描：添加冷却时间（5秒内不处理相同或新的扫描）
         const now = Date.now();
-        if (now - lastScanTime < 2000) return;
+        if (now - lastScanTime < 5000) return;
         
         setLastScannedData(data);
         setLastScanTime(now);
@@ -390,14 +395,9 @@ const ExchangeScreen = () => {
             console.log('Checking and retrying image uploads before exchange...');
             const { avatarUrl, wechatQrCodeUrl, companyImageUrls, missingFiles } = await validateAndUploadImages();
             
+            // 图片上传失败不影响交换，继续执行
             if (missingFiles.length > 0) {
-                // Alert.alert(
-                //     '网络连接失败',
-                //     `以下文件无法上传到云端：\n${missingFiles.join('、')}\n\n请检查网络连接后重试交换名片。`,
-                //     [{ text: '确定' }]
-                // );
-                setIsProcessing(false);
-                return;
+                console.log('Some images failed to upload, but exchange will continue:', missingFiles);
             }
             
             // 检查加密名片数据是否已上传
@@ -413,12 +413,17 @@ const ExchangeScreen = () => {
                         }
                         console.log('✓ Encrypted card uploaded successfully');
                     } catch (error) {
-                        Alert.alert(
-                            '网络连接失败',
-                            '无法上传名片数据到云端，请检查网络连接后重试交换名片。',
-                            [{ text: '确定' }]
-                        );
+                        // 立即设置失败标志，防止后续 Alert
+                        if (!scanFailedRef.current) {
+                            scanFailedRef.current = true;
+                            Alert.alert(
+                                '网络连接失败',
+                                '无法上传名片数据到云端，请检查网络连接后重试交换名片。',
+                                [{ text: '确定' }]
+                            );
+                        }
                         setIsProcessing(false);
+                        setScanFailed(true);
                         return;
                     }
                 }
@@ -517,9 +522,16 @@ const ExchangeScreen = () => {
                 // 保存 AES 密钥以便后续使用
                 await AsyncStorage.setItem(`encrypted_card_${peerDid}_key`, aesKey);
             } catch (error: any) {
-                console.error('Failed to get peer card:', error);
-                Alert.alert('错误', `无法获取对方名片: ${error.message}\n\n${isUpdate ? '更新' : '交换'}已取消`);
+                // 立即设置失败标志，防止后续 Alert
+                if (!scanFailedRef.current) {
+                    scanFailedRef.current = true;
+                    Alert.alert(
+                        '网络连接失败', 
+                        '无法下载对方的名片数据，请检查网络连接后重新打开扫描重试。'
+                    );
+                }
                 setIsProcessing(false);
+                setScanFailed(true);
                 return;
             }
 
@@ -540,6 +552,8 @@ const ExchangeScreen = () => {
                 }
                 
                 // 退出扫描模式，显示名片预览弹窗
+                console.log('✓ Exchange updated, showing card preview modal');
+                console.log('Peer card data:', peerCardData ? 'exists' : 'null');
                 setMode('qr');
                 setScannedCard(peerCardData);
                 setScannedPeerDid(peerDid);
@@ -564,15 +578,21 @@ const ExchangeScreen = () => {
                 setNote('');
                 
                 // 退出扫描模式，显示名片预览弹窗
+                console.log('✓ Exchange created, showing card preview modal');
+                console.log('Peer card data:', peerCardData ? 'exists' : 'null');
                 setMode('qr');
                 setScannedCard(peerCardData);
                 setScannedPeerDid(peerDid);
             }
         } catch (error) {
-            console.error('Failed to exchange card:', error);
-            Alert.alert('错误', '名片交换失败，请重试');
-        } finally {
+            console.warn('Exchange failed:', error);
+            // 立即设置失败标志，防止后续 Alert
+            if (!scanFailedRef.current) {
+                scanFailedRef.current = true;
+                Alert.alert('错误', '名片交换失败，请重新打开扫描重试。');
+            }
             setIsProcessing(false);
+            setScanFailed(true);
         }
     };
 
@@ -653,6 +673,8 @@ const ExchangeScreen = () => {
                             // 重置扫描状态，允许重新扫描
                             setLastScannedData('');
                             setLastScanTime(0);
+                            scanFailedRef.current = false;
+                            setScanFailed(false);
                             setMode('scan');
                         }}
                     >
@@ -838,6 +860,8 @@ const ExchangeScreen = () => {
                                 // 重置扫描状态
                                 setLastScannedData('');
                                 setLastScanTime(0);
+                                scanFailedRef.current = false;
+                                setScanFailed(false);
                             }}
                         >
                             <Text style={styles.closeButtonText}>✕</Text>
