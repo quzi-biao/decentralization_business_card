@@ -2,7 +2,7 @@
   "expo": {
     "name": "AI数字名片",
     "slug": "business-card",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
@@ -17,11 +17,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.quzi.businesscard",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "deploymentTarget": "15.1",
       "infoPlist": {
         "NSCameraUsageDescription": "需要使用相机扫描二维码和拍摄照片",
-        "NSPhotoLibraryUsageDescription": "需要访问相册以选择和保存图片",
+        "NSPhotoLibraryUsageDescription": "AI数字名片需要访问您的相册来完成以下功能：1) 选择照片作为您的名片头像、公司logo或产品图片；2) 保存生成的二维码名片图片到相册，方便您分享给他人。例如：您可以从相册中选择一张专业照片作为名片头像，或将生成的二维码名片保存到相册后通过微信等方式分享。",
         "NSMicrophoneUsageDescription": "AI名片需要使用麦克风来录制语音消息，以便与AI助手进行语音交互。例如：您可以通过语音告诉AI助手您的职位、公司信息等，AI会自动帮您填写名片内容。",
         "ITSAppUsesNonExemptEncryption": false
       },

@@ -122,21 +122,17 @@ const ExchangeScreen = () => {
                     if (!avatarUrl) {
                         console.log('Uploading avatar to MinIO...');
                         const updatedFile = await fileManager.ensureFileUploaded(cardData.avatarId);
-                        console.log('Upload result:', updatedFile);
                         if (updatedFile?.minioUrl) {
                             avatarUrl = updatedFile.minioUrl;
                             console.log('✓ Avatar uploaded to MinIO:', avatarUrl);
                         } else {
-                            console.error('❌ Avatar upload failed - no minioUrl returned');
                             missingFiles.push('头像');
                         }
                     }
                 } else {
-                    console.error('❌ Avatar file metadata not found for id:', cardData.avatarId);
                     missingFiles.push('头像');
                 }
             } catch (error) {
-                console.error('Failed to process avatar:', error);
                 missingFiles.push('头像');
             }
         }
@@ -169,7 +165,6 @@ const ExchangeScreen = () => {
                     missingFiles.push('微信二维码');
                 }
             } catch (error) {
-                console.error('Failed to process WeChat QR code:', error);
                 missingFiles.push('微信二维码');
             }
         }
@@ -210,7 +205,6 @@ const ExchangeScreen = () => {
                         missingFiles.push(`公司图片 ${i + 1}`);
                     }
                 } catch (error) {
-                    console.error(`Failed to process company image ${i + 1}:`, error);
                     missingFiles.push(`公司图片 ${i + 1}`);
                 }
             }
@@ -238,14 +232,14 @@ const ExchangeScreen = () => {
             
             // 如果有文件上传失败，显示警告但继续
             if (missingFiles.length > 0) {
-                console.warn('Some files failed to upload:', missingFiles);
-                Alert.alert(
-                    '部分文件上传失败',
-                    `以下文件未能上传到云端：\n${missingFiles.join('、')}\n\n交换名片时对方可能无法看到这些内容。建议检查网络连接后重新生成二维码。`,
-                    [
-                        { text: '知道了', style: 'default' }
-                    ]
-                );
+                // console.warn('Some files failed to upload:', missingFiles);
+                // Alert.alert(
+                //     '提示',
+                //     `以下文件暂未上传到云端：\n${missingFiles.join('、')}\n\n二维码已生成，交换名片时会自动重试上传。`,
+                //     [
+                //         { text: '知道了', style: 'default' }
+                //     ]
+                // );
             }
 
             // Step 4: 上传加密的名片数据
@@ -392,6 +386,44 @@ const ExchangeScreen = () => {
                 return;
             }
 
+            // 在交换前检查并重试上传图片到 MinIO
+            console.log('Checking and retrying image uploads before exchange...');
+            const { avatarUrl, wechatQrCodeUrl, companyImageUrls, missingFiles } = await validateAndUploadImages();
+            
+            if (missingFiles.length > 0) {
+                // Alert.alert(
+                //     '网络连接失败',
+                //     `以下文件无法上传到云端：\n${missingFiles.join('、')}\n\n请检查网络连接后重试交换名片。`,
+                //     [{ text: '确定' }]
+                // );
+                setIsProcessing(false);
+                return;
+            }
+            
+            // 检查加密名片数据是否已上传
+            const storedPackage = await AsyncStorage.getItem(`encrypted_card_${identity.did}`);
+            if (storedPackage) {
+                const package_ = JSON.parse(storedPackage);
+                if (!package_.storageUrl) {
+                    console.log('Encrypted card not uploaded, retrying...');
+                    try {
+                        const newPackage = await uploadEncryptedCard(cardData);
+                        if (!newPackage.storageUrl) {
+                            throw new Error('MinIO upload failed');
+                        }
+                        console.log('✓ Encrypted card uploaded successfully');
+                    } catch (error) {
+                        Alert.alert(
+                            '网络连接失败',
+                            '无法上传名片数据到云端，请检查网络连接后重试交换名片。',
+                            [{ text: '确定' }]
+                        );
+                        setIsProcessing(false);
+                        return;
+                    }
+                }
+            }
+
             // 检查是否已经交换过
             const existingExchange = useExchangeStore.getState().getExchange(peerDid);
             const isUpdate = !!existingExchange;
@@ -435,7 +467,6 @@ const ExchangeScreen = () => {
                             console.log('✓ Avatar downloaded and saved:', avatarFile.id);
                         }
                     } catch (error) {
-                        console.error('Failed to download avatar:', error);
                         // 头像下载失败不影响整体流程
                     }
                 }
@@ -450,7 +481,6 @@ const ExchangeScreen = () => {
                             console.log('✓ WeChat QR code downloaded and saved:', qrFile.id);
                         }
                     } catch (error) {
-                        console.error('Failed to download WeChat QR code:', error);
                         // 微信二维码下载失败不影响整体流程
                     }
                 }
@@ -471,7 +501,6 @@ const ExchangeScreen = () => {
                                     console.log(`✓ Company image ${i + 1} downloaded and saved:`, imageFile.id);
                                 }
                             } catch (error) {
-                                console.error(`Failed to download company image ${i + 1}:`, error);
                                 // 单个图片下载失败不影响其他图片
                             }
                         }
@@ -481,7 +510,6 @@ const ExchangeScreen = () => {
                             console.log(`✓ Total ${downloadedImageIds.length} company images downloaded`);
                         }
                     } catch (error) {
-                        console.error('Failed to download company images:', error);
                         // 公司图片下载失败不影响整体流程
                     }
                 }

@@ -48,8 +48,7 @@ export async function uploadToMinio(data: string, filename?: string): Promise<st
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('MinIO upload failed:', response.status, response.statusText, errorText);
-      throw new Error(`MinIO upload failed: ${response.status} ${response.statusText}`);
+      throw new Error(`MinIO upload failed: ${response.status}`);
     }
 
     // 缓存上传记录
@@ -57,7 +56,7 @@ export async function uploadToMinio(data: string, filename?: string): Promise<st
 
     return uploadUrl;
   } catch (error) {
-    console.error('MinIO upload error:', error);
+    // 静默抛出错误，由上层处理
     throw error;
   }
 }

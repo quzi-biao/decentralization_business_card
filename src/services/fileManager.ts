@@ -474,14 +474,13 @@ class FileManagerService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`MinIO upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`MinIO upload failed: ${response.status}`);
       }
 
       const publicUrl = `${MINIO_CONFIG.endpoint}/${MINIO_CONFIG.bucket}/${objectName}`;
       return publicUrl;
     } catch (error) {
-      console.error('Error uploading to MinIO:', error);
+      // 静默抛出错误，由上层处理
       throw error;
     }
   }
@@ -746,7 +745,7 @@ class FileManagerService {
 
       return metadata;
     } catch (error) {
-      console.error('Failed to ensure file uploaded:', error);
+      // 静默处理错误，返回 null 由上层处理
       return null;
     }
   }

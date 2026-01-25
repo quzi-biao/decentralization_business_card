@@ -73,9 +73,16 @@ export async function uploadEncryptedCard(cardData: any): Promise<EncryptedPacka
         timestamp: Date.now()
     };
     
-    // 上传到 MinIO，使用内容 hash 作为文件名
-    const minioUrl = await uploadToMinio(JSON.stringify(package_), `${dataHash}.json`);
-    package_.storageUrl = minioUrl;
+    // 尝试上传到 MinIO，使用内容 hash 作为文件名
+    try {
+        const minioUrl = await uploadToMinio(JSON.stringify(package_), `${dataHash}.json`);
+        package_.storageUrl = minioUrl;
+        console.log('✓ Encrypted card uploaded to MinIO:', minioUrl);
+    } catch (error) {
+        console.warn('MinIO upload failed, will use local storage only');
+        // MinIO 上传失败不影响功能，使用空 URL，后续交换时会重试
+        package_.storageUrl = '';
+    }
     
     // 同时保存到本地 AsyncStorage 作为备份
     await AsyncStorage.setItem(`${STORAGE_PREFIX}${identity.did}`, JSON.stringify(package_));
