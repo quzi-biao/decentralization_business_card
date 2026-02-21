@@ -218,7 +218,8 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## 📞 Support
 
-- 📧 Email: support@example.com
+- 📧 Email: 0xnomean@gmail.com
+- 💬 WeChat: godisdog007 (请备注：去中心化名片)
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/business-card/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/business-card/discussions)
 

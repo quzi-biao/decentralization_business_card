@@ -218,7 +218,8 @@ business-card/
 
 ## 📞 支持
 
-- 📧 邮箱：support@example.com
+- 📧 邮箱：0xnomean@gmail.com
+- 💬 微信：godisdog007（请备注：去中心化名片）
 - 🐛 问题反馈：[GitHub Issues](https://github.com/yourusername/business-card/issues)
 - 💬 讨论：[GitHub Discussions](https://github.com/yourusername/business-card/discussions)
 

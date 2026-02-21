@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability, please **DO NOT** open a public issue. Instead:
 
-1. Email us at: security@example.com
+1. Email us at: 0xnomean@gmail.com
 2. Include detailed information about the vulnerability
 3. Wait for our response before disclosing publicly
 
@@ -85,6 +85,8 @@ Before deploying:
 
 ## 📞 Contact
 
-For security concerns: security@example.com
+For security concerns: 0xnomean@gmail.com
+
+WeChat: godisdog007 (请备注：去中心化名片)
 
 Thank you for helping keep this project secure! 🙏
