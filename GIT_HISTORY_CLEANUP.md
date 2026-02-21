@@ -31,23 +31,22 @@ brew install bfg
 创建 `passwords.txt` 文件，包含需要替换的敏感信息：
 
 ```
-# n8n API Key
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTVlNzNmYS0zNWE2LTRiMjItYWM1Yi0yMTU3ZWM0N2UyMjEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY4MTQyNjIxfQ.srEtupJd_zxll1FJBAk96Bvssi9x08TGco0ipADanLY
+# n8n API Key（示例 - 替换为您实际泄露的 key）
+your-actual-leaked-api-key-here
 
-# n8n 服务器地址
-https://n8n.waters-ai.work
-http://101.34.87.172:5678
-https://n8n.quzi-tech.xyz
+# n8n 服务器地址（示例 - 替换为您实际的服务器地址）
+https://your-n8n-server.com
+http://your.server.ip:5678
 
-# MinIO 服务器地址
-https://n8n.waters-ai.work:9343
+# MinIO 服务器地址（示例）
+https://your-minio-server.com:9000
 
-# Webhook 路径和 Workflow IDs
-f18884f3-9866-4649-a82b-543ac6873d6f
-KVico7Zps62RFNb4
-jDf6woXVzj2k_0wGWViwy
-8fc0755e-9e3f-476d-a222-e90e33fb3f28
-vMshNKu_8EM85rLGB8ByS
+# Webhook 路径和 Workflow IDs（示例 - 替换为您实际的 IDs）
+your-webhook-path-1
+your-workflow-id-1
+your-workflow-id-2
+your-webhook-path-2
+your-workflow-id-3
 ```
 
 ### 3. 运行 BFG 清理
@@ -138,8 +137,8 @@ git filter-repo --path-rename path-changes.txt --force
 git log --all --oneline
 
 # 搜索敏感信息（不应该有结果）
-git log --all -p | grep "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-git log --all -p | grep "n8n.waters-ai.work"
+git log --all -p | grep "your-actual-api-key"
+git log --all -p | grep "your-server-address"
 ```
 
 ### 2. 检查文件内容
