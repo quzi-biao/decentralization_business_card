@@ -44,7 +44,19 @@ const CardsScreen: React.FC<Props> = ({ navigation }) => {
 
     const activeExchanges = exchanges.filter(e => e.status === 'active');
 
-    const filteredCards = activeExchanges
+    // 去重：同一个 peerDid 只保留最新的交换记录
+    const deduplicatedExchanges = Array.from(
+        activeExchanges.reduce((map, exchange) => {
+            const existing = map.get(exchange.peerDid);
+            // 如果不存在或当前记录更新，则更新 map
+            if (!existing || exchange.lastSyncAt > existing.lastSyncAt) {
+                map.set(exchange.peerDid, exchange);
+            }
+            return map;
+        }, new Map<string, typeof activeExchanges[0]>())
+    ).map(([_, exchange]) => exchange);
+
+    const filteredCards = deduplicatedExchanges
         .filter(exchange => {
             const card = exchangedCards.get(exchange.peerDid);
             if (!card?.cardData) return false;

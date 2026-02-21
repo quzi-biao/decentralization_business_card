@@ -50,42 +50,48 @@ const ExchangeScreen = () => {
     const availableTags = ['客户', '供应商', '合作伙伴', '朋友', '同事', '潜在客户'];
 
     useEffect(() => {
-        const checkNetworkAndGenerateQR = async () => {
-            try {
-                const netState = await NetInfo.fetch();
-                console.log('Network state:', netState);
-                
-                if (netState.isConnected && netState.isInternetReachable !== false) {
-                    // 网络已连接，生成二维码
-                    console.log('Network available, generating QR code...');
-                    generateMyQRCode();
-                } else {
-                    console.log('Network not available, waiting for connection...');
-                    // 监听网络状态变化
-                    const unsubscribe = NetInfo.addEventListener(state => {
-                        console.log('Network state changed:', state);
-                        if (state.isConnected && state.isInternetReachable !== false && !qrData) {
-                            console.log('Network connected, generating QR code...');
-                            generateMyQRCode();
-                            unsubscribe();
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Failed to check network state:', error);
-                // 网络检查失败，延迟1秒后尝试生成
-                setTimeout(() => generateMyQRCode(), 1000);
-            }
-        };
+        // 立即生成二维码
+        generateMyQRCode();
+    }, []);
+
+    // 监听网络状态变化，网络恢复后自动刷新二维码并重置扫描状态
+    useEffect(() => {
+        let previouslyDisconnected = false;
         
-        checkNetworkAndGenerateQR();
+        const unsubscribe = NetInfo.addEventListener(state => {
+            console.log('Network state changed:', state);
+            
+            // 检测网络从断开到连接的转变
+            if (state.isConnected && state.isInternetReachable !== false) {
+                if (previouslyDisconnected) {
+                    console.log('✅ Network restored, auto-refreshing QR code...');
+                    // 网络恢复，自动刷新二维码
+                    generateMyQRCode();
+                    
+                    // 重置扫描失败状态，允许用户重新扫描
+                    if (scanFailedRef.current) {
+                        console.log('🔄 Resetting scan failure state, user can retry scanning');
+                        scanFailedRef.current = false;
+                        setScanFailed(false);
+                    }
+                }
+                previouslyDisconnected = false;
+            } else {
+                console.log('⚠️ Network disconnected');
+                previouslyDisconnected = true;
+            }
+        });
+        
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     // 监听名片数据变化，自动重新生成二维码
     useEffect(() => {
         // 只有在已经生成过二维码后才重新生成
         if (qrData) {
-            console.log('Card data changed, regenerating QR code...');
+            console.log('🔄 Card data changed, regenerating QR code...');
             generateMyQRCode();
         }
     }, [cardData]);
@@ -670,9 +676,7 @@ const ExchangeScreen = () => {
                         style={styles.scanCard}
                         onPress={() => {
                             setScannedCard(null);
-                            // 重置扫描状态，允许重新扫描
-                            setLastScannedData('');
-                            setLastScanTime(0);
+                            // 重置扫描失败状态，但保留 lastScannedData 防止重复扫描
                             scanFailedRef.current = false;
                             setScanFailed(false);
                             setMode('scan');
@@ -857,7 +861,7 @@ const ExchangeScreen = () => {
                             style={styles.closeButton}
                             onPress={() => {
                                 setMode('qr');
-                                // 重置扫描状态
+                                // 关闭扫描时清空扫描记录，允许下次重新扫描
                                 setLastScannedData('');
                                 setLastScanTime(0);
                                 scanFailedRef.current = false;
